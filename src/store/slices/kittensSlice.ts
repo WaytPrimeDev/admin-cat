@@ -98,8 +98,6 @@ const kittensSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchKittens.fulfilled, (state, action) => {
-        console.log("er");
-
         state.isLoading = false;
 
         state.items = action.payload.data;
