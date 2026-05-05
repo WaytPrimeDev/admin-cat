@@ -1,0 +1,92 @@
+/* Контейнер для всех превью */
+.previewContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 15px 0;
+  padding: 10px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  min-height: 50px;
+}
+
+/* Карточка одного изображения */
+.previewItem {
+  position: relative;
+  width: 110px;
+  height: 110px;
+  border-radius: 10px;
+  border: 2px solid #ddd;
+  background-color: #fff;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+  z-index: 1;
+}
+
+/* Эффект при наведении на всю карточку */
+.previewItem:hover {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  border-color: #007bff;
+}
+
+/* Область, за которую можно тянуть (картинка) */
+.dragHandle {
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+}
+
+/* Само изображение */
+.previewImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Порядковый номер (1, 2, 3...) */
+.badge {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  background-color: rgba(0, 123, 255, 0.85);
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 12px;
+  pointer-events: none; /* Чтобы не мешал перетаскиванию */
+}
+
+/* Кнопка удаления (крестик) */
+.removeSmall {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: #ff4d4f;
+  color: white;
+  border: 2px solid white;
+  font-size: 16px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+  transition: background-color 0.2s;
+}
+
+.removeSmall:hover {
+  background-color: #d9363e;
+}

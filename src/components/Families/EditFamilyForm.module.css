@@ -1,0 +1,51 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.form div {
+  display: flex;
+  flex-direction: column;
+}
+
+.form label {
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+}
+
+.form input,
+.form select {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.form select[multiple] {
+  height: 150px;
+}
+
+.form span {
+  color: red;
+  font-size: 0.8rem;
+}
+
+button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-right: 0.5rem;
+}
+
+button[type="submit"] {
+  background: blue;
+  color: white;
+}
+
+button:disabled {
+  background: gray;
+  cursor: not-allowed;
+}
