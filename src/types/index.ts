@@ -151,7 +151,9 @@ export interface UpdateParentRequest {
 export interface UpdateFamilyRequest {
   name: string;
   displayOrder: number;
-  parentIds: string[];
+
+  dad: string;
+  mom: string;
   kittensIds: string[];
 }
 
