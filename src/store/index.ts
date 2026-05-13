@@ -15,6 +15,7 @@ import authReducer from "./slices/authSlice";
 import kittensReducer from "./slices/kittensSlice";
 import parentsReducer from "./slices/parentsSlice";
 import familiesReducer from "./slices/familiesSlice";
+import filtersReducer from "./slices/filterSlice";
 import { useDispatch } from "react-redux";
 
 const persistedAuthReducer = persistReducer(
@@ -32,6 +33,7 @@ export const store = configureStore({
     kittens: kittensReducer,
     parents: parentsReducer,
     families: familiesReducer,
+    filters: filtersReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

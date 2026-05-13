@@ -35,7 +35,7 @@ export const updateKitten = createAsyncThunk(
     { rejectWithValue },
   ) => {
     try {
-      const response = await api.put<AddKittenResponse>(
+      const response = await api.patch<AddKittenResponse>(
         `/cats/kitten/${id}`,
         formData,
         {

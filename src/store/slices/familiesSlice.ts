@@ -68,6 +68,21 @@ export const updateFamily = createAsyncThunk(
   },
 );
 
+export const updateFamiliesOrder = createAsyncThunk(
+  "families/updateOrder",
+  async (orderedIds: string[], { rejectWithValue }) => {
+    try {
+      const response = await api.patch("/families/reorder", { orderedIds });
+      return response.data; // Или можете просто вернуть orderedIds, чтобы обновить стейт Redux локально
+    } catch (error) {
+      const err = error as AxiosError<{ message: string }>;
+      return rejectWithValue(
+        err.response?.data?.message || "Ошибка сортировки",
+      );
+    }
+  },
+);
+
 export const deleteFamily = createAsyncThunk(
   "families/deleteFamily",
   async (id: string, { rejectWithValue }) => {
@@ -115,6 +130,11 @@ const familiesSlice = createSlice({
       .addCase(deleteFamily.fulfilled, (state, action) => {
         state.items = state.items.filter(
           (family) => family._id !== action.payload,
+        );
+      })
+      .addCase(updateFamiliesOrder.fulfilled, (state) => {
+        state.items = state.items.sort(
+          (a, b) => a.displayOrder - b.displayOrder,
         );
       });
   },

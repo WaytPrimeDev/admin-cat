@@ -5,7 +5,7 @@ export const familySchema = z.object({
   kittens: z.array(z.string()).min(1, "минимум 1 котенок"),
   mom: z.string(),
   dad: z.string(),
-  displayOrder: z.number(),
+  breed: z.string().min(1, "Порода обязательна"),
 });
 
 export const updateFamilySchema = z.object({
@@ -14,6 +14,7 @@ export const updateFamilySchema = z.object({
   mom: z.string(),
   dad: z.string(),
   kittensIds: z.array(z.string()).min(1, "минимум 1 котенок"),
+  breed: z.string(),
 });
 
 export type UpdateFamilyFormValues = z.infer<typeof updateFamilySchema>;

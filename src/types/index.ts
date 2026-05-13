@@ -1,3 +1,15 @@
+interface Filter {
+  name: string;
+  _id: string;
+}
+
+export interface FilterState {
+  breeds: Filter[];
+  colors: Filter[];
+  isLoading: boolean;
+  error: string | null;
+}
+
 export interface User {
   id: string;
   email: string;

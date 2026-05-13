@@ -1,6 +1,6 @@
 import React, { Suspense, useState } from "react";
 import { useDispatch } from "react-redux";
-import { Link, useNavigate, Outlet } from "react-router-dom";
+import { Link, useNavigate, Outlet, useLocation } from "react-router-dom";
 import { logout } from "../../store/slices/authSlice";
 import styles from "./Layout.module.css";
 
@@ -8,55 +8,81 @@ const Layout: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = () => {
     dispatch(logout());
     navigate("/login");
+    setIsMenuOpen(false);
   };
 
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
+  const menuItems = [
+    { path: "/dashboard", label: "Dashboard", icon: "📊" },
+    { path: "/kittens", label: "Kittens", icon: "🐱" },
+    { path: "/parents", label: "Parents", icon: "👥" },
+    { path: "/families", label: "Families", icon: "🤍" },
+    { path: "/reservations", label: "Reservations", icon: "📅" },
+    { path: "/finance", label: "Finance", icon: "💰" },
+    { path: "/settings", label: "Settings", icon: "⚙️" },
+  ];
 
   return (
     <div className={styles.layout}>
-      <header className={styles.header}>
-        <div className={styles.logo}>
-          <h1>Arlen Fluffy Plush</h1>
-        </div>
-        <button className={styles.burger} onClick={toggleMenu}>
-          ☰
+      {/* Мобильная шапка */}
+      <header className={styles.mobileHeader}>
+        <h1 className={styles.mobileLogo}>Arlen</h1>
+        <button
+          className={styles.burger}
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+        >
+          {isMenuOpen ? "✕" : "☰"}
         </button>
-        <nav className={`${styles.nav} ${isMenuOpen ? styles.navOpen : ""}`}>
-          <Link
-            to="/kittens"
-            className={styles.navLink}
-            onClick={() => setIsMenuOpen(false)}
-          >
-            Котята
-          </Link>
-          <Link
-            to="/parents"
-            className={styles.navLink}
-            onClick={() => setIsMenuOpen(false)}
-          >
-            Родители
-          </Link>
-          <Link
-            to="/families"
-            className={styles.navLink}
-            onClick={() => setIsMenuOpen(false)}
-          >
-            Семьи/Пометы
-          </Link>
-          <button className={styles.logoutBtn} onClick={handleLogout}>
-            Выход
-          </button>
-        </nav>
       </header>
+
+      {/* Оверлей для закрытия меню кликом по пустому месту */}
+      {isMenuOpen && (
+        <div className={styles.overlay} onClick={() => setIsMenuOpen(false)} />
+      )}
+
+      <aside
+        className={`${styles.sidebar} ${isMenuOpen ? styles.sidebarOpen : ""}`}
+      >
+        <div className={styles.sidebarContent}>
+          <div className={styles.logoSection}>
+            <h1 className={styles.brandTitle}>Arlen Fluffy Plush</h1>
+            <p className={styles.brandSubtitle}>CAT CATTERY</p>
+          </div>
+
+          <nav className={styles.nav}>
+            {menuItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`${styles.navLink} ${
+                  location.pathname === item.path ? styles.activeLink : ""
+                }`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <span className={styles.icon}>{item.icon}</span>
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+
+          <div className={styles.sidebarFooter}>
+            <button className={styles.logoutBtn} onClick={handleLogout}>
+              Logout
+            </button>
+            <p className={styles.copyright}>© 2026 Arlen Fluffy Plush</p>
+          </div>
+        </div>
+      </aside>
+
       <main className={styles.main}>
-        <Suspense fallback={null}>
-          <Outlet />
+        <Suspense fallback={<div className={styles.loader}>Загрузка...</div>}>
+          <div className={styles.pageContainer}>
+            <Outlet />
+          </div>
         </Suspense>
       </main>
     </div>
