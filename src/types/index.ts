@@ -7,7 +7,8 @@ export interface FilterState {
   breeds: Filter[];
   colors: Filter[];
   isLoading: boolean;
-  error: string | null;
+  errorColor: string | null;
+  errorBreed: string | null;
 }
 
 export interface User {
@@ -152,4 +153,9 @@ export interface UpdateFamilyRequest {
   displayOrder: number;
   parentIds: string[];
   kittensIds: string[];
+}
+
+export interface MyKnownError {
+  message: string;
+  success: boolean;
 }

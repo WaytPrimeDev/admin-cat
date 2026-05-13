@@ -1,5 +1,7 @@
 import { useState } from "react";
 import type { UseFormRegisterReturn } from "react-hook-form";
+import { useAppDispatch } from "../../store";
+import { clearError } from "../../store/slices/filterSlice";
 
 export interface SelectOption {
   _id: string; // или id, если на бекенде по-другому
@@ -21,7 +23,6 @@ export const AdminDynamicSelect = ({
   options,
   registerProps,
   currentValue,
-
   onAdd,
   onRemove,
 }: AdminDynamicSelectProps) => {
@@ -64,6 +65,7 @@ export const AdminDynamicSelect = ({
       }
     }
   };
+  const dispatch = useAppDispatch();
 
   return (
     <div className="form-group">
@@ -79,6 +81,7 @@ export const AdminDynamicSelect = ({
             disabled={isLoading}
             style={{ flex: 1 }}
           />
+
           <button
             type="button"
             onClick={handleAdd}
@@ -96,7 +99,17 @@ export const AdminDynamicSelect = ({
         </div>
       ) : (
         <div style={{ display: "flex", gap: "8px" }}>
-          <select {...registerProps} style={{ flex: 1 }} disabled={isLoading}>
+          <select
+            {...registerProps}
+            style={{ flex: 1 }}
+            disabled={isLoading}
+            onBlur={(e) => {
+              // Проверка: если фокус ушел за пределы всего блока компонента
+              if (!e.currentTarget.contains(e.relatedTarget)) {
+                dispatch(clearError());
+              }
+            }}
+          >
             <option value="">-- Выберите --</option>
             {options.map((opt) => (
               <option key={opt._id} value={opt.name}>

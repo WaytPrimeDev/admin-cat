@@ -31,6 +31,7 @@ import { useSelector } from "react-redux";
 import {
   addBreed,
   addColor,
+  clearError,
   deleteBreed,
   deleteColor,
 } from "../../store/slices/filterSlice";
@@ -61,7 +62,9 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
   const selectedBreed = useWatch({ control, name: "breed" });
 
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const { colors, breeds } = useSelector((state: RootState) => state.filters);
+  const { colors, breeds, errorColor, errorBreed } = useSelector(
+    (state: RootState) => state.filters,
+  );
 
   // Блокируем скролл страницы при открытом модальном окне
   useEffect(() => {
@@ -167,8 +170,13 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
     setValue("images", updated, { shouldValidate: true });
   };
 
+  const closeForm = () => {
+    editShowForm(false);
+    dispatch(clearError());
+  };
+
   return (
-    <div className={styles.overlay} onClick={() => editShowForm(false)}>
+    <div className={styles.overlay} onClick={() => closeForm()}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         {/* Шапка модалки */}
         <div className={styles.header}>
@@ -178,7 +186,7 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
           </div>
           <button
             className={styles.closeBtn}
-            onClick={() => editShowForm(false)}
+            onClick={() => closeForm()}
             aria-label="Close"
           >
             <svg
@@ -235,6 +243,7 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
                 onAdd={handleAddBreed}
                 onRemove={handleRemoveBreed}
               />
+              {errorBreed && <p className={styles.error}>{errorBreed}</p>}
               {errors.breed && (
                 <span className={styles.error}>{errors.breed.message}</span>
               )}
@@ -249,6 +258,7 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
                 onAdd={handleAddColor}
                 onRemove={handleRemoveColor}
               />
+              {errorColor && <p className={styles.error}>{errorColor}</p>}
               {errors.color && (
                 <span className={styles.error}>{errors.color.message}</span>
               )}
@@ -271,9 +281,7 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
             <div className={styles.formGroup}>
               <label>Gender</label>
               <select {...register("sex")} className={styles.input}>
-                <option value="" disabled>
-                  Select gender
-                </option>
+                <option value="">Select gender</option>
                 <option value="male">Male (Самец)</option>
                 <option value="female">Female (Самка)</option>
               </select>
@@ -364,7 +372,7 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
             <button
               type="button"
               className={styles.cancelBtn}
-              onClick={() => editShowForm(false)}
+              onClick={() => closeForm()}
             >
               Cancel
             </button>
@@ -374,7 +382,7 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
           </div>
         </form>
       </div>
-      <svg class="cat-icon" viewBox="0 0 24 24">
+      <svg className={styles.catIcon} viewBox="0 0 24 24">
         <path d="M12 5c.67 0 1.35.09 2 .26 1.78-2 5.03-2.84 6.42-2.26 1.4.58-.42 7-.42 7 .57 1.07 1 2.24 1 3.44C21 17.9 16.97 21 12 21s-9-3-9-7.56c0-1.25.5-2.4 1-3.44 0 0-1.89-6.42-.5-7 1.39-.58 4.72.23 6.5 2.23A9.04 9.04 0 0 1 12 5Z"></path>
         <path d="M8 14v.5"></path>
         <path d="M16 14v.5"></path>

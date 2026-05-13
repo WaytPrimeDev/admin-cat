@@ -12,6 +12,20 @@
   box-sizing: border-box;
   animation: fadeIn 0.2s ease-out;
 }
+.catIcon {
+  width: 48px;
+  height: 48px;
+  stroke: #333; /* Цвет контура */
+  stroke-width: 1.5; /* Толщина линий */
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+  transition: stroke 0.3s;
+}
+
+.catIcon:hover {
+  stroke: #ff6b6b; /* Цвет при наведении */
+}
 
 @keyframes fadeIn {
   from {

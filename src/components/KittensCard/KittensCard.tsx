@@ -59,6 +59,9 @@ const KittensCard = ({ editKitten }: KittenCardProps) => {
             <td data-label="BREED" className={styles.mutedText}>
               {kitten.breed || "Not specified"}
             </td>
+            <td data-label="COLOR" className={styles.mutedText}>
+              {kitten.color || "Not specified"}
+            </td>
             <td data-label="AGE" className={styles.mutedText}>
               {kitten.birthDay
                 ? getPluralWeeks(getKittenAgeInWeeks(kitten.birthDay))
@@ -81,7 +84,8 @@ const KittensCard = ({ editKitten }: KittenCardProps) => {
               </span>
             </td>
             <td data-label="PRICE" className={styles.priceText}>
-              ${kitten.price?.toLocaleString()}
+              breeding: ${kitten.price?.breeding?.toLocaleString() || ""}, pet:
+              ${kitten.price?.pet?.toLocaleString() || ""}
             </td>
             <td data-label="ACTIONS">
               <div className={styles.actions}>
