@@ -1,3 +1,7 @@
+:root {
+  --gold-color: #c4a44a;
+}
+
 .layout {
   display: flex;
   flex-direction: column;
@@ -70,6 +74,8 @@
 
 .logoSection {
   margin-bottom: 30px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--gold-color);
 }
 
 .brandTitle {
@@ -104,6 +110,7 @@
 }
 
 .activeLink {
+  border-left: 2px solid var(--gold-color);
   background-color: #ded7f0;
   color: #2b1f5c;
   font-weight: 600;
@@ -112,7 +119,7 @@
 .sidebarFooter {
   margin-top: auto;
   padding-top: 20px;
-  border-top: 1px solid #d1d1e0;
+  border-top: 1px solid var(--gold-color);
 }
 
 .logoutBtn {

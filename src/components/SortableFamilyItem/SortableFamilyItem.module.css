@@ -1,0 +1,278 @@
+/* 📱 MOBILE FIRST */
+:root {
+  --gold-color: #c4a44a;
+}
+
+.card {
+  background: white;
+  border: 1px solid #e1e1e8;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  background-color: #ffffff;
+  position: relative;
+}
+
+/* Состояния Drag and Drop */
+.reordering {
+  cursor: grab;
+  transition:
+    box-shadow 0.2s,
+    border-color 0.2s;
+  border-style: dashed;
+  border-color: #2b1f5c;
+  opacity: 0.9;
+}
+
+.dragging {
+  cursor: grabbing;
+  opacity: 1;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  border-color: #2b1f5c;
+  transform: scale(1.02);
+  border-style: solid;
+  z-index: 999;
+}
+
+/* Шапка Mating Pair */
+.cardHeader {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.matingPairTitle {
+  margin: 0;
+  font-family: serif;
+  font-size: 20px;
+  color: #1a1a33;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.lineDivider {
+  flex-grow: 1;
+  height: 1px;
+  background-color: #e1e1e8;
+}
+
+/* Кнопки действий */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.deleteBtn,
+.editBtn {
+  background: none;
+  border: none;
+  color: #b0b0c8;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    color 0.2s,
+    transform 0.1s;
+  border-radius: 50%;
+}
+
+.editBtn:hover {
+  color: #2b1f5c; /* Фиолетовый для редактирования */
+  transform: scale(1.1);
+}
+
+.deleteBtn:hover {
+  color: #dc2626; /* Красный для удаления */
+  transform: scale(1.1);
+}
+
+/* Главный бейдж */
+.mainBreedBadge {
+  display: inline-block;
+  align-self: flex-start;
+  background-color: #f0ebf8;
+  color: #2b1f5c;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  margin-bottom: 20px;
+}
+
+/* Сетка родителей */
+.parentsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.parentColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.parentImageWrapper {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 12px;
+  overflow: hidden;
+  background-color: #f8f8fb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Стили для отсутствующего фото */
+.emptyImageWrapper {
+  background-color: #f0f0f5;
+  border: 1px dashed #d1d1e0;
+}
+
+.emptyIcon {
+  font-size: 40px;
+  color: #d1d1e0;
+  font-family: serif;
+}
+
+.parentImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.parentInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.parentTitle {
+  color: var(--gold-color);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.parentName {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a33;
+}
+
+/* Текст для отсутствующего родителя */
+.unknownText {
+  color: #8a8ab5;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 14px;
+}
+
+.parentChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.chipPurple,
+.chipGold {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+.chipPurple {
+  background-color: #f0ebf8;
+  color: #4a4a68;
+}
+
+.chipGold {
+  background-color: #fff8e1;
+  color: #b48a3a;
+}
+
+/* Разделитель */
+.separator {
+  border: none;
+  border-top: 1px solid #f0f0f5; /* Изменил на серый, золото сильно било в глаза */
+  margin: 0 0 20px 0;
+}
+
+/* Превью котят */
+.litterPreviewHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.litterPreviewHeader h4 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1a1a33;
+}
+
+.litterPreviewHeader span {
+  font-size: 13px;
+  color: #8a8ab5;
+}
+
+.kittensList {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scrollbar-width: thin;
+}
+
+.kittenItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  min-width: 80px;
+}
+
+.kittenImage {
+  width: 80px;
+  height: 80px;
+  border-radius: 12px;
+  object-fit: cover;
+  background-color: #f8f8fb;
+}
+
+.kittenName {
+  font-size: 13px;
+  font-weight: 500;
+  color: #1a1a33;
+  text-align: center;
+}
+
+.noKittensText {
+  color: #b0b0c8;
+  font-size: 13px;
+  font-style: italic;
+  margin: 0;
+}
+
+/* 💻 DESKTOP СТИЛИ */
+@media (min-width: 768px) {
+  .kittenImage {
+    width: 100px;
+    height: 100px;
+  }
+  .kittenItem {
+    min-width: 100px;
+  }
+}

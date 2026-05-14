@@ -1,3 +1,5 @@
+import styles from "./AdminDynamicSelect.module.css";
+
 import { useState } from "react";
 import type { UseFormRegisterReturn } from "react-hook-form";
 import { useAppDispatch } from "../../store";
@@ -74,12 +76,12 @@ export const AdminDynamicSelect = ({
       {isAdding ? (
         <div style={{ display: "flex", gap: "8px" }}>
           <input
+            className={styles.addInput}
             type="text"
             value={newValue}
             onChange={(e) => setNewValue(e.target.value)}
             placeholder={`Новое значение...`}
             disabled={isLoading}
-            style={{ flex: 1 }}
           />
 
           <button

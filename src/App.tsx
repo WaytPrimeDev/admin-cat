@@ -4,6 +4,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 
 import PrivateRoute from "./components/PrivateRoute/PrivateRoute";
 import Layout from "./components/Layout/Layout";
+import DashboardPage from "./pages/DashboardPage/DashboardPage";
 
 const LoginPage = lazy(() => import("./pages/LoginPage/LoginPage"));
 const KittensPage = lazy(() => import("./pages/KittensPage/KittensPage"));
@@ -23,7 +24,8 @@ function App() {
             </PrivateRoute>
           }
         >
-          <Route index element={<Navigate to="/kittens" replace />} />
+          <Route index element={<Navigate to="/dashboard" replace />} />
+          <Route path="dashboard" element={<DashboardPage />} />
           <Route path="kittens" element={<KittensPage />} />
           <Route path="parents" element={<ParentsPage />} />
           <Route path="families" element={<FamiliesPage />} />

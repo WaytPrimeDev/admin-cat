@@ -65,6 +65,7 @@ export interface Kitten {
     mom: string;
     dad: string;
   };
+  createdAt: string;
 }
 
 export interface KittenResponse {
@@ -93,6 +94,7 @@ export interface Parent {
   breed: string;
   sex: KittenSex;
   images: KittenImage[];
+  createdAt: string;
 }
 export interface GetParentResponse {
   status: string;
@@ -115,11 +117,13 @@ export interface Family {
   _id: string;
   name: string;
   kittens: string[];
+  breed: string;
   displayOrder: number;
   parents: {
     mom?: string;
     dad?: string;
   };
+  createdAt: string;
 }
 
 export interface GetFamilyResponse {

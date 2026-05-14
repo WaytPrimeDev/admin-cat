@@ -40,7 +40,7 @@
 .modal {
   background: #ffffff;
   width: 100%;
-  max-width: 640px;
+  max-width: 740px;
   max-height: 90vh; /* Защита, чтобы не уходило за экран */
   border-radius: 16px;
   display: flex;

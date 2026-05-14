@@ -1,0 +1,270 @@
+/* =========================================
+   📱 MOBILE FIRST
+   ========================================= */
+
+/* Оверлей с размытием (backdrop-filter) */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(30, 30, 45, 0.5); /* Полупрозрачный фон */
+  backdrop-filter: blur(6px); /* Размытие заднего фона */
+  -webkit-backdrop-filter: blur(6px); /* Для Safari */
+  z-index: 2000;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end; /* На телефоне прижимаем модалку к низу экрана */
+  padding: 16px;
+  box-sizing: border-box;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Контейнер модального окна */
+.modal {
+  background: #ffffff;
+  width: 100%;
+  max-width: 640px;
+  max-height: 90vh; /* Чтобы окно не вылезало за пределы экрана */
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Шапка модального окна */
+.header {
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px solid #f0f0f5;
+  background-color: #fff;
+  flex-shrink: 0;
+}
+
+.headerText h2 {
+  margin: 0;
+  font-size: 20px;
+  color: #1a1a33;
+  font-family: serif;
+}
+
+.headerText p {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #8a8ab5;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  color: #8a8ab5;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+
+.closeBtn:hover {
+  background-color: #f0f0f5;
+  color: #1a1a33;
+}
+
+/* Основная скроллируемая область с полями */
+.formBody {
+  padding: 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  flex-grow: 1;
+}
+
+/* Стилизация скроллбара */
+.formBody::-webkit-scrollbar {
+  width: 6px;
+}
+.formBody::-webkit-scrollbar-thumb {
+  background-color: #d1d1e0;
+  border-radius: 4px;
+}
+
+/* На мобильном телефоне 1 колонка */
+.gridRow {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.formGroup label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #4a4a68;
+}
+
+/* Стили полей ввода (input, select) */
+.input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #e1e1e8;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #1a1a33;
+  box-sizing: border-box;
+  outline: none;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+  background-color: #fafafc;
+}
+
+.input:focus {
+  border-color: #4a4ae2;
+  background-color: #fff;
+  box-shadow: 0 0 0 3px rgba(74, 74, 226, 0.1);
+}
+
+.input::placeholder {
+  color: #b0b0c8;
+}
+
+.error {
+  color: #dc2626;
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+/* Кнопка загрузки фотографий */
+.uploadBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px;
+  border: 1px dashed #b0b0c8;
+  border-radius: 8px;
+  background-color: #f8f8fb;
+  color: #4a4a68;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.uploadBtn:hover {
+  border-color: #4a4ae2;
+  color: #4a4ae2;
+  background-color: #f0f0ff;
+}
+
+.previewContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 8px;
+  padding: 12px;
+  background: #fafafc;
+  border-radius: 8px;
+  border: 1px solid #e1e1e8;
+}
+
+/* Подвал формы с кнопками */
+.footer {
+  display: flex;
+  flex-direction: column-reverse; /* На телефоне "Отмена" под кнопкой сохранения */
+  gap: 12px;
+  margin-top: 10px;
+  padding-top: 20px;
+  border-top: 1px solid #f0f0f5;
+}
+
+.submitBtn,
+.cancelBtn {
+  width: 100%;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background-color 0.2s;
+}
+
+.submitBtn {
+  background-color: #2b1f5c;
+  color: white;
+  border: none;
+}
+
+.submitBtn:hover {
+  background-color: #1e1540;
+}
+
+.cancelBtn {
+  background-color: transparent;
+  color: #4a4a68;
+  border: 1px solid #e1e1e8;
+}
+
+.cancelBtn:hover {
+  background-color: #f0f0f5;
+}
+
+/* =========================================
+   💻 DESKTOP СТИЛИ (min-width: 768px)
+   ========================================= */
+@media (min-width: 768px) {
+  .overlay {
+    align-items: center; /* Центрируем модалку на экране */
+  }
+
+  .gridRow {
+    grid-template-columns: 1fr 1fr; /* Поля выстраиваются в 2 колонки */
+  }
+
+  .footer {
+    flex-direction: row; /* Возвращаем кнопки в одну строку */
+    justify-content: flex-end; /* Сдвигаем вправо */
+  }
+
+  .submitBtn,
+  .cancelBtn {
+    width: auto; /* Кнопки сужаются до размера текста */
+  }
+}

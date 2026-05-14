@@ -12,8 +12,7 @@ import styles from "./FamiliesPage.module.css";
 import FamilyCard from "../../components/FamilyCard/FamilyCard";
 import AddFamilyForm from "../../components/AddFamilyForm/AddFamily";
 import { fetchBreeds } from "../../store/slices/filterSlice";
-// import EditFamilyForm from "../../components/Families/EditFamilyForm";
-// import type { Family } from "../../types";
+import type { Family } from "../../types";
 
 const FamiliesPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -22,92 +21,84 @@ const FamiliesPage: React.FC = () => {
   );
   const [showForm, setShowForm] = useState(false);
 
-  const [localFamilies, setLocalFamilies] = useState([...families]);
+  const [localFamilies, setLocalFamilies] = useState<Family[]>([]);
   const [isReordering, setIsReordering] = useState(false);
 
   useEffect(() => {
     dispatch(fetchFamilies());
     dispatch(fetchKittens());
     dispatch(fetchParents());
-
     dispatch(fetchBreeds());
   }, [dispatch]);
 
-  // Синхронизируем локальный стейт с Redux при загрузке или изменении
-  useEffect(() => {
+  const handleStartReordering = () => {
     setLocalFamilies([...families]);
-  }, [families]);
+    setIsReordering(true);
+  };
 
-  // Сохранение нового порядка
   const handleSaveOrder = async () => {
     try {
       const orderedIds = localFamilies.map((f) => f._id);
-      console.log(orderedIds);
-
       await dispatch(updateFamiliesOrder(orderedIds)).unwrap();
       setIsReordering(false);
-      // Опционально: можно заново запросить семьи, но если сервер ответил "ок", то Redux уже обновлен
     } catch (error) {
       console.error("Ошибка при сохранении порядка:", error);
-      // Возвращаем старый порядок в случае ошибки
-      setLocalFamilies([...families]);
+      setIsReordering(false);
     }
   };
+
+  const displayFamilies = isReordering ? localFamilies : families;
 
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h2>Семьи / Пометы</h2>
+        <div className={styles.titleSection}>
+          <h2>Families</h2>
+          <p className={styles.subtitle}>Breeding lines and litter records</p>
+        </div>
         <button
           className={styles.addBtn}
           onClick={() => setShowForm(!showForm)}
         >
-          {showForm ? "Отмена" : "Создать семью"}
+          {showForm ? "Cancel" : "+ Add Family"}
         </button>
       </div>
+
       {families.length !== 0 && (
-        <>
+        <div className={styles.controls}>
           {!isReordering ? (
-            <button
-              className={styles.editBtn}
-              onClick={() => setIsReordering(true)}
-            >
-              Изменить порядок
+            <button className={styles.editBtn} onClick={handleStartReordering}>
+              Reorder Families
             </button>
           ) : (
-            <>
+            <div className={styles.reorderActions}>
               <button className={styles.submitBtn} onClick={handleSaveOrder}>
-                Сохранить порядок
+                Save Order
               </button>
               <button
-                className={styles.deleteBtn}
-                onClick={() => {
-                  setIsReordering(false);
-                  setLocalFamilies([...families]);
-                }}
+                className={styles.cancelBtn}
+                onClick={() => setIsReordering(false)}
               >
-                Отмена
+                Cancel
               </button>
-            </>
+            </div>
           )}
-        </>
+        </div>
       )}
+
       {familiesError && <div className={styles.error}>{familiesError}</div>}
       {showForm && <AddFamilyForm editShowForm={setShowForm} />}
-      {/* {editingFamily && (
-        <EditFamilyForm
-          family={editingFamily}
-          onClose={() => setEditingFamily(null)}
-        />
-      )} */}
-      {families.length ? (
-        <FamilyCard
-          editLocalFamily={setLocalFamilies}
-          localFamilies={localFamilies}
-          isReordering={isReordering}
-        />
+
+      {families.length > 0 ? (
+        <div className={styles.cardGrid}>
+          <FamilyCard
+            editLocalFamily={setLocalFamilies}
+            localFamilies={displayFamilies}
+            isReordering={isReordering}
+          />
+        </div>
       ) : (
-        <p>упс, семей пока нет</p>
+        <p className={styles.emptyState}>No families found.</p>
       )}
     </div>
   );

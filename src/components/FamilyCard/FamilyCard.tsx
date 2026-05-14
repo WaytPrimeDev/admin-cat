@@ -12,12 +12,10 @@ import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-
+  rectSortingStrategy,
 } from "@dnd-kit/sortable";
 
 import styles from "./FamilyCard.module.css";
-
 import SortableFamilyItem from "../SortableFamilyItem/SortableFamilyItem";
 
 import type { RootState } from "../../store";
@@ -40,11 +38,16 @@ const FamilyCard = ({
   );
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5, // Чтобы случайный клик не начинал перетаскивание
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     }),
   );
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (over && active.id !== over.id) {
@@ -68,7 +71,7 @@ const FamilyCard = ({
         >
           <SortableContext
             items={localFamilies.map((f) => f._id)}
-            strategy={verticalListSortingStrategy}
+            strategy={rectSortingStrategy}
           >
             <div className={styles.list}>
               {localFamilies.map((family) => (

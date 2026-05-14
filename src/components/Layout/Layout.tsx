@@ -21,14 +21,13 @@ const Layout: React.FC = () => {
     { path: "/kittens", label: "Kittens", icon: "🐱" },
     { path: "/parents", label: "Parents", icon: "👥" },
     { path: "/families", label: "Families", icon: "🤍" },
-    { path: "/reservations", label: "Reservations", icon: "📅" },
-    { path: "/finance", label: "Finance", icon: "💰" },
-    { path: "/settings", label: "Settings", icon: "⚙️" },
+    // { path: "/reservations", label: "Reservations", icon: "📅" },
+    // { path: "/finance", label: "Finance", icon: "💰" },
+    // { path: "/settings", label: "Settings", icon: "⚙️" },
   ];
 
   return (
     <div className={styles.layout}>
-      {/* Мобильная шапка */}
       <header className={styles.mobileHeader}>
         <h1 className={styles.mobileLogo}>Arlen</h1>
         <button
@@ -39,7 +38,6 @@ const Layout: React.FC = () => {
         </button>
       </header>
 
-      {/* Оверлей для закрытия меню кликом по пустому месту */}
       {isMenuOpen && (
         <div className={styles.overlay} onClick={() => setIsMenuOpen(false)} />
       )}

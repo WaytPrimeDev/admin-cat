@@ -1,169 +1,146 @@
+/* 📱 MOBILE FIRST */
 .container {
-  max-width: 1200px;
-  margin: 0 auto;
+  padding: 16px;
+  background-color: #f8f8fb;
+  min-height: 100%;
+  box-sizing: border-box;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 .header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
+  flex-direction: column;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  width: 100%;
 }
 
-.header h2 {
+.titleSection h2 {
   margin: 0;
-  color: var(--text-color);
+  font-size: 24px;
+  color: #1a1a33;
+  font-weight: 500;
+  font-family: serif;
+}
+
+.subtitle {
+  margin: 4px 0 0;
+  color: #8a8ab5;
+  font-size: 13px;
 }
 
 .addBtn {
-  background-color: var(--primary-color);
+  background-color: #2b1f5c;
   color: white;
   border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
   cursor: pointer;
 }
 
 .addBtn:hover {
-  background-color: #357abd;
+  background-color: #1e1540;
+}
+
+.controls {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.reorderActions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.editBtn,
+.submitBtn,
+.cancelBtn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  width: 100%;
 }
 
 .editBtn {
-  background-color: #28a745;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-right: 0.5rem;
+  background-color: #e1e1e8;
+  color: #1a1a33;
 }
-
-.editBtn:hover {
-  background-color: #218838;
+.submitBtn {
+  background-color: #16a34a;
+  color: white;
+}
+.cancelBtn {
+  background-color: white;
+  border: 1px solid #e1e1e8;
+  color: #1a1a33;
 }
 
 .error {
-  color: var(--error-color);
-  background-color: #f8d7da;
-  border: 1px solid #f5c6cb;
-  padding: 0.75rem;
-  border-radius: 4px;
-  margin-bottom: 1rem;
-}
-
-.form {
-  background-color: var(--secondary-color);
-  padding: 1.5rem;
+  background: #fee;
+  color: #dc2626;
+  padding: 12px;
   border-radius: 8px;
-  margin-bottom: 2rem;
-  border: 1px solid var(--border-color);
+  margin-bottom: 20px;
 }
 
-.formGroup {
-  margin-bottom: 1rem;
-}
-
-.formGroup label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: bold;
-}
-
-.formGroup input,
-.formGroup select {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-}
-
-.checkboxGroup {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.checkboxLabel {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  background-color: white;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  border: 1px solid var(--border-color);
-}
-
-.submitBtn {
-  background-color: var(--success-color);
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.submitBtn:hover {
-  background-color: #218838;
-}
-
-.submitBtn:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
-}
-
-.loading {
+.emptyState {
   text-align: center;
-  padding: 2rem;
-  font-size: 1.2rem;
+  padding: 40px;
+  color: #8a8ab5;
 }
 
-.list {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+/* Сетка для карточек семей */
+.cardGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
 }
 
-.card {
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  padding: 1rem;
-  background-color: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.info h3 {
-  margin: 0 0 0.5rem 0;
-  color: var(--text-color);
-}
-
-.info p {
-  margin: 0.25rem 0;
-  color: #666;
-}
-
-.deleteBtn {
-  background-color: var(--error-color);
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.deleteBtn:hover {
-  background-color: #c82333;
-}
-
-/* Desktop styles */
-@media (min-width: 768px) {
-  .checkboxGroup {
-    flex-direction: column;
+/* 💻 DESKTOP СТИЛИ (min-width: 1024px) */
+@media (min-width: 1024px) {
+  .container {
+    padding: 32px 40px;
+    overflow-x: visible;
   }
 
-  .card {
+  .header {
     flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .addBtn {
+    width: auto;
+    padding: 10px 24px;
+  }
+
+  .controls {
+    align-items: flex-start;
+  }
+
+  .reorderActions {
+    width: auto;
+  }
+
+  .editBtn,
+  .submitBtn,
+  .cancelBtn {
+    width: auto;
+  }
+
+  /* На больших экранах делаем 2 колонки */
+  .cardGrid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }

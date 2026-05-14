@@ -1,0 +1,434 @@
+/* =========================================
+   📱 MOBILE FIRST
+   ========================================= */
+
+/* Оверлей */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(30, 30, 45, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 3000;
+  display: flex;
+  justify-content: center;
+  align-items: center; /* Центрируем по всем осям */
+  padding: 16px;
+  box-sizing: border-box;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Модальное окно (Фиксированное, внутри скролл) */
+.modal {
+  background: #ffffff;
+  width: 100%;
+  max-width: 600px;
+  max-height: 95vh; /* Модалка не может быть больше экрана */
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+  animation: scaleUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+  overflow: hidden; /* Обрезаем внешние края */
+}
+
+@keyframes scaleUp {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Шапка (Не скроллится) */
+.header {
+  padding: 20px 24px 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-shrink: 0;
+  border-bottom: 1px solid #f0f0f5;
+  background-color: #fff;
+  z-index: 10;
+}
+
+.titleWrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.title {
+  margin: 0;
+  font-family: serif;
+  font-size: 24px;
+  color: #1a1a33;
+}
+
+.titleBadge {
+  color: #cda34f;
+  background-color: #fff8e1;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid #fde68a;
+}
+
+.subtitle {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: #8a8ab5;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  color: #8a8ab5;
+  cursor: pointer;
+  padding: 4px;
+  transition: color 0.2s;
+}
+
+.closeBtn:hover {
+  color: #1a1a33;
+}
+
+/* ТЕЛО МОДАЛКИ (ВНУТРЕННИЙ СКРОЛЛ) */
+.content {
+  padding: 20px 24px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow-y: auto; /* Позволяет контенту скроллиться внутри модалки */
+  scrollbar-width: thin; /* Тонкий скроллбар для Firefox */
+}
+
+.content::-webkit-scrollbar {
+  width: 6px;
+}
+.content::-webkit-scrollbar-thumb {
+  background-color: #d1d1e0;
+  border-radius: 4px;
+}
+
+/* ФОТОГРАФИИ */
+.photosSection {
+  display: flex;
+  gap: 12px;
+  height: 200px; /* Фиксированная высота для предсказуемого скролла */
+}
+
+.mainPhotoWrapper {
+  flex: 2;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.thumbnailsColumn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.thumbWrapper {
+  flex: 1;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.mainPhotoWrapper:hover,
+.thumbWrapper:hover {
+  opacity: 0.85;
+}
+
+.photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* БЫСТРЫЕ ЧИПЫ */
+.chipsGroup {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chip {
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid;
+}
+
+.chipMale {
+  color: #0d6efd;
+  background-color: #eff6ff;
+  border-color: #bfdbfe;
+}
+.chipFemale {
+  color: #d63384;
+  background-color: #fdf2f8;
+  border-color: #fbcfe8;
+}
+.chipPurple {
+  color: #4a4a68;
+  background-color: #f0ebf8;
+  border-color: #e1d4f4;
+}
+.chipGold {
+  color: #b48a3a;
+  background-color: #fff8e1;
+  border-color: #fde68a;
+}
+
+/* ТАБЛИЦА */
+.detailsTable {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #f0f0f5;
+  border-radius: 12px;
+}
+
+.detailRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f0f5;
+  font-size: 13px;
+}
+
+.detailRow:last-child {
+  border-bottom: none;
+}
+.detailLabel {
+  color: #8a8ab5;
+}
+.detailValue {
+  color: #1a1a33;
+  font-weight: 500;
+  text-align: right;
+}
+
+/* СЕКЦИИ (Здоровье и Потомство) */
+.sectionBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sectionTitle {
+  margin: 0;
+  font-size: 11px;
+  color: #8a8ab5;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* Здоровье */
+.healthBox {
+  border: 1px solid #f0f0f5;
+  border-radius: 12px;
+  padding: 16px;
+  font-size: 13px;
+  color: #4a4a68;
+  line-height: 1.5;
+}
+
+/* Потомство */
+.offspringList {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto; /* Горизонтальный скролл для котят */
+  padding-bottom: 8px;
+  scrollbar-width: thin;
+}
+
+.offspringCard {
+  border: 1px solid #f0f0f5;
+  border-radius: 12px;
+  padding: 12px;
+  min-width: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.offspringAvatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.offspringName {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a33;
+  text-align: center;
+}
+
+.statusBadge {
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 500;
+}
+.available {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+.reserved {
+  background: #fffbeb;
+  color: #d97706;
+  border: 1px solid #fde68a;
+}
+.sold {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.noOffspring {
+  font-size: 13px;
+  color: #b0b0c8;
+  margin: 0;
+}
+
+/* =========================================
+   ГАЛЕРЕЯ (ЛАЙТБОКС)
+   ========================================= */
+.galleryOverlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.9);
+  z-index: 4000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: fadeIn 0.2s ease-out;
+  backdrop-filter: blur(10px);
+}
+
+.galleryImage {
+  max-width: 90vw;
+  max-height: 85vh;
+  object-fit: contain;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  user-select: none;
+}
+
+.galleryCloseBtn {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: white;
+  font-size: 24px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.galleryCloseBtn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.galleryNavBtn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: white;
+  font-size: 32px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 4px;
+}
+
+.galleryNavBtn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.prevBtn {
+  left: 20px;
+}
+.nextBtn {
+  right: 20px;
+}
+
+.galleryCounter {
+  position: absolute;
+  bottom: 24px;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 6px 16px;
+  border-radius: 20px;
+}
+
+/* Мобильная адаптация галереи */
+@media (max-width: 768px) {
+  .photosSection {
+    height: 160px;
+  } /* Делаем фото чуть меньше на телефоне */
+
+  .galleryNavBtn {
+    top: auto;
+    bottom: 20px;
+    transform: none;
+    width: 60px;
+    height: 60px;
+  }
+  .prevBtn {
+    left: 30%;
+    transform: translateX(-50%);
+  }
+  .nextBtn {
+    right: 30%;
+    transform: translateX(50%);
+  }
+  .galleryCounter {
+    top: 24px;
+    bottom: auto;
+  }
+}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useSelector } from "react-redux";
 import { fetchKittens } from "../../store/slices/kittensSlice";
 import { useAppDispatch, type RootState } from "../../store";
@@ -9,6 +9,8 @@ import EditKittenForm from "../../components/EditKittensForm/EditKittenForm";
 import KittensTable from "../../components/KittensCard/KittensCard";
 import AddKittenForm from "../../components/AddKittenForm/AddKittenForm";
 import { fetchBreeds, fetchColors } from "../../store/slices/filterSlice";
+import { fetchParents } from "../../store/slices/parentsSlice";
+import { fetchFamilies } from "../../store/slices/familiesSlice";
 
 const KittensPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -18,11 +20,28 @@ const KittensPage: React.FC = () => {
   const [editingKitten, setEditingKitten] = useState<Kitten | null>(null);
   const [showForm, setShowForm] = useState(false);
 
+  // Добавляем состояние для поиска
+  const [searchQuery, setSearchQuery] = useState("");
+
   useEffect(() => {
     dispatch(fetchKittens());
     dispatch(fetchColors());
     dispatch(fetchBreeds());
+    dispatch(fetchParents());
+    dispatch(fetchFamilies());
   }, [dispatch]);
+
+  // Фильтруем котят по имени (UA или EN)
+  const queryKittens = useMemo(() => {
+    if (!searchQuery.trim()) return kittens;
+
+    const lowerCaseQuery = searchQuery.toLowerCase();
+    return kittens.filter(
+      (kitten) =>
+        kitten.nameUa?.toLowerCase().includes(lowerCaseQuery) ||
+        kitten.nameEn?.toLowerCase().includes(lowerCaseQuery),
+    );
+  }, [kittens, searchQuery]);
 
   return (
     <div className={styles.container}>
@@ -62,7 +81,9 @@ const KittensPage: React.FC = () => {
           <input
             type="text"
             className={styles.searchInput}
-            placeholder="Search by name, breed, or parents..."
+            placeholder="Search by name..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)} // Привязываем инпут к стейту
           />
         </div>
         <div className={styles.filterSection}>
@@ -101,13 +122,17 @@ const KittensPage: React.FC = () => {
       )}
 
       <div className={styles.tableContainer}>
-        {kittens && kittens.length > 0 ? (
-          <KittensTable editKitten={setEditingKitten} />
+        {queryKittens && queryKittens.length > 0 ? (
+          // Передаем отфильтрованный массив в таблицу
+          <KittensTable
+            editKitten={setEditingKitten}
+            queryKittens={queryKittens}
+          />
         ) : (
           <p className={styles.emptyState}>No kittens found</p>
         )}
         <div className={styles.tableFooter}>
-          {kittens?.length} of {kittens?.length} kittens
+          {queryKittens?.length} of {kittens?.length} kittens
         </div>
       </div>
     </div>

@@ -1,0 +1,329 @@
+/* =========================================
+   📱 MOBILE FIRST
+   ========================================= */
+:root {
+  --gold-color: #c4a44a;
+}
+.container {
+  padding: 16px;
+  background-color: #f8f8fb;
+  min-height: 100vh;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.loadingText {
+  color: #8a8ab5;
+  font-size: 14px;
+  text-align: center;
+  padding: 40px;
+}
+
+/* Шапка */
+.header {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 24px;
+}
+
+.title {
+  margin: 0;
+  font-family: serif;
+  font-size: 28px;
+  color: #1a1a33;
+  font-weight: 500;
+}
+
+.subtitle {
+  margin: 4px 0 0 0;
+  color: #8a8ab5;
+  font-size: 14px;
+}
+
+/* Сетка статистики */
+.statsGrid {
+  display: grid;
+  grid-template-columns: 1fr; /* На телефоне 1 колонка */
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.statCard {
+  background: white;
+  border: 1px solid #e1e1e8;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.01);
+}
+
+.statHeader {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 16px;
+}
+
+.iconWrapper {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background-color: #f0ebf8;
+  color: #2b1f5c;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.statBody {
+  display: flex;
+  flex-direction: column;
+}
+
+.statValue {
+  margin: 0 0 4px 0;
+  font-family: serif;
+  font-size: 28px;
+  color: #1a1a33;
+  font-weight: 600;
+}
+
+.statTitle {
+  font-size: 14px;
+  color: #4a4a68;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.statSubtext {
+  font-size: 12px;
+  color: #8a8ab5;
+}
+
+/* Стили для 4-й карточки (ЦИТАТА) */
+.quoteBody {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* Распределяем текст и автора */
+  flex-grow: 1; /* Растягиваем на всю доступную высоту */
+}
+
+.quoteText {
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  font-style: italic;
+  color: #1a1a33;
+  line-height: 1.4;
+  /* Ограничиваем высоту цитаты до 3 строк, чтобы не ломать верстку */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3; /* Добавленное стандартное свойство */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.quoteAuthor {
+  font-size: 12px;
+  color: var(--gold-color);
+  font-weight: 500;
+  align-self: flex-end; /* Автор прижат к правому краю */
+}
+
+/* Основная сетка (Активность и Сайдбар) */
+.mainGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Левая секция: Активность */
+.activitySection {
+  background: white;
+  border: 1px solid #e1e1e8;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.01);
+}
+
+.sectionTitle {
+  margin: 0 0 20px 0;
+  font-family: serif;
+  font-size: 20px;
+  color: #1a1a33;
+  font-weight: 500;
+}
+
+.activityList {
+  display: flex;
+  flex-direction: column;
+}
+
+.activityItem {
+  display: flex;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid #f0f0f5;
+}
+
+.activityItem:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.activityItem:first-child {
+  padding-top: 0;
+}
+
+.activityDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+
+.activityContent {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.activityTop {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.activityName {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a33;
+}
+
+.activityTime {
+  font-size: 12px;
+  color: #b0b0c8;
+}
+
+.activityDesc {
+  font-size: 13px;
+  color: #8a8ab5;
+}
+
+.emptyText {
+  color: #b0b0c8;
+  font-size: 13px;
+  margin: 0;
+}
+
+/* Правая секция (Боковые карточки) */
+.sideGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.sideCard {
+  background: white;
+  border: 1px solid #e1e1e8;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.01);
+}
+
+.smallSectionTitle {
+  margin: 0 0 16px 0;
+  font-size: 12px;
+  color: #8a8ab5;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+/* Список статусов */
+.statusList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.statusItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.statusLabelGroup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.statusAvailable {
+  background-color: #86efac;
+}
+.statusReserved {
+  background-color: #fde047;
+}
+.statusSold {
+  background-color: #fca5a5;
+}
+
+.statusLabel {
+  font-size: 14px;
+  color: #1a1a33;
+  font-weight: 500;
+}
+
+.statusCount {
+  font-size: 14px;
+  color: #1a1a33;
+  font-weight: 600;
+}
+
+/* =========================================
+   💊 TABLET СТИЛИ (min-width: 768px)
+   ========================================= */
+@media (min-width: 768px) {
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr); /* 2x2 на планшете */
+  }
+
+  .activityTop {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+/* =========================================
+   💻 DESKTOP СТИЛИ (min-width: 1024px)
+   ========================================= */
+@media (min-width: 1024px) {
+  .container {
+    padding: 32px 40px;
+  }
+
+  .title {
+    font-size: 32px;
+  }
+
+  .statsGrid {
+    /* ВОЗВРАЩАЕМ 4 КОЛОНКИ ДЛЯ ДЕСКТОПА */
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .mainGrid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    align-items: start;
+  }
+}

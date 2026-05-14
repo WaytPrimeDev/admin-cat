@@ -1,216 +1,365 @@
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
+/* =========================================
+   📱 MOBILE FIRST (Карточки)
+   ========================================= */
+.table {
+  width: 100%;
+  display: block;
+  box-sizing: border-box;
 }
 
-.header {
+.table thead {
+  display: none;
+}
+
+.table tbody {
+  display: block;
+  width: 100%;
+}
+
+.parentRow {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  background: white;
+  border: 1px solid #e1e1e8;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  transition: all 0.2s ease-in-out;
+}
+
+/* Если аккордеон открыт, убираем скругления и границу снизу на карточке родителя */
+.activeRow {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.table td {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  padding: 12px 0;
+  border-bottom: 1px solid #f0f0f5;
+  text-align: right;
+  box-sizing: border-box;
 }
 
-.header h2 {
-  margin: 0;
-  color: var(--text-color);
+.parentRow td:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
 }
 
-.addBtn {
-  background-color: var(--primary-color);
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
+.parentRow td:first-child {
+  padding-top: 0;
 }
 
-.addBtn:hover {
-  background-color: #357abd;
-}
-
-.editBtn {
-  background-color: #28a745;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-right: 0.5rem;
-}
-
-.editBtn:hover {
-  background-color: #218838;
-}
-
-.error {
-  color: var(--error-color);
-  background-color: #f8d7da;
-  border: 1px solid #f5c6cb;
-  padding: 0.75rem;
-  border-radius: 4px;
-  margin-bottom: 1rem;
-}
-
-.form {
-  background-color: var(--secondary-color);
-  padding: 1.5rem;
-  border-radius: 8px;
-  margin-bottom: 2rem;
-  border: 1px solid var(--border-color);
-}
-
-.formGroup {
-  margin-bottom: 1rem;
-}
-
-.formGroup label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: bold;
-}
-
-.formGroup input {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-}
-
-.submitBtn {
-  background-color: var(--success-color);
-  color: white;
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.submitBtn:hover {
-  background-color: #218838;
-}
-
-.loading {
-  text-align: center;
-  padding: 2rem;
-  font-size: 1.2rem;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 1rem;
-}
-
-.card {
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  overflow: hidden;
-  background-color: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.photos {
-  display: flex;
-  overflow-x: auto;
-}
-
-.photos img {
-  width: 100px;
-  height: 100px;
-  object-fit: cover;
+.table td::before {
+  content: attr(data-label);
+  font-weight: 600;
+  color: #8a8ab5;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  margin-right: 16px;
   flex-shrink: 0;
 }
 
-.info {
-  padding: 1rem;
-}
-
-.info h3 {
-  margin: 0 0 0.5rem 0;
-  color: var(--text-color);
-}
-
-.info p {
-  margin: 0.25rem 0;
-  color: #666;
-}
-
-.deleteBtn {
-  width: 100%;
-  background-color: var(--error-color);
-  color: white;
-  border: none;
-  padding: 0.5rem;
-  cursor: pointer;
-}
-
-.deleteBtn:hover {
-  background-color: #c82333;
-}
-
-/* Desktop styles */
-@media (min-width: 768px) {
-  .grid {
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  }
-
-  .photos img {
-    width: 120px;
-    height: 120px;
-  }
-}
-.previewContainer {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 15px;
-}
-
-.btnPhoto {
-  margin-top: 20px;
-  display: inline-block;
-  border: 1px solid black;
-  padding: 10px;
-  border-radius: 10px;
-  background-color: gray;
-  color: wheat;
-}
-
-.previewItem {
-  width: 100px;
-  height: 100px;
-  border: 2px solid #eee;
-  border-radius: 8px;
+/* =========================================
+   ЭЛЕМЕНТЫ ТАБЛИЦЫ
+   ========================================= */
+.avatarWrapper {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
   overflow: hidden;
+  background: #eee;
+  flex-shrink: 0;
 }
 
-.previewImage {
+.avatar {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.badge {
-  position: absolute;
-  top: 5px;
-  left: 5px;
-  background: rgba(0, 0, 0, 0.6);
-  color: white;
-  padding: 2px 6px;
-  border-radius: 4px;
+.nameCell {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.nameText {
+  font-weight: 500;
+  color: #1a1a33;
+}
+.titleText {
+  color: #cda34f;
   font-size: 12px;
+  margin-top: 2px;
+}
+.mutedText {
+  color: #8a8ab5;
 }
 
-.removeSmall {
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  background: red;
-  color: white;
+.actions {
+  display: flex;
+  gap: 16px;
+  justify-content: flex-end;
+}
+.iconBtn {
+  background: none;
   border: none;
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
   cursor: pointer;
-  z-index: 10;
+  color: #b0b0c8;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+}
+.iconBtn:hover {
+  color: #2b1f5c;
+}
+
+/* =========================================
+   АККОРДЕОН КОТЯТ (Колонка)
+   ========================================= */
+.kittensCell {
+  cursor: pointer;
+  user-select: none;
+}
+
+.kittensTrigger {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  width: 100%;
+}
+
+.avatarStack {
+  display: flex;
+  align-items: center;
+}
+
+.stackAvatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid white;
+  margin-left: -10px; /* Перекрытие аватарок */
+  object-fit: cover;
+  background: #eee;
+}
+
+.stackAvatar:first-child {
+  margin-left: 0;
+}
+
+.kittenCount {
+  color: #8a8ab5;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.noKittens {
+  color: #d1d1e0;
+  font-size: 13px;
+}
+
+/* =========================================
+   АККОРДЕОН КОТЯТ (Раскрытая панель)
+   ========================================= */
+.expandedRow {
+  display: block;
+  background: white;
+  border: 1px solid #e1e1e8;
+  border-top: none;
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+  margin-bottom: 16px; /* Возвращаем отступ следующей карточке */
+  animation: slideDown 0.2s ease-out forwards;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.expandedTd {
+  display: block;
+  padding: 0 16px 16px 16px !important; /* Убираем стандартные паддинги td */
+  border: none !important;
+}
+
+/* Скрываем лейбл (data-label) для раскрытой строки на телефоне */
+.expandedTd::before {
+  display: none !important;
+}
+
+.expandedContent {
+  background: #fdfdfd;
+  border: 1px solid #f0f0f5;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.expandedHeader {
+  font-size: 11px;
+  color: #8a8ab5;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+.kittenChipsContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.kittenChip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 16px 6px 6px;
+  background: white;
+  border: 1px solid #e1e1e8;
+  border-radius: 30px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.chipAvatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.chipInfo {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.chipName {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a33;
+}
+
+.chipStatus {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #8a8ab5;
+  margin-top: 2px;
+}
+
+/* Цвета точек статуса */
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+.available {
+  background-color: #16a34a;
+}
+.reserved {
+  background-color: #d97706;
+}
+.sold {
+  background-color: #dc2626;
+}
+
+/* =========================================
+   💻 DESKTOP (Таблица)
+   ========================================= */
+@media (min-width: 1400px) {
+  .table {
+    display: table;
+    border-collapse: collapse;
+    background: white;
+    min-width: 1000px;
+  }
+  .table thead {
+    display: table-header-group;
+  }
+  .table tbody {
+    display: table-row-group;
+  }
+
+  .parentRow {
+    display: table-row;
+    border: none;
+    padding: 0;
+    margin-bottom: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  /* Убираем нижнюю линию у родителя, если открыт аккордеон, чтобы визуально объединить их */
+  .parentRow.activeRow td {
+    border-bottom: none;
+  }
+
+  .table td {
+    display: table-cell;
+    padding: 16px;
+    border-bottom: 1px solid #f0f0f5;
+    text-align: left;
+  }
+
+  .table th {
+    text-align: left;
+    padding: 16px;
+    color: #8a8ab5;
+    font-weight: 600;
+    font-size: 12px;
+    border-bottom: 1px solid #f0f0f5;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .desktopOnlyCell {
+    padding-left: 24px !important;
+  }
+  .table td::before {
+    display: none;
+  }
+  .table td > div {
+    text-align: left;
+  }
+
+  .kittensTrigger {
+    justify-content: flex-start;
+  }
+  .actions {
+    justify-content: center;
+  }
+
+  /* Десктопный вид раскрытой строки */
+  .expandedRow {
+    display: table-row;
+    border: none;
+    background: transparent;
+    border-radius: 0;
+  }
+
+  .expandedTd {
+    display: table-cell;
+    padding: 0 24px 24px 24px !important; /* Отступы по бокам */
+    border-bottom: 1px solid #f0f0f5 !important;
+  }
 }
