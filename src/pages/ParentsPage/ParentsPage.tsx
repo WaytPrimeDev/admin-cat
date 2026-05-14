@@ -79,7 +79,7 @@ const ParentsPage: React.FC = () => {
           <input
             type="text"
             className={styles.searchInput}
-            placeholder="Search by name, breed, or title..."
+            placeholder="Search by name..."
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>

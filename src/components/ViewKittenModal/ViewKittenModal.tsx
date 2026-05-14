@@ -205,7 +205,7 @@ const ViewKittenModal: React.FC<ViewKittenModalProps> = ({
                     <div className={styles.parentCard}>
                       <div className={styles.parentInfo}>
                         <span className={styles.parentName}>
-                          {"Отец ушел за хлебом((("}
+                          {"Отец ушел за хлебом"}
                         </span>
                       </div>
                     </div>

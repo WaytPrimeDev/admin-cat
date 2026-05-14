@@ -66,6 +66,7 @@ export interface Kitten {
     dad: string;
   };
   createdAt: string;
+  isTelegramPublished?: boolean;
 }
 
 export interface KittenResponse {

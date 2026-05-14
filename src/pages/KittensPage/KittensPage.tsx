@@ -19,8 +19,6 @@ const KittensPage: React.FC = () => {
   );
   const [editingKitten, setEditingKitten] = useState<Kitten | null>(null);
   const [showForm, setShowForm] = useState(false);
-
-  // Добавляем состояние для поиска
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
@@ -31,7 +29,6 @@ const KittensPage: React.FC = () => {
     dispatch(fetchFamilies());
   }, [dispatch]);
 
-  // Фильтруем котят по имени (UA или EN)
   const queryKittens = useMemo(() => {
     if (!searchQuery.trim()) return kittens;
 
@@ -60,7 +57,6 @@ const KittensPage: React.FC = () => {
         </button>
       </div>
 
-      {/* Единая строка поиска и фильтров как на макете */}
       <div className={styles.searchContainer}>
         <div className={styles.searchInputWrapper}>
           <span className={styles.searchIcon}>
@@ -83,10 +79,32 @@ const KittensPage: React.FC = () => {
             className={styles.searchInput}
             placeholder="Search by name..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)} // Привязываем инпут к стейту
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
+          {searchQuery && (
+            <button
+              className={styles.clearSearchBtn}
+              onClick={() => setSearchQuery("")}
+              aria-label="Clear search"
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          )}
         </div>
-        <div className={styles.filterSection}>
+
+        <button className={styles.filterSection} aria-label="Open filters">
           <svg
             width="16"
             height="16"
@@ -108,10 +126,11 @@ const KittensPage: React.FC = () => {
             <line x1="17" y1="16" x2="23" y2="16"></line>
           </svg>
           <span className={styles.filterText}>Filters</span>
-        </div>
+        </button>
       </div>
 
       {error && <div className={styles.error}>{error}</div>}
+
       {showForm && <AddKittenForm editShowForm={setShowForm} />}
 
       {editingKitten && (
@@ -123,16 +142,20 @@ const KittensPage: React.FC = () => {
 
       <div className={styles.tableContainer}>
         {queryKittens && queryKittens.length > 0 ? (
-          // Передаем отфильтрованный массив в таблицу
           <KittensTable
             editKitten={setEditingKitten}
             queryKittens={queryKittens}
           />
         ) : (
-          <p className={styles.emptyState}>No kittens found</p>
+          <div className={styles.emptyState}>
+            <p>No kittens found</p>
+            <span className={styles.emptyStateSub}>
+              Try adjusting your search criteria
+            </span>
+          </div>
         )}
         <div className={styles.tableFooter}>
-          {queryKittens?.length} of {kittens?.length} kittens
+          Showing {queryKittens?.length} of {kittens?.length} kittens
         </div>
       </div>
     </div>

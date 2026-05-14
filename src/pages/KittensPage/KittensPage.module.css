@@ -2,9 +2,9 @@
   padding: 16px;
   background-color: #f8f8fb;
   min-height: 100%;
-  box-sizing: border-box; /* ВАЖНО: не дает контейнеру выйти за пределы экрана */
+  box-sizing: border-box;
   width: 100%;
-  overflow-x: hidden; /* Превентивная блокировка горизонтального скролла */
+  overflow-x: hidden;
 }
 
 .header {
@@ -37,9 +37,16 @@
   font-weight: 500;
   width: 100%;
   box-sizing: border-box;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-/* Поиск */
+.addBtn:hover {
+  background-color: #3d2d82;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(43, 31, 92, 0.2);
+}
+
 .searchContainer {
   display: flex;
   align-items: center;
@@ -50,6 +57,12 @@
   height: 48px;
   width: 100%;
   box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+.searchContainer:focus-within {
+  border-color: #2b1f5c;
+  box-shadow: 0 0 0 3px rgba(43, 31, 92, 0.08);
 }
 
 .searchInputWrapper {
@@ -57,13 +70,14 @@
   display: flex;
   align-items: center;
   padding: 0 12px;
-  min-width: 0; /* Не позволяет инпуту распирать флекс-контейнер */
+  min-width: 0;
 }
 
 .searchIcon {
   color: #8a8ab5;
   margin-right: 8px;
   flex-shrink: 0;
+  display: flex;
 }
 
 .searchInput {
@@ -71,23 +85,62 @@
   border: none;
   outline: none;
   font-size: 14px;
-  min-width: 0; /* Фикс для Safari/iOS */
+  color: #1a1a33;
+  min-width: 0;
+  background: transparent;
+}
+
+.searchInput::placeholder {
+  color: #b0b0c8;
+}
+
+.clearSearchBtn {
+  background: none;
+  border: none;
+  color: #b0b0c8;
+  padding: 4px;
+  margin-left: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.clearSearchBtn:hover {
+  background: #f0f0f5;
+  color: #1a1a33;
 }
 
 .filterSection {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
   padding: 0 16px;
-  height: 24px;
+  height: 100%;
+  border: none;
   border-left: 1px solid #e1e1e8;
+  background: transparent;
   color: #8a8ab5;
   flex-shrink: 0;
+  cursor: pointer;
+  border-radius: 0 8px 8px 0;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
-/* Прячем текст на телефоне, чтобы экономить место */
+.filterSection:hover {
+  background-color: #f4f4f8;
+  color: #2b1f5c;
+}
+
 .filterText {
   display: none;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .tableContainer {
@@ -96,7 +149,44 @@
   width: 100%;
 }
 
-/* 💻 DESKTOP СТИЛИ */
+.error {
+  background-color: #fef2f2;
+  color: #dc2626;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border: 1px solid #fecaca;
+  font-size: 14px;
+}
+
+.emptyState {
+  padding: 48px 20px;
+  text-align: center;
+  color: #1a1a33;
+  font-weight: 500;
+  font-size: 16px;
+  background: white;
+  border: 1px solid #e1e1e8;
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.emptyStateSub {
+  display: block;
+  font-size: 13px;
+  color: #8a8ab5;
+  margin-top: 4px;
+  font-weight: 400;
+}
+
+.tableFooter {
+  padding: 16px;
+  text-align: center;
+  color: #8a8ab5;
+  font-size: 13px;
+  font-weight: 500;
+}
+
 @media (min-width: 1000px) {
   .container {
     padding: 32px 40px;
@@ -105,9 +195,9 @@
 
   .header {
     flex-direction: row;
-    justify-content: space-between; /* Расталкивает заголовок и кнопку по краям */
+    justify-content: space-between;
     align-items: center;
-    width: 100%; /* Гарантирует, что кнопка уедет в самый правый край */
+    width: 100%;
   }
 
   .addBtn {
@@ -115,7 +205,7 @@
   }
 
   .filterText {
-    display: inline; /* Показываем слово Filters на ПК */
+    display: inline;
   }
 
   .tableContainer {
@@ -123,9 +213,19 @@
     border: 1px solid #e1e1e8;
     border-radius: 12px;
     width: 100%;
-    /* ВАЖНО: Добавляем внутренний горизонтальный скролл для планшетов */
     overflow-x: auto;
-    /* Прячем скроллбар в Webkit (опционально, для красоты) */
     scrollbar-width: thin;
+  }
+
+  .emptyState {
+    border: none;
+    border-radius: 0;
+    margin-bottom: 0;
+  }
+
+  .tableFooter {
+    border-top: 1px solid #f0f0f5;
+    text-align: right;
+    padding: 16px 24px;
   }
 }

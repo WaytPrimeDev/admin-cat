@@ -165,7 +165,7 @@ const SortableFamilyItem: React.FC<SortableFamilyItemProps> = ({
             <div
               className={`${styles.parentName} ${!father ? styles.unknownText : ""}`}
             >
-              {father ? father.nameEn || father.nameUa : "Ушел за хлебом((("}
+              {father ? father.nameEn || father.nameUa : "Ушел за хлебом"}
             </div>
             {father && (
               <div className={styles.parentChips}>
@@ -196,7 +196,7 @@ const SortableFamilyItem: React.FC<SortableFamilyItemProps> = ({
             <div
               className={`${styles.parentName} ${!mother ? styles.unknownText : ""}`}
             >
-              {mother ? mother.nameEn || mother.nameUa : "Нерадивая мать((("}
+              {mother ? mother.nameEn || mother.nameUa : "Нерадивая мать"}
             </div>
             {mother && (
               <div className={styles.parentChips}>
