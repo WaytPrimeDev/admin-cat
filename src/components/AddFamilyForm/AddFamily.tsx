@@ -7,6 +7,7 @@ import styles from "./AddFamily.module.css";
 import { useAppDispatch, type RootState } from "../../store";
 import {
   familySchema,
+  type FamilyFormInput,
   type FamilyFormValues,
 } from "../../validation/familySchema";
 import { createFamily } from "../../store/slices/familiesSlice";
@@ -23,11 +24,12 @@ const AddFamilyForm = ({ editShowForm }: AddFamilyFormProps) => {
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<FamilyFormValues>({
+  } = useForm<FamilyFormInput, undefined, FamilyFormValues>({
     resolver: zodResolver(familySchema),
     defaultValues: {
       dad: undefined,
       mom: undefined,
+      kittens: [],
     },
   });
 
@@ -44,10 +46,13 @@ const AddFamilyForm = ({ editShowForm }: AddFamilyFormProps) => {
     };
   }, []);
 
-  const showKittens = useMemo(
-    () => kittens.filter((kitten) => kitten.familyId === null),
-    [kittens],
-  );
+  const showKittens = useMemo(() => {
+    const kittensArr = kittens.filter((kitten) => kitten.familyId === null);
+    return [...kittensArr];
+  }, [kittens]);
+
+  console.log(showKittens);
+  console.log(errors);
 
   const sexParents = useMemo(() => {
     const mom = parents.filter((parent) => parent.sex === "female");
