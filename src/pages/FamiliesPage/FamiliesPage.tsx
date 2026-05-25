@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import {
   fetchFamilies,
@@ -20,6 +20,7 @@ const FamiliesPage: React.FC = () => {
     (state: RootState) => state.families,
   );
   const [showForm, setShowForm] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const [localFamilies, setLocalFamilies] = useState<Family[]>([]);
   const [isReordering, setIsReordering] = useState(false);
@@ -39,7 +40,9 @@ const FamiliesPage: React.FC = () => {
   const handleSaveOrder = async () => {
     try {
       const orderedIds = localFamilies.map((f) => f._id);
+
       await dispatch(updateFamiliesOrder(orderedIds)).unwrap();
+      await dispatch(fetchFamilies()).unwrap();
       setIsReordering(false);
     } catch (error) {
       console.error("Ошибка при сохранении порядка:", error);
@@ -48,6 +51,17 @@ const FamiliesPage: React.FC = () => {
   };
 
   const displayFamilies = isReordering ? localFamilies : families;
+
+  const queryFamilies = useMemo(() => {
+    if (!searchQuery.trim()) return displayFamilies;
+
+    const lowerCaseQuery = searchQuery.toLowerCase();
+    return displayFamilies.filter(
+      (family) =>
+        family.name?.toLowerCase().includes(lowerCaseQuery) ||
+        family.breed?.toLowerCase().includes(lowerCaseQuery),
+    );
+  }, [displayFamilies, searchQuery]);
 
   return (
     <div className={styles.container}>
@@ -62,6 +76,33 @@ const FamiliesPage: React.FC = () => {
         >
           {showForm ? "Cancel" : "+ Add Family"}
         </button>
+      </div>
+
+      <div className={styles.searchContainer}>
+        <div className={styles.searchInputWrapper}>
+          <span className={styles.searchIcon}>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </span>
+          <input
+            type="text"
+            className={styles.searchInput}
+            placeholder="Search families..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
       </div>
 
       {families.length !== 0 && (
@@ -89,16 +130,26 @@ const FamiliesPage: React.FC = () => {
       {familiesError && <div className={styles.error}>{familiesError}</div>}
       {showForm && <AddFamilyForm editShowForm={setShowForm} />}
 
-      {families.length > 0 ? (
-        <div className={styles.cardGrid}>
+      {queryFamilies.length > 0 ? (
+        <div className={styles.tableContainer}>
           <FamilyCard
             editLocalFamily={setLocalFamilies}
-            localFamilies={displayFamilies}
+            localFamilies={queryFamilies}
             isReordering={isReordering}
           />
         </div>
       ) : (
-        <p className={styles.emptyState}>No families found.</p>
+        <p className={styles.emptyState}>
+          {families.length === 0
+            ? "No families found."
+            : "No families match the search."}
+        </p>
+      )}
+
+      {families.length > 0 && (
+        <div className={styles.footer}>
+          {queryFamilies.length} of {families.length} families
+        </div>
       )}
     </div>
   );

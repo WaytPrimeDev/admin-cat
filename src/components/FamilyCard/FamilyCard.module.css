@@ -1,9 +1,54 @@
-/* 📱 MOBILE FIRST */
-.list {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 24px;
-  width: 100%;
+/* =========================================
+   📱 MOBILE СТИЛИ (< 1024px)
+   ========================================= */
+@media (max-width: 1023px) {
+  .table {
+    display: block;
+    width: 100%;
+    border-collapse: collapse;
+    box-sizing: border-box;
+  }
+  .table thead {
+    display: none;
+  }
+  .table tbody {
+    display: block;
+    width: 100%;
+  }
+}
+
+/* =========================================
+   💻 DESKTOP СТИЛИ (>= 1024px)
+   ========================================= */
+@media (min-width: 1024px) {
+  .table {
+    display: table;
+    width: 100%;
+    table-layout: auto;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(43, 31, 92, 0.04);
+  }
+  .table thead {
+    display: table-header-group;
+    background: #fcfcfd;
+  }
+  .table tbody {
+    display: table-row-group;
+  }
+  .table th {
+    text-align: left;
+    padding: 16px 24px;
+    color: #8a8ab5;
+    font-weight: 600;
+    font-size: 12px;
+    border-bottom: 1px solid #edf0f5;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
 }
 
 .loading {
@@ -11,11 +56,4 @@
   padding: 40px;
   color: #8a8ab5;
   font-size: 14px;
-}
-
-/* 💻 DESKTOP СТИЛИ */
-@media (min-width: 1024px) {
-  .list {
-    grid-template-columns: repeat(2, 1fr);
-  }
 }

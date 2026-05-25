@@ -27,7 +27,7 @@
   border: 1px solid #e1e1e8;
   border-radius: 12px;
   padding: 16px;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
 }
 
@@ -237,14 +237,14 @@
 
   .table td {
     display: table-cell;
-    padding: 16px;
+    padding: 10px;
     border-bottom: 1px solid #f0f0f5;
     text-align: left;
   }
 
   .table th {
     text-align: left;
-    padding: 16px;
+    padding: 10px;
     color: #8a8ab5;
     font-weight: 600;
     font-size: 12px;
@@ -252,7 +252,7 @@
   }
 
   .desktopOnlyCell {
-    padding-left: 24px !important;
+    padding-left: 24px;
   }
 
   .table td::before {

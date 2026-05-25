@@ -62,14 +62,13 @@ const TelegramPublishBtn = ({
   );
 };
 
-// Микро-компонент копирования ID (приятная фича)
 const CopyIdBtn = ({ kittenId }: { kittenId: string }) => {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(kittenId);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000); // Возвращаем иконку через 2 сек
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -119,11 +118,16 @@ const KittensCard = ({ editKitten, queryKittens }: KittenCardProps) => {
   const dispatch = useAppDispatch();
   const { isLoading } = useSelector((state: RootState) => state.kittens);
   const [viewKitten, setViewKitten] = useState<Kitten | null>(null);
+  const { items: parents } = useSelector((state: RootState) => state.parents);
 
   const handleDelete = (id: string) => {
     if (window.confirm("Are you sure you want to delete this kitten?")) {
       dispatch(deleteKitten(id));
     }
+  };
+  const parentName = (parentId: string | undefined) => {
+    const parent = parents.find((p) => p._id === parentId);
+    return parent ? parent.nameUa : "-";
   };
 
   if (isLoading) return <div className={styles.loading}>Loading...</div>;
@@ -176,9 +180,12 @@ const KittensCard = ({ editKitten, queryKittens }: KittenCardProps) => {
               <td data-label="SEX" className={styles.mutedText}>
                 {kitten.sex === "male" ? "♂ Male" : "♀ Female"}
               </td>
-              <td data-label="PARENTS" className={styles.parentsCell}>
-                <div>{kitten.parentId?.dad || "-"}</div>
-                <div>{kitten.parentId?.mom || "-"}</div>
+              <td
+                data-label="PARENTS"
+                className={(styles.parentsCell, styles.mutedText)}
+              >
+                <div>{parentName(kitten.parentId?.dad)}</div>
+                <div>{parentName(kitten.parentId?.mom)}</div>
               </td>
               <td data-label="STATUS">
                 <span
