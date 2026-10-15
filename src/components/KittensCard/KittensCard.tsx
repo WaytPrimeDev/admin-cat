@@ -302,7 +302,6 @@ const KittensCard = ({ editKitten, queryKittens }: KittenCardProps) => {
                     </svg>
                   </button>
                   <button
-                    disabled
                     className={styles.iconBtn}
                     onClick={() => editKitten(kitten)}
                     aria-label="Edit"

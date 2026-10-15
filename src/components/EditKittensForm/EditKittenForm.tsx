@@ -1,186 +1,320 @@
-import React, { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect, useState } from "react";
+import { useForm, useWatch } from "react-hook-form";
+import { useSelector } from "react-redux";
+
 import {
+  KITTEN_STATUSES,
   updateKittenSchema,
   type UpdateKittenFormValues,
 } from "../../validation/kittenSchema";
-import { useAppDispatch } from "../../store";
+import { useAppDispatch, type RootState } from "../../store";
 import { updateKitten } from "../../store/slices/kittensSlice";
-import { type Kitten } from "../../types";
+import type { Kitten, KittenPrice } from "../../types";
+import { buildUpdateKittenFormData } from "../../utils/buildUpdateFormData";
+import { withCurrentOption } from "../../utils/withCurrentOption";
+import { PhotoOrderEditor } from "../PhotoOrderEditor/PhotoOrderEditor";
+import formStyles from "../AddKittenForm/AddKittenForm.module.css";
 import styles from "./EditKittenForm.module.css";
+
+const STATUS_LABELS: Record<(typeof KITTEN_STATUSES)[number], string> = {
+  offline: "Offline (скрыт)",
+  active: "Active (в продаже)",
+  booked: "Booked (забронирован)",
+  out: "Out (уехал)",
+};
+
+// Бэкенд хранит пустую цену как строку "null"
+const toPriceInput = (price: KittenPrice["breeding"] | string | undefined) =>
+  price === null || price === undefined || price === "null" ? "" : String(price);
 
 interface EditKittenFormProps {
   kitten: Kitten;
   onClose: () => void;
 }
 
-const EditKittenForm: React.FC<EditKittenFormProps> = ({ kitten, onClose }) => {
+const EditKittenForm = ({ kitten, onClose }: EditKittenFormProps) => {
   const dispatch = useAppDispatch();
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [retainedImages, setRetainedImages] = useState<string[]>(
-    kitten.images.map((img) => img.full),
-  );
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { colors, breeds } = useSelector((state: RootState) => state.filters);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
     setValue,
-    formState: { errors },
+    control,
+    formState: { errors, isSubmitting },
   } = useForm<UpdateKittenFormValues>({
     resolver: zodResolver(updateKittenSchema),
     defaultValues: {
       nameUa: kitten.nameUa,
       nameEn: kitten.nameEn,
       color: kitten.color,
-      birthDay: kitten.birthDay,
       breed: kitten.breed,
       sex: kitten.sex,
-      breeding: kitten.price.breeding?.toString() || "",
-      pet: kitten.price.pet?.toString() || "",
-      retainedImages,
+      status: kitten.status ?? "offline",
+      // <input type="date"> принимает только YYYY-MM-DD, а с бэка приходит ISO
+      birthDay: kitten.birthDay?.slice(0, 10) ?? "",
+      breeding: toPriceInput(kitten.price?.breeding),
+      pet: toPriceInput(kitten.price?.pet),
+      retainedImages: kitten.images.map((image) => image.full),
       newImages: [],
     },
   });
 
+  const retainedImages = useWatch({ control, name: "retainedImages" });
+  const newImages = useWatch({ control, name: "newImages" });
+
   useEffect(() => {
-    setValue("retainedImages", retainedImages);
-  }, [retainedImages, setValue]);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, []);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const files = Array.from(e.target.files);
-      setSelectedFiles(files);
-      setValue("newImages", files);
-    }
+  const setPhotos = (nextRetained: string[], nextNew: File[]) => {
+    setValue("retainedImages", nextRetained, { shouldValidate: true });
+    setValue("newImages", nextNew, { shouldValidate: true });
   };
 
-  const removeRetainedImage = (url: string) => {
-    setRetainedImages((prev) => prev.filter((img) => img !== url));
-  };
-
-  const onSubmit = async (data: UpdateKittenFormValues) => {
-    setIsSubmitting(true);
-    const formData = new FormData();
-
-    // Add retained images
-    formData.append("retainedImages", JSON.stringify(data.retainedImages));
-
-    // Add new files
-    selectedFiles.forEach((file) => {
-      formData.append("photos", file);
-    });
-
-    // Add text fields
-    formData.append("nameUa", data.nameUa);
-    formData.append("nameEn", data.nameEn);
-    formData.append("color", data.color);
-    formData.append("birthDay", data.birthDay);
-    formData.append("breed", data.breed);
-    formData.append("sex", data.sex);
-    formData.append("breeding", data.breeding);
-    formData.append("pet", data.pet);
-
+  const onSubmit = async (values: UpdateKittenFormValues) => {
+    setSubmitError(null);
     try {
-      await dispatch(updateKitten({ id: kitten._id, formData })).unwrap();
-      alert("Kitten updated successfully");
+      await dispatch(
+        updateKitten({
+          id: kitten._id,
+          formData: buildUpdateKittenFormData(values),
+        }),
+      ).unwrap();
       onClose();
     } catch (error) {
-      alert("Failed to update kitten: " + error);
-    } finally {
-      setIsSubmitting(false);
+      setSubmitError(
+        typeof error === "string" ? error : "Не удалось сохранить котёнка",
+      );
     }
+  };
+
+  const closeForm = () => {
+    if (!isSubmitting) onClose();
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
-      <h2>Edit Kitten</h2>
-
-      {/* Text fields */}
-      <div>
-        <label>Name UA</label>
-        <input {...register("nameUa")} />
-        {errors.nameUa && <span>{errors.nameUa.message}</span>}
-      </div>
-
-      <div>
-        <label>Name EN</label>
-        <input {...register("nameEn")} />
-        {errors.nameEn && <span>{errors.nameEn.message}</span>}
-      </div>
-
-      <div>
-        <label>Color</label>
-        <input {...register("color")} />
-        {errors.color && <span>{errors.color.message}</span>}
-      </div>
-
-      <div>
-        <label>Birth Day</label>
-        <input type="date" {...register("birthDay")} />
-        {errors.birthDay && <span>{errors.birthDay.message}</span>}
-      </div>
-
-      <div>
-        <label>Breed</label>
-        <input {...register("breed")} />
-        {errors.breed && <span>{errors.breed.message}</span>}
-      </div>
-
-      <div>
-        <label>Sex</label>
-        <select {...register("sex")}>
-          <option value="male">Male</option>
-          <option value="female">Female</option>
-        </select>
-        {errors.sex && <span>{errors.sex.message}</span>}
-      </div>
-
-      <div>
-        <label>Breeding Price</label>
-        <input {...register("breeding")} />
-      </div>
-
-      <div>
-        <label>Pet Price</label>
-        <input {...register("pet")} />
-      </div>
-
-      {/* Retained Images */}
-      <div>
-        <h3>Current Images</h3>
-        <div className={styles.images}>
-          {retainedImages.map((url) => (
-            <div key={url} className={styles.imageContainer}>
-              <img src={url} alt="Kitten" className={styles.image} />
-              <button type="button" onClick={() => removeRetainedImage(url)}>
-                Remove
-              </button>
-            </div>
-          ))}
+    <div className={formStyles.overlay} onClick={closeForm}>
+      <div
+        className={formStyles.modal}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className={formStyles.header}>
+          <div className={formStyles.headerText}>
+            <h2>Edit Kitten</h2>
+            <p>{kitten.nameUa}</p>
+          </div>
+          <button
+            type="button"
+            className={formStyles.closeBtn}
+            onClick={closeForm}
+            aria-label="Close"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
         </div>
-      </div>
 
-      {/* New Images */}
-      <div>
-        <label>Add New Images</label>
-        <input
-          type="file"
-          multiple
-          accept="image/*"
-          onChange={handleFileChange}
-        />
-        {errors.newImages && <span>{errors.newImages.message}</span>}
-      </div>
+        <form onSubmit={handleSubmit(onSubmit)} className={formStyles.formBody}>
+          <div className={formStyles.gridRow}>
+            <div className={formStyles.formGroup}>
+              <label htmlFor="edit-kitten-nameUa">Name (UA)</label>
+              <input
+                id="edit-kitten-nameUa"
+                {...register("nameUa")}
+                className={formStyles.input}
+              />
+              {errors.nameUa && (
+                <span className={formStyles.error}>
+                  {errors.nameUa.message}
+                </span>
+              )}
+            </div>
 
-      <button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Updating..." : "Update Kitten"}
-      </button>
-      <button type="button" onClick={onClose}>
-        Cancel
-      </button>
-    </form>
+            <div className={formStyles.formGroup}>
+              <label htmlFor="edit-kitten-nameEn">Name (EN)</label>
+              <input
+                id="edit-kitten-nameEn"
+                {...register("nameEn")}
+                className={formStyles.input}
+              />
+              {errors.nameEn && (
+                <span className={formStyles.error}>
+                  {errors.nameEn.message}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className={formStyles.gridRow}>
+            <div className={formStyles.formGroup}>
+              <label htmlFor="edit-kitten-breed">Breed</label>
+              <select
+                id="edit-kitten-breed"
+                {...register("breed")}
+                className={formStyles.input}
+              >
+                <option value="">-- Выберите --</option>
+                {withCurrentOption(breeds, kitten.breed).map((breed) => (
+                  <option key={breed._id} value={breed.name}>
+                    {breed.name}
+                  </option>
+                ))}
+              </select>
+              {errors.breed && (
+                <span className={formStyles.error}>{errors.breed.message}</span>
+              )}
+            </div>
+
+            <div className={formStyles.formGroup}>
+              <label htmlFor="edit-kitten-color">Color / Pattern</label>
+              <select
+                id="edit-kitten-color"
+                {...register("color")}
+                className={formStyles.input}
+              >
+                <option value="">-- Выберите --</option>
+                {withCurrentOption(colors, kitten.color).map((color) => (
+                  <option key={color._id} value={color.name}>
+                    {color.name}
+                  </option>
+                ))}
+              </select>
+              {errors.color && (
+                <span className={formStyles.error}>{errors.color.message}</span>
+              )}
+            </div>
+          </div>
+
+          <div className={formStyles.gridRow}>
+            <div className={formStyles.formGroup}>
+              <label htmlFor="edit-kitten-birthDay">Date of Birth</label>
+              <input
+                id="edit-kitten-birthDay"
+                type="date"
+                {...register("birthDay")}
+                className={formStyles.input}
+              />
+              {errors.birthDay && (
+                <span className={formStyles.error}>
+                  {errors.birthDay.message}
+                </span>
+              )}
+            </div>
+
+            <div className={formStyles.formGroup}>
+              <label htmlFor="edit-kitten-sex">Gender</label>
+              <select
+                id="edit-kitten-sex"
+                {...register("sex")}
+                className={formStyles.input}
+              >
+                <option value="male">Male (Самец)</option>
+                <option value="female">Female (Самка)</option>
+              </select>
+              {errors.sex && (
+                <span className={formStyles.error}>{errors.sex.message}</span>
+              )}
+            </div>
+          </div>
+
+          <div className={formStyles.gridRow}>
+            <div className={formStyles.formGroup}>
+              <label htmlFor="edit-kitten-status">Status</label>
+              <select
+                id="edit-kitten-status"
+                {...register("status")}
+                className={formStyles.input}
+              >
+                {KITTEN_STATUSES.map((status) => (
+                  <option key={status} value={status}>
+                    {STATUS_LABELS[status]}
+                  </option>
+                ))}
+              </select>
+              {errors.status && (
+                <span className={formStyles.error}>
+                  {errors.status.message}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className={formStyles.gridRow}>
+            <div className={formStyles.formGroup}>
+              <label htmlFor="edit-kitten-breeding">Price for Breeding</label>
+              <input
+                id="edit-kitten-breeding"
+                type="number"
+                min="0"
+                placeholder="e.g., 3500"
+                {...register("breeding")}
+                className={formStyles.input}
+              />
+            </div>
+
+            <div className={formStyles.formGroup}>
+              <label htmlFor="edit-kitten-pet">Price as Pet</label>
+              <input
+                id="edit-kitten-pet"
+                type="number"
+                min="0"
+                placeholder="e.g., 1500"
+                {...register("pet")}
+                className={formStyles.input}
+              />
+            </div>
+          </div>
+
+          <PhotoOrderEditor
+            inputId="edit-kitten-photos"
+            existingImages={kitten.images}
+            retainedImages={retainedImages}
+            newImages={newImages}
+            onChange={setPhotos}
+            error={errors.newImages?.message}
+          />
+
+          {submitError && (
+            <div className={styles.submitError}>{submitError}</div>
+          )}
+
+          <div className={formStyles.footer}>
+            <button
+              type="button"
+              className={formStyles.cancelBtn}
+              onClick={closeForm}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className={formStyles.submitBtn}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Saving..." : "Save Changes"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 };
 

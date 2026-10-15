@@ -307,7 +307,7 @@ const AddParentForm = ({ editShowForm }: AddParentFormProps) => {
                       <SortablePhoto
                         key={file.name + file.size}
                         id={file.name + file.size}
-                        file={file}
+                        source={file}
                         index={index}
                         onRemove={() => removeFile(index)}
                       />

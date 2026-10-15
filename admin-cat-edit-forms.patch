@@ -1,0 +1,1575 @@
+diff --git a/src/components/AddKittenForm/AddKittenForm.tsx b/src/components/AddKittenForm/AddKittenForm.tsx
+index 08ecfdb..c162a01 100644
+--- a/src/components/AddKittenForm/AddKittenForm.tsx
++++ b/src/components/AddKittenForm/AddKittenForm.tsx
+@@ -354,7 +354,7 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
+                       <SortablePhoto
+                         key={file.name + file.size}
+                         id={file.name + file.size}
+-                        file={file}
++                        source={file}
+                         index={index}
+                         onRemove={() => removeFile(index)}
+                       />
+diff --git a/src/components/AddParentForm/AddParentForm.tsx b/src/components/AddParentForm/AddParentForm.tsx
+index f5c5283..a133edf 100644
+--- a/src/components/AddParentForm/AddParentForm.tsx
++++ b/src/components/AddParentForm/AddParentForm.tsx
+@@ -307,7 +307,7 @@ const AddParentForm = ({ editShowForm }: AddParentFormProps) => {
+                       <SortablePhoto
+                         key={file.name + file.size}
+                         id={file.name + file.size}
+-                        file={file}
++                        source={file}
+                         index={index}
+                         onRemove={() => removeFile(index)}
+                       />
+diff --git a/src/components/EditKittensForm/EditKittenForm.module.css b/src/components/EditKittensForm/EditKittenForm.module.css
+index 82c8f52..145df3d 100644
+--- a/src/components/EditKittensForm/EditKittenForm.module.css
++++ b/src/components/EditKittensForm/EditKittenForm.module.css
+@@ -1,77 +1,10 @@
+-.form {
+-  display: flex;
+-  flex-direction: column;
+-  gap: 1rem;
+-  max-width: 500px;
+-  margin: 0 auto;
+-}
+-
+-.form div {
+-  display: flex;
+-  flex-direction: column;
+-}
+-
+-.form label {
+-  margin-bottom: 0.5rem;
+-  font-weight: bold;
+-}
+-
+-.form input,
+-.form select {
+-  padding: 0.5rem;
+-  border: 1px solid #ccc;
+-  border-radius: 4px;
+-}
+-
+-.form span {
+-  color: red;
+-  font-size: 0.8rem;
+-}
+-
+-.images {
+-  display: flex;
+-  flex-wrap: wrap;
+-  gap: 1rem;
+-}
+-
+-.imageContainer {
+-  position: relative;
+-}
+-
+-.image {
+-  width: 100px;
+-  height: 100px;
+-  object-fit: cover;
+-  border-radius: 4px;
+-}
++/* Основа модалки и полей — AddKittenForm.module.css, фото — PhotoOrderEditor */
+ 
+-.imageContainer button {
+-  position: absolute;
+-  top: 0;
+-  right: 0;
+-  background: red;
+-  color: white;
+-  border: none;
+-  border-radius: 50%;
+-  width: 20px;
+-  height: 20px;
+-  cursor: pointer;
++.submitError {
++  padding: 10px 14px;
++  border: 1px solid #fecaca;
++  border-radius: 8px;
++  background-color: #fef2f2;
++  color: #dc2626;
++  font-size: 13px;
+ }
+-
+-button {
+-  padding: 0.5rem 1rem;
+-  border: none;
+-  border-radius: 4px;
+-  cursor: pointer;
+-  margin-right: 0.5rem;
+-}
+-
+-button[type="submit"] {
+-  background: blue;
+-  color: white;
+-}
+-
+-button:disabled {
+-  background: gray;
+-  cursor: not-allowed;
+-}
+\ No newline at end of file
+diff --git a/src/components/EditKittensForm/EditKittenForm.tsx b/src/components/EditKittensForm/EditKittenForm.tsx
+index c4395ef..cfda528 100644
+--- a/src/components/EditKittensForm/EditKittenForm.tsx
++++ b/src/components/EditKittensForm/EditKittenForm.tsx
+@@ -1,186 +1,320 @@
+-import React, { useState, useEffect } from "react";
+-import { useForm } from "react-hook-form";
+ import { zodResolver } from "@hookform/resolvers/zod";
++import { useEffect, useState } from "react";
++import { useForm, useWatch } from "react-hook-form";
++import { useSelector } from "react-redux";
++
+ import {
++  KITTEN_STATUSES,
+   updateKittenSchema,
+   type UpdateKittenFormValues,
+ } from "../../validation/kittenSchema";
+-import { useAppDispatch } from "../../store";
++import { useAppDispatch, type RootState } from "../../store";
+ import { updateKitten } from "../../store/slices/kittensSlice";
+-import { type Kitten } from "../../types";
++import type { Kitten, KittenPrice } from "../../types";
++import { buildUpdateKittenFormData } from "../../utils/buildUpdateFormData";
++import { withCurrentOption } from "../../utils/withCurrentOption";
++import { PhotoOrderEditor } from "../PhotoOrderEditor/PhotoOrderEditor";
++import formStyles from "../AddKittenForm/AddKittenForm.module.css";
+ import styles from "./EditKittenForm.module.css";
+ 
++const STATUS_LABELS: Record<(typeof KITTEN_STATUSES)[number], string> = {
++  offline: "Offline (скрыт)",
++  active: "Active (в продаже)",
++  booked: "Booked (забронирован)",
++  out: "Out (уехал)",
++};
++
++// Бэкенд хранит пустую цену как строку "null"
++const toPriceInput = (price: KittenPrice["breeding"] | string | undefined) =>
++  price === null || price === undefined || price === "null" ? "" : String(price);
++
+ interface EditKittenFormProps {
+   kitten: Kitten;
+   onClose: () => void;
+ }
+ 
+-const EditKittenForm: React.FC<EditKittenFormProps> = ({ kitten, onClose }) => {
++const EditKittenForm = ({ kitten, onClose }: EditKittenFormProps) => {
+   const dispatch = useAppDispatch();
+-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+-  const [retainedImages, setRetainedImages] = useState<string[]>(
+-    kitten.images.map((img) => img.full),
+-  );
+-  const [isSubmitting, setIsSubmitting] = useState(false);
++  const { colors, breeds } = useSelector((state: RootState) => state.filters);
++  const [submitError, setSubmitError] = useState<string | null>(null);
+ 
+   const {
+     register,
+     handleSubmit,
+     setValue,
+-    formState: { errors },
++    control,
++    formState: { errors, isSubmitting },
+   } = useForm<UpdateKittenFormValues>({
+     resolver: zodResolver(updateKittenSchema),
+     defaultValues: {
+       nameUa: kitten.nameUa,
+       nameEn: kitten.nameEn,
+       color: kitten.color,
+-      birthDay: kitten.birthDay,
+       breed: kitten.breed,
+       sex: kitten.sex,
+-      breeding: kitten.price.breeding?.toString() || "",
+-      pet: kitten.price.pet?.toString() || "",
+-      retainedImages,
++      status: kitten.status ?? "offline",
++      // <input type="date"> принимает только YYYY-MM-DD, а с бэка приходит ISO
++      birthDay: kitten.birthDay?.slice(0, 10) ?? "",
++      breeding: toPriceInput(kitten.price?.breeding),
++      pet: toPriceInput(kitten.price?.pet),
++      retainedImages: kitten.images.map((image) => image.full),
+       newImages: [],
+     },
+   });
+ 
++  const retainedImages = useWatch({ control, name: "retainedImages" });
++  const newImages = useWatch({ control, name: "newImages" });
++
+   useEffect(() => {
+-    setValue("retainedImages", retainedImages);
+-  }, [retainedImages, setValue]);
+-
+-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+-    if (e.target.files) {
+-      const files = Array.from(e.target.files);
+-      setSelectedFiles(files);
+-      setValue("newImages", files);
+-    }
+-  };
++    document.body.style.overflow = "hidden";
++    return () => {
++      document.body.style.overflow = "unset";
++    };
++  }, []);
+ 
+-  const removeRetainedImage = (url: string) => {
+-    setRetainedImages((prev) => prev.filter((img) => img !== url));
++  const setPhotos = (nextRetained: string[], nextNew: File[]) => {
++    setValue("retainedImages", nextRetained, { shouldValidate: true });
++    setValue("newImages", nextNew, { shouldValidate: true });
+   };
+ 
+-  const onSubmit = async (data: UpdateKittenFormValues) => {
+-    setIsSubmitting(true);
+-    const formData = new FormData();
+-
+-    // Add retained images
+-    formData.append("retainedImages", JSON.stringify(data.retainedImages));
+-
+-    // Add new files
+-    selectedFiles.forEach((file) => {
+-      formData.append("photos", file);
+-    });
+-
+-    // Add text fields
+-    formData.append("nameUa", data.nameUa);
+-    formData.append("nameEn", data.nameEn);
+-    formData.append("color", data.color);
+-    formData.append("birthDay", data.birthDay);
+-    formData.append("breed", data.breed);
+-    formData.append("sex", data.sex);
+-    formData.append("breeding", data.breeding);
+-    formData.append("pet", data.pet);
+-
++  const onSubmit = async (values: UpdateKittenFormValues) => {
++    setSubmitError(null);
+     try {
+-      await dispatch(updateKitten({ id: kitten._id, formData })).unwrap();
+-      alert("Kitten updated successfully");
++      await dispatch(
++        updateKitten({
++          id: kitten._id,
++          formData: buildUpdateKittenFormData(values),
++        }),
++      ).unwrap();
+       onClose();
+     } catch (error) {
+-      alert("Failed to update kitten: " + error);
+-    } finally {
+-      setIsSubmitting(false);
++      setSubmitError(
++        typeof error === "string" ? error : "Не удалось сохранить котёнка",
++      );
+     }
+   };
+ 
++  const closeForm = () => {
++    if (!isSubmitting) onClose();
++  };
++
+   return (
+-    <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
+-      <h2>Edit Kitten</h2>
+-
+-      {/* Text fields */}
+-      <div>
+-        <label>Name UA</label>
+-        <input {...register("nameUa")} />
+-        {errors.nameUa && <span>{errors.nameUa.message}</span>}
+-      </div>
++    <div className={formStyles.overlay} onClick={closeForm}>
++      <div
++        className={formStyles.modal}
++        onClick={(event) => event.stopPropagation()}
++      >
++        <div className={formStyles.header}>
++          <div className={formStyles.headerText}>
++            <h2>Edit Kitten</h2>
++            <p>{kitten.nameUa}</p>
++          </div>
++          <button
++            type="button"
++            className={formStyles.closeBtn}
++            onClick={closeForm}
++            aria-label="Close"
++          >
++            <svg
++              width="20"
++              height="20"
++              viewBox="0 0 24 24"
++              fill="none"
++              stroke="currentColor"
++              strokeWidth="2"
++              strokeLinecap="round"
++              strokeLinejoin="round"
++            >
++              <line x1="18" y1="6" x2="6" y2="18"></line>
++              <line x1="6" y1="6" x2="18" y2="18"></line>
++            </svg>
++          </button>
++        </div>
+ 
+-      <div>
+-        <label>Name EN</label>
+-        <input {...register("nameEn")} />
+-        {errors.nameEn && <span>{errors.nameEn.message}</span>}
+-      </div>
++        <form onSubmit={handleSubmit(onSubmit)} className={formStyles.formBody}>
++          <div className={formStyles.gridRow}>
++            <div className={formStyles.formGroup}>
++              <label htmlFor="edit-kitten-nameUa">Name (UA)</label>
++              <input
++                id="edit-kitten-nameUa"
++                {...register("nameUa")}
++                className={formStyles.input}
++              />
++              {errors.nameUa && (
++                <span className={formStyles.error}>
++                  {errors.nameUa.message}
++                </span>
++              )}
++            </div>
+ 
+-      <div>
+-        <label>Color</label>
+-        <input {...register("color")} />
+-        {errors.color && <span>{errors.color.message}</span>}
+-      </div>
++            <div className={formStyles.formGroup}>
++              <label htmlFor="edit-kitten-nameEn">Name (EN)</label>
++              <input
++                id="edit-kitten-nameEn"
++                {...register("nameEn")}
++                className={formStyles.input}
++              />
++              {errors.nameEn && (
++                <span className={formStyles.error}>
++                  {errors.nameEn.message}
++                </span>
++              )}
++            </div>
++          </div>
+ 
+-      <div>
+-        <label>Birth Day</label>
+-        <input type="date" {...register("birthDay")} />
+-        {errors.birthDay && <span>{errors.birthDay.message}</span>}
+-      </div>
++          <div className={formStyles.gridRow}>
++            <div className={formStyles.formGroup}>
++              <label htmlFor="edit-kitten-breed">Breed</label>
++              <select
++                id="edit-kitten-breed"
++                {...register("breed")}
++                className={formStyles.input}
++              >
++                <option value="">-- Выберите --</option>
++                {withCurrentOption(breeds, kitten.breed).map((breed) => (
++                  <option key={breed._id} value={breed.name}>
++                    {breed.name}
++                  </option>
++                ))}
++              </select>
++              {errors.breed && (
++                <span className={formStyles.error}>{errors.breed.message}</span>
++              )}
++            </div>
+ 
+-      <div>
+-        <label>Breed</label>
+-        <input {...register("breed")} />
+-        {errors.breed && <span>{errors.breed.message}</span>}
+-      </div>
++            <div className={formStyles.formGroup}>
++              <label htmlFor="edit-kitten-color">Color / Pattern</label>
++              <select
++                id="edit-kitten-color"
++                {...register("color")}
++                className={formStyles.input}
++              >
++                <option value="">-- Выберите --</option>
++                {withCurrentOption(colors, kitten.color).map((color) => (
++                  <option key={color._id} value={color.name}>
++                    {color.name}
++                  </option>
++                ))}
++              </select>
++              {errors.color && (
++                <span className={formStyles.error}>{errors.color.message}</span>
++              )}
++            </div>
++          </div>
+ 
+-      <div>
+-        <label>Sex</label>
+-        <select {...register("sex")}>
+-          <option value="male">Male</option>
+-          <option value="female">Female</option>
+-        </select>
+-        {errors.sex && <span>{errors.sex.message}</span>}
+-      </div>
++          <div className={formStyles.gridRow}>
++            <div className={formStyles.formGroup}>
++              <label htmlFor="edit-kitten-birthDay">Date of Birth</label>
++              <input
++                id="edit-kitten-birthDay"
++                type="date"
++                {...register("birthDay")}
++                className={formStyles.input}
++              />
++              {errors.birthDay && (
++                <span className={formStyles.error}>
++                  {errors.birthDay.message}
++                </span>
++              )}
++            </div>
+ 
+-      <div>
+-        <label>Breeding Price</label>
+-        <input {...register("breeding")} />
+-      </div>
++            <div className={formStyles.formGroup}>
++              <label htmlFor="edit-kitten-sex">Gender</label>
++              <select
++                id="edit-kitten-sex"
++                {...register("sex")}
++                className={formStyles.input}
++              >
++                <option value="male">Male (Самец)</option>
++                <option value="female">Female (Самка)</option>
++              </select>
++              {errors.sex && (
++                <span className={formStyles.error}>{errors.sex.message}</span>
++              )}
++            </div>
++          </div>
+ 
+-      <div>
+-        <label>Pet Price</label>
+-        <input {...register("pet")} />
+-      </div>
++          <div className={formStyles.gridRow}>
++            <div className={formStyles.formGroup}>
++              <label htmlFor="edit-kitten-status">Status</label>
++              <select
++                id="edit-kitten-status"
++                {...register("status")}
++                className={formStyles.input}
++              >
++                {KITTEN_STATUSES.map((status) => (
++                  <option key={status} value={status}>
++                    {STATUS_LABELS[status]}
++                  </option>
++                ))}
++              </select>
++              {errors.status && (
++                <span className={formStyles.error}>
++                  {errors.status.message}
++                </span>
++              )}
++            </div>
++          </div>
+ 
+-      {/* Retained Images */}
+-      <div>
+-        <h3>Current Images</h3>
+-        <div className={styles.images}>
+-          {retainedImages.map((url) => (
+-            <div key={url} className={styles.imageContainer}>
+-              <img src={url} alt="Kitten" className={styles.image} />
+-              <button type="button" onClick={() => removeRetainedImage(url)}>
+-                Remove
+-              </button>
++          <div className={formStyles.gridRow}>
++            <div className={formStyles.formGroup}>
++              <label htmlFor="edit-kitten-breeding">Price for Breeding</label>
++              <input
++                id="edit-kitten-breeding"
++                type="number"
++                min="0"
++                placeholder="e.g., 3500"
++                {...register("breeding")}
++                className={formStyles.input}
++              />
+             </div>
+-          ))}
+-        </div>
+-      </div>
+ 
+-      {/* New Images */}
+-      <div>
+-        <label>Add New Images</label>
+-        <input
+-          type="file"
+-          multiple
+-          accept="image/*"
+-          onChange={handleFileChange}
+-        />
+-        {errors.newImages && <span>{errors.newImages.message}</span>}
+-      </div>
++            <div className={formStyles.formGroup}>
++              <label htmlFor="edit-kitten-pet">Price as Pet</label>
++              <input
++                id="edit-kitten-pet"
++                type="number"
++                min="0"
++                placeholder="e.g., 1500"
++                {...register("pet")}
++                className={formStyles.input}
++              />
++            </div>
++          </div>
++
++          <PhotoOrderEditor
++            inputId="edit-kitten-photos"
++            existingImages={kitten.images}
++            retainedImages={retainedImages}
++            newImages={newImages}
++            onChange={setPhotos}
++            error={errors.newImages?.message}
++          />
+ 
+-      <button type="submit" disabled={isSubmitting}>
+-        {isSubmitting ? "Updating..." : "Update Kitten"}
+-      </button>
+-      <button type="button" onClick={onClose}>
+-        Cancel
+-      </button>
+-    </form>
++          {submitError && (
++            <div className={styles.submitError}>{submitError}</div>
++          )}
++
++          <div className={formStyles.footer}>
++            <button
++              type="button"
++              className={formStyles.cancelBtn}
++              onClick={closeForm}
++              disabled={isSubmitting}
++            >
++              Cancel
++            </button>
++            <button
++              type="submit"
++              className={formStyles.submitBtn}
++              disabled={isSubmitting}
++            >
++              {isSubmitting ? "Saving..." : "Save Changes"}
++            </button>
++          </div>
++        </form>
++      </div>
++    </div>
+   );
+ };
+ 
+diff --git a/src/components/KittensCard/KittensCard.tsx b/src/components/KittensCard/KittensCard.tsx
+index fb9807b..5a83d76 100644
+--- a/src/components/KittensCard/KittensCard.tsx
++++ b/src/components/KittensCard/KittensCard.tsx
+@@ -302,7 +302,6 @@ const KittensCard = ({ editKitten, queryKittens }: KittenCardProps) => {
+                     </svg>
+                   </button>
+                   <button
+-                    disabled
+                     className={styles.iconBtn}
+                     onClick={() => editKitten(kitten)}
+                     aria-label="Edit"
+diff --git a/src/components/ParentCard/ParentCard.tsx b/src/components/ParentCard/ParentCard.tsx
+index 9120865..24ab054 100644
+--- a/src/components/ParentCard/ParentCard.tsx
++++ b/src/components/ParentCard/ParentCard.tsx
+@@ -144,7 +144,6 @@ const ParentCard = ({
+                       </svg>
+                     </button>
+                     <button
+-                      disabled
+                       className={styles.iconBtn}
+                       onClick={() => editParent(parent)}
+                       aria-label="Edit"
+diff --git a/src/components/Parents/EditParentForm.module.css b/src/components/Parents/EditParentForm.module.css
+index 82c8f52..8ec07eb 100644
+--- a/src/components/Parents/EditParentForm.module.css
++++ b/src/components/Parents/EditParentForm.module.css
+@@ -1,77 +1,10 @@
+-.form {
+-  display: flex;
+-  flex-direction: column;
+-  gap: 1rem;
+-  max-width: 500px;
+-  margin: 0 auto;
+-}
+-
+-.form div {
+-  display: flex;
+-  flex-direction: column;
+-}
+-
+-.form label {
+-  margin-bottom: 0.5rem;
+-  font-weight: bold;
+-}
+-
+-.form input,
+-.form select {
+-  padding: 0.5rem;
+-  border: 1px solid #ccc;
+-  border-radius: 4px;
+-}
+-
+-.form span {
+-  color: red;
+-  font-size: 0.8rem;
+-}
+-
+-.images {
+-  display: flex;
+-  flex-wrap: wrap;
+-  gap: 1rem;
+-}
+-
+-.imageContainer {
+-  position: relative;
+-}
+-
+-.image {
+-  width: 100px;
+-  height: 100px;
+-  object-fit: cover;
+-  border-radius: 4px;
+-}
++/* Основа модалки и полей — AddParentForm.module.css, фото — PhotoOrderEditor */
+ 
+-.imageContainer button {
+-  position: absolute;
+-  top: 0;
+-  right: 0;
+-  background: red;
+-  color: white;
+-  border: none;
+-  border-radius: 50%;
+-  width: 20px;
+-  height: 20px;
+-  cursor: pointer;
++.submitError {
++  padding: 10px 14px;
++  border: 1px solid #fecaca;
++  border-radius: 8px;
++  background-color: #fef2f2;
++  color: #dc2626;
++  font-size: 13px;
+ }
+-
+-button {
+-  padding: 0.5rem 1rem;
+-  border: none;
+-  border-radius: 4px;
+-  cursor: pointer;
+-  margin-right: 0.5rem;
+-}
+-
+-button[type="submit"] {
+-  background: blue;
+-  color: white;
+-}
+-
+-button:disabled {
+-  background: gray;
+-  cursor: not-allowed;
+-}
+\ No newline at end of file
+diff --git a/src/components/Parents/EditParentForm.tsx b/src/components/Parents/EditParentForm.tsx
+index bb05dde..db96bf7 100644
+--- a/src/components/Parents/EditParentForm.tsx
++++ b/src/components/Parents/EditParentForm.tsx
+@@ -1,28 +1,37 @@
+-import React, { useState, useEffect } from 'react';
+-import { useForm } from 'react-hook-form';
+-import { zodResolver } from '@hookform/resolvers/zod';
+-import { updateParentSchema, type UpdateParentFormValues } from '../../validation/ParentSchema';
+-import { useAppDispatch } from '../../store';
+-import { updateParent } from '../../store/slices/parentsSlice';
+-import { type Parent } from '../../types';
+-import styles from './EditParentForm.module.css';
++import { zodResolver } from "@hookform/resolvers/zod";
++import { useEffect, useState } from "react";
++import { useForm, useWatch } from "react-hook-form";
++import { useSelector } from "react-redux";
++
++import {
++  updateParentSchema,
++  type UpdateParentFormValues,
++} from "../../validation/ParentSchema";
++import { useAppDispatch, type RootState } from "../../store";
++import { updateParent } from "../../store/slices/parentsSlice";
++import type { Parent } from "../../types";
++import { buildUpdateParentFormData } from "../../utils/buildUpdateFormData";
++import { withCurrentOption } from "../../utils/withCurrentOption";
++import { PhotoOrderEditor } from "../PhotoOrderEditor/PhotoOrderEditor";
++import formStyles from "../AddParentForm/AddParentForm.module.css";
++import styles from "./EditParentForm.module.css";
+ 
+ interface EditParentFormProps {
+   parent: Parent;
+   onClose: () => void;
+ }
+ 
+-const EditParentForm: React.FC<EditParentFormProps> = ({ parent, onClose }) => {
++const EditParentForm = ({ parent, onClose }: EditParentFormProps) => {
+   const dispatch = useAppDispatch();
+-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+-  const [retainedImages, setRetainedImages] = useState<string[]>(parent.images.map(img => img.full));
+-  const [isSubmitting, setIsSubmitting] = useState(false);
++  const { colors, breeds } = useSelector((state: RootState) => state.filters);
++  const [submitError, setSubmitError] = useState<string | null>(null);
+ 
+   const {
+     register,
+     handleSubmit,
+     setValue,
+-    formState: { errors },
++    control,
++    formState: { errors, isSubmitting },
+   } = useForm<UpdateParentFormValues>({
+     resolver: zodResolver(updateParentSchema),
+     defaultValues: {
+@@ -31,121 +40,202 @@ const EditParentForm: React.FC<EditParentFormProps> = ({ parent, onClose }) => {
+       color: parent.color,
+       breed: parent.breed,
+       sex: parent.sex,
+-      retainedImages,
++      retainedImages: parent.images.map((image) => image.full),
+       newImages: [],
+     },
+   });
+ 
+-  useEffect(() => {
+-    setValue('retainedImages', retainedImages);
+-  }, [retainedImages, setValue]);
+-
+-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+-    if (e.target.files) {
+-      const files = Array.from(e.target.files);
+-      setSelectedFiles(files);
+-      setValue('newImages', files);
+-    }
+-  };
++  const retainedImages = useWatch({ control, name: "retainedImages" });
++  const newImages = useWatch({ control, name: "newImages" });
+ 
+-  const removeRetainedImage = (url: string) => {
+-    setRetainedImages(prev => prev.filter(img => img !== url));
++  useEffect(() => {
++    document.body.style.overflow = "hidden";
++    return () => {
++      document.body.style.overflow = "unset";
++    };
++  }, []);
++
++  const setPhotos = (nextRetained: string[], nextNew: File[]) => {
++    setValue("retainedImages", nextRetained, { shouldValidate: true });
++    setValue("newImages", nextNew, { shouldValidate: true });
+   };
+ 
+-  const onSubmit = async (data: UpdateParentFormValues) => {
+-    setIsSubmitting(true);
+-    const formData = new FormData();
+-
+-    // Add retained images
+-    formData.append('retainedImages', JSON.stringify(data.retainedImages));
+-
+-    // Add new files
+-    selectedFiles.forEach(file => {
+-      formData.append('photos', file);
+-    });
+-
+-    // Add text fields
+-    formData.append('nameUa', data.nameUa);
+-    formData.append('nameEn', data.nameEn);
+-    formData.append('color', data.color);
+-    formData.append('breed', data.breed);
+-    formData.append('sex', data.sex);
+-
++  const onSubmit = async (values: UpdateParentFormValues) => {
++    setSubmitError(null);
+     try {
+-      await dispatch(updateParent({ id: parent._id, formData })).unwrap();
+-      alert('Parent updated successfully');
++      await dispatch(
++        updateParent({
++          id: parent._id,
++          formData: buildUpdateParentFormData(values),
++        }),
++      ).unwrap();
+       onClose();
+     } catch (error) {
+-      alert('Failed to update parent: ' + error);
+-    } finally {
+-      setIsSubmitting(false);
++      setSubmitError(
++        typeof error === "string" ? error : "Не удалось сохранить родителя",
++      );
+     }
+   };
+ 
+-  return (
+-    <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
+-      <h2>Edit Parent</h2>
+-
+-      {/* Text fields */}
+-      <div>
+-        <label>Name UA</label>
+-        <input {...register('nameUa')} />
+-        {errors.nameUa && <span>{errors.nameUa.message}</span>}
+-      </div>
+-
+-      <div>
+-        <label>Name EN</label>
+-        <input {...register('nameEn')} />
+-        {errors.nameEn && <span>{errors.nameEn.message}</span>}
+-      </div>
+-
+-      <div>
+-        <label>Color</label>
+-        <input {...register('color')} />
+-        {errors.color && <span>{errors.color.message}</span>}
+-      </div>
++  const closeForm = () => {
++    if (!isSubmitting) onClose();
++  };
+ 
+-      <div>
+-        <label>Breed</label>
+-        <input {...register('breed')} />
+-        {errors.breed && <span>{errors.breed.message}</span>}
+-      </div>
++  return (
++    <div className={formStyles.overlay} onClick={closeForm}>
++      <div
++        className={formStyles.modal}
++        onClick={(event) => event.stopPropagation()}
++      >
++        <div className={formStyles.header}>
++          <div className={formStyles.headerText}>
++            <h2>Edit Parent</h2>
++            <p>{parent.nameUa}</p>
++          </div>
++          <button
++            type="button"
++            className={formStyles.closeBtn}
++            onClick={closeForm}
++            aria-label="Close"
++          >
++            <svg
++              width="20"
++              height="20"
++              viewBox="0 0 24 24"
++              fill="none"
++              stroke="currentColor"
++              strokeWidth="2"
++              strokeLinecap="round"
++              strokeLinejoin="round"
++            >
++              <line x1="18" y1="6" x2="6" y2="18"></line>
++              <line x1="6" y1="6" x2="18" y2="18"></line>
++            </svg>
++          </button>
++        </div>
+ 
+-      <div>
+-        <label>Sex</label>
+-        <select {...register('sex')}>
+-          <option value="male">Male</option>
+-          <option value="female">Female</option>
+-        </select>
+-        {errors.sex && <span>{errors.sex.message}</span>}
+-      </div>
++        <form onSubmit={handleSubmit(onSubmit)} className={formStyles.formBody}>
++          <div className={formStyles.gridRow}>
++            <div className={formStyles.formGroup}>
++              <label htmlFor="edit-parent-nameUa">Name (UA)</label>
++              <input
++                id="edit-parent-nameUa"
++                {...register("nameUa")}
++                className={formStyles.input}
++              />
++              {errors.nameUa && (
++                <span className={formStyles.error}>
++                  {errors.nameUa.message}
++                </span>
++              )}
++            </div>
+ 
+-      {/* Retained Images */}
+-      <div>
+-        <h3>Current Images</h3>
+-        <div className={styles.images}>
+-          {retainedImages.map(url => (
+-            <div key={url} className={styles.imageContainer}>
+-              <img src={url} alt="Parent" className={styles.image} />
+-              <button type="button" onClick={() => removeRetainedImage(url)}>Remove</button>
++            <div className={formStyles.formGroup}>
++              <label htmlFor="edit-parent-nameEn">Name (EN)</label>
++              <input
++                id="edit-parent-nameEn"
++                {...register("nameEn")}
++                className={formStyles.input}
++              />
++              {errors.nameEn && (
++                <span className={formStyles.error}>
++                  {errors.nameEn.message}
++                </span>
++              )}
++            </div>
++          </div>
++
++          <div className={formStyles.gridRow}>
++            <div className={formStyles.formGroup}>
++              <label htmlFor="edit-parent-breed">Breed</label>
++              <select
++                id="edit-parent-breed"
++                {...register("breed")}
++                className={formStyles.input}
++              >
++                <option value="">-- Выберите --</option>
++                {withCurrentOption(breeds, parent.breed).map((breed) => (
++                  <option key={breed._id} value={breed.name}>
++                    {breed.name}
++                  </option>
++                ))}
++              </select>
++              {errors.breed && (
++                <span className={formStyles.error}>{errors.breed.message}</span>
++              )}
+             </div>
+-          ))}
+-        </div>
+-      </div>
+ 
+-      {/* New Images */}
+-      <div>
+-        <label>Add New Images</label>
+-        <input type="file" multiple accept="image/*" onChange={handleFileChange} />
+-        {errors.newImages && <span>{errors.newImages.message}</span>}
++            <div className={formStyles.formGroup}>
++              <label htmlFor="edit-parent-color">Color / Pattern</label>
++              <select
++                id="edit-parent-color"
++                {...register("color")}
++                className={formStyles.input}
++              >
++                <option value="">-- Выберите --</option>
++                {withCurrentOption(colors, parent.color).map((color) => (
++                  <option key={color._id} value={color.name}>
++                    {color.name}
++                  </option>
++                ))}
++              </select>
++              {errors.color && (
++                <span className={formStyles.error}>{errors.color.message}</span>
++              )}
++            </div>
++          </div>
++
++          <div className={formStyles.gridRow}>
++            <div className={formStyles.formGroup}>
++              <label htmlFor="edit-parent-sex">Gender</label>
++              <select
++                id="edit-parent-sex"
++                {...register("sex")}
++                className={formStyles.input}
++              >
++                <option value="male">Male (Самец)</option>
++                <option value="female">Female (Самка)</option>
++              </select>
++              {errors.sex && (
++                <span className={formStyles.error}>{errors.sex.message}</span>
++              )}
++            </div>
++          </div>
++
++          <PhotoOrderEditor
++            inputId="edit-parent-photos"
++            existingImages={parent.images}
++            retainedImages={retainedImages}
++            newImages={newImages}
++            onChange={setPhotos}
++            error={errors.newImages?.message}
++          />
++
++          {submitError && (
++            <div className={styles.submitError}>{submitError}</div>
++          )}
++
++          <div className={formStyles.footer}>
++            <button
++              type="button"
++              className={formStyles.cancelBtn}
++              onClick={closeForm}
++              disabled={isSubmitting}
++            >
++              Cancel
++            </button>
++            <button
++              type="submit"
++              className={formStyles.submitBtn}
++              disabled={isSubmitting}
++            >
++              {isSubmitting ? "Saving..." : "Save Changes"}
++            </button>
++          </div>
++        </form>
+       </div>
+-
+-      <button type="submit" disabled={isSubmitting}>
+-        {isSubmitting ? 'Updating...' : 'Update Parent'}
+-      </button>
+-      <button type="button" onClick={onClose}>Cancel</button>
+-    </form>
++    </div>
+   );
+ };
+ 
+-export default EditParentForm;
+\ No newline at end of file
++export default EditParentForm;
+diff --git a/src/components/PhotoOrderEditor/PhotoOrderEditor.module.css b/src/components/PhotoOrderEditor/PhotoOrderEditor.module.css
+new file mode 100644
+index 0000000..e008dd6
+--- /dev/null
++++ b/src/components/PhotoOrderEditor/PhotoOrderEditor.module.css
+@@ -0,0 +1,65 @@
++.group {
++  display: flex;
++  flex-direction: column;
++  gap: 6px;
++}
++
++.label {
++  font-size: 13px;
++  font-weight: 500;
++  color: #4a4a68;
++}
++
++.hint {
++  margin: 0;
++  font-size: 12px;
++  line-height: 1.4;
++  color: #8a8ab5;
++}
++
++.uploadBtn {
++  display: flex;
++  align-items: center;
++  justify-content: center;
++  gap: 8px;
++  width: 100%;
++  padding: 12px;
++  border: 1px dashed #b0b0c8;
++  border-radius: 8px;
++  background-color: #f8f8fb;
++  color: #4a4a68;
++  font-size: 14px;
++  font-weight: 500;
++  cursor: pointer;
++  box-sizing: border-box;
++  transition: all 0.2s;
++}
++
++.uploadBtn:hover {
++  border-color: #4a4ae2;
++  color: #4a4ae2;
++  background-color: #f0f0ff;
++}
++
++.uploadDisabled {
++  opacity: 0.5;
++  cursor: not-allowed;
++  pointer-events: none;
++}
++
++.previewContainer {
++  display: flex;
++  flex-wrap: wrap;
++  gap: 12px;
++  margin-top: 8px;
++  padding: 12px;
++  background: #fafafc;
++  border-radius: 8px;
++  border: 1px solid #e1e1e8;
++}
++
++.error {
++  color: #dc2626;
++  font-size: 12px;
++  margin-top: 2px;
++}
+diff --git a/src/components/PhotoOrderEditor/PhotoOrderEditor.tsx b/src/components/PhotoOrderEditor/PhotoOrderEditor.tsx
+new file mode 100644
+index 0000000..89c48a0
+--- /dev/null
++++ b/src/components/PhotoOrderEditor/PhotoOrderEditor.tsx
+@@ -0,0 +1,191 @@
++import {
++  DndContext,
++  closestCenter,
++  KeyboardSensor,
++  PointerSensor,
++  useSensor,
++  useSensors,
++  type DragEndEvent,
++} from "@dnd-kit/core";
++import {
++  arrayMove,
++  SortableContext,
++  sortableKeyboardCoordinates,
++  rectSortingStrategy,
++} from "@dnd-kit/sortable";
++import { useMemo } from "react";
++
++import type { KittenImage } from "../../types";
++import { MAX_PHOTOS } from "../../validation/photoSelection";
++import { SortablePhoto } from "../SortablePhoto/SortablePhoto";
++import styles from "./PhotoOrderEditor.module.css";
++
++// Совпадает с fileFilter multer на бэкенде
++const ACCEPTED_IMAGE_TYPES = "image/jpeg,image/png,image/webp,image/gif";
++
++const fileId = (file: File) =>
++  `${file.name}-${file.size}-${file.lastModified}`;
++
++interface PhotoOrderEditorProps {
++  inputId: string;
++  existingImages: readonly KittenImage[];
++  retainedImages: string[];
++  newImages: File[];
++  onChange: (retainedImages: string[], newImages: File[]) => void;
++  error?: string;
++}
++
++/**
++ * Редактор фото для форм редактирования: сохранённые фото + новые файлы.
++ * Бэкенд ставит новые фото после сохранённых, поэтому перетаскивать можно
++ * только внутри своей группы; нумерация сквозная, первое фото — главное.
++ */
++export const PhotoOrderEditor = ({
++  inputId,
++  existingImages,
++  retainedImages,
++  newImages,
++  onChange,
++  error,
++}: PhotoOrderEditorProps) => {
++  const photoCount = retainedImages.length + newImages.length;
++  const isLimitReached = photoCount >= MAX_PHOTOS;
++
++  // Превью — лёгкая mobile-версия, идентификатор для бэкенда — full
++  const previewByFullUrl = useMemo(
++    () => new Map(existingImages.map((image) => [image.full, image.mobile])),
++    [existingImages],
++  );
++
++  const sensors = useSensors(
++    useSensor(PointerSensor),
++    useSensor(KeyboardSensor, {
++      coordinateGetter: sortableKeyboardCoordinates,
++    }),
++  );
++
++  const handleDragEnd = ({ active, over }: DragEndEvent) => {
++    if (!over || active.id === over.id) return;
++
++    const retainedFrom = retainedImages.indexOf(String(active.id));
++    const retainedTo = retainedImages.indexOf(String(over.id));
++    if (retainedFrom !== -1 && retainedTo !== -1) {
++      onChange(arrayMove(retainedImages, retainedFrom, retainedTo), newImages);
++      return;
++    }
++
++    const newIds = newImages.map(fileId);
++    const newFrom = newIds.indexOf(String(active.id));
++    const newTo = newIds.indexOf(String(over.id));
++    if (newFrom !== -1 && newTo !== -1) {
++      onChange(retainedImages, arrayMove(newImages, newFrom, newTo));
++    }
++  };
++
++  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
++    const picked = Array.from(event.target.files ?? []);
++    event.target.value = "";
++
++    const knownIds = new Set(newImages.map(fileId));
++    const accepted = picked
++      .filter((file) => !knownIds.has(fileId(file)))
++      .slice(0, MAX_PHOTOS - photoCount);
++
++    onChange(retainedImages, [...newImages, ...accepted]);
++  };
++
++  const removeRetained = (url: string) =>
++    onChange(
++      retainedImages.filter((retainedUrl) => retainedUrl !== url),
++      newImages,
++    );
++
++  const removeNew = (file: File) =>
++    onChange(
++      retainedImages,
++      newImages.filter((newFile) => newFile !== file),
++    );
++
++  return (
++    <div className={styles.group}>
++      <span className={styles.label}>
++        Photos ({photoCount}/{MAX_PHOTOS})
++      </span>
++      <p className={styles.hint}>
++        Перетаскивайте, чтобы изменить порядок. Первое фото (★) — главное.
++        Новые фото добавляются после текущих. Удалённые фото пропадут только
++        после сохранения.
++      </p>
++
++      <label
++        htmlFor={inputId}
++        className={`${styles.uploadBtn} ${
++          isLimitReached ? styles.uploadDisabled : ""
++        }`}
++      >
++        <svg
++          width="16"
++          height="16"
++          viewBox="0 0 24 24"
++          fill="none"
++          stroke="currentColor"
++          strokeWidth="2"
++        >
++          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
++          <polyline points="17 8 12 3 7 8"></polyline>
++          <line x1="12" y1="3" x2="12" y2="15"></line>
++        </svg>
++        {isLimitReached ? "Limit reached" : "Add Images"}
++      </label>
++      <input
++        id={inputId}
++        type="file"
++        multiple
++        hidden
++        accept={ACCEPTED_IMAGE_TYPES}
++        disabled={isLimitReached}
++        onChange={handleFileChange}
++      />
++
++      {photoCount > 0 && (
++        <div className={styles.previewContainer}>
++          <DndContext
++            sensors={sensors}
++            collisionDetection={closestCenter}
++            onDragEnd={handleDragEnd}
++          >
++            <SortableContext
++              items={retainedImages}
++              strategy={rectSortingStrategy}
++            >
++              {retainedImages.map((url, index) => (
++                <SortablePhoto
++                  key={url}
++                  id={url}
++                  source={previewByFullUrl.get(url) ?? url}
++                  index={index}
++                  onRemove={() => removeRetained(url)}
++                />
++              ))}
++            </SortableContext>
++            <SortableContext
++              items={newImages.map(fileId)}
++              strategy={rectSortingStrategy}
++            >
++              {newImages.map((file, index) => (
++                <SortablePhoto
++                  key={fileId(file)}
++                  id={fileId(file)}
++                  source={file}
++                  index={retainedImages.length + index}
++                  onRemove={() => removeNew(file)}
++                />
++              ))}
++            </SortableContext>
++          </DndContext>
++        </div>
++      )}
++      {error && <span className={styles.error}>{error}</span>}
++    </div>
++  );
++};
+diff --git a/src/components/SortablePhoto/SortablePhoto.tsx b/src/components/SortablePhoto/SortablePhoto.tsx
+index 8344c00..0f9993d 100644
+--- a/src/components/SortablePhoto/SortablePhoto.tsx
++++ b/src/components/SortablePhoto/SortablePhoto.tsx
+@@ -1,15 +1,17 @@
++import { useMemo } from "react";
+ import { useSortable } from "@dnd-kit/sortable";
+ import { CSS } from "@dnd-kit/utilities";
+ import styles from "./SortablePhoto.module.css";
+ 
+ interface Props {
+   id: string;
+-  file: File;
++  // File — новый локальный файл, string — URL уже загруженного фото
++  source: File | string;
+   onRemove: () => void;
+   index: number;
+ }
+ 
+-export const SortablePhoto = ({ id, file, onRemove, index }: Props) => {
++export const SortablePhoto = ({ id, source, onRemove, index }: Props) => {
+   const { attributes, listeners, setNodeRef, transform, transition } =
+     useSortable({ id });
+ 
+@@ -20,14 +22,26 @@ export const SortablePhoto = ({ id, file, onRemove, index }: Props) => {
+     cursor: "grab",
+   };
+ 
+-  // Создаем локальный URL для превью
+-  const previewUrl = URL.createObjectURL(file);
++  // Создаём локальный URL один раз на файл, а не на каждый ре-рендер при перетаскивании
++  const previewUrl = useMemo(
++    () => (typeof source === "string" ? source : URL.createObjectURL(source)),
++    [source],
++  );
++
++  const releaseObjectUrl = () => {
++    if (typeof source !== "string") URL.revokeObjectURL(previewUrl);
++  };
+ 
+   return (
+     <div ref={setNodeRef} style={style} className={styles.previewItem}>
+       <div {...attributes} {...listeners} className={styles.dragHandle}>
+-        <img src={previewUrl} alt="preview" className={styles.previewImage} />
+-        <span className={styles.badge}>{index + 1}</span>
++        <img
++          src={previewUrl}
++          alt="preview"
++          className={styles.previewImage}
++          onLoad={releaseObjectUrl}
++        />
++        <span className={styles.badge}>{index === 0 ? "★ 1" : index + 1}</span>
+       </div>
+       <button type="button" onClick={onRemove} className={styles.removeSmall}>
+         ×
+diff --git a/src/store/slices/kittensSlice.ts b/src/store/slices/kittensSlice.ts
+index 0a49fac..38e60cf 100644
+--- a/src/store/slices/kittensSlice.ts
++++ b/src/store/slices/kittensSlice.ts
+@@ -114,7 +114,8 @@ const kittensSlice = createSlice({
+           (k) => k._id === action.payload.data._id,
+         );
+         if (index !== -1) {
+-          state.items[index] = action.payload.data;
++          // PATCH-ответ не содержит вычисляемого isTelegramPublished — не теряем его
++          state.items[index] = { ...state.items[index], ...action.payload.data };
+         }
+       })
+       .addCase(deleteKitten.fulfilled, (state, action) => {
+diff --git a/src/utils/buildUpdateFormData.ts b/src/utils/buildUpdateFormData.ts
+new file mode 100644
+index 0000000..3755049
+--- /dev/null
++++ b/src/utils/buildUpdateFormData.ts
+@@ -0,0 +1,52 @@
++import type { UpdateKittenFormValues } from "../validation/kittenSchema";
++import type { UpdateParentFormValues } from "../validation/ParentSchema";
++
++/*
++ * Собирают multipart-тела для PATCH /cats/kitten/:id и PATCH /cats/parent/:id.
++ * Контракт бэкенда (arlenBack, validation/catSchemas.ts):
++ * - файлы — в поле "images" (multer: upload.array("images", 5));
++ * - retainedImages — JSON-строка массива full-URL, порядок = порядок фото;
++ * - новые файлы встают после сохранённых, первое фото итога — главное.
++ */
++
++const appendPhotos = (
++  formData: FormData,
++  values: { retainedImages: string[]; newImages: File[] },
++) => {
++  formData.append("retainedImages", JSON.stringify(values.retainedImages));
++  values.newImages.forEach((file) => formData.append("images", file));
++};
++
++export const buildUpdateKittenFormData = (
++  values: UpdateKittenFormValues,
++): FormData => {
++  const formData = new FormData();
++
++  formData.append("nameUa", values.nameUa);
++  formData.append("nameEn", values.nameEn);
++  formData.append("color", values.color);
++  formData.append("breed", values.breed);
++  formData.append("sex", values.sex);
++  formData.append("status", values.status);
++  formData.append("birthDay", values.birthDay); // YYYY-MM-DD из <input type="date">
++  formData.append("breeding", values.breeding);
++  formData.append("pet", values.pet);
++  appendPhotos(formData, values);
++
++  return formData;
++};
++
++export const buildUpdateParentFormData = (
++  values: UpdateParentFormValues,
++): FormData => {
++  const formData = new FormData();
++
++  formData.append("nameUa", values.nameUa);
++  formData.append("nameEn", values.nameEn);
++  formData.append("color", values.color);
++  formData.append("breed", values.breed);
++  formData.append("sex", values.sex);
++  appendPhotos(formData, values);
++
++  return formData;
++};
+diff --git a/src/utils/withCurrentOption.ts b/src/utils/withCurrentOption.ts
+new file mode 100644
+index 0000000..aeef0d4
+--- /dev/null
++++ b/src/utils/withCurrentOption.ts
+@@ -0,0 +1,11 @@
++interface Option {
++  _id: string;
++  name: string;
++}
++
++// Если значение удалили из справочника, оно всё равно должно остаться выбираемым,
++// иначе <select> молча покажет пустое значение и форма не пройдёт валидацию
++export const withCurrentOption = (options: Option[], current: string) =>
++  current && !options.some((option) => option.name === current)
++    ? [{ _id: `current-${current}`, name: current }, ...options]
++    : options;
+diff --git a/src/validation/ParentSchema.ts b/src/validation/ParentSchema.ts
+index 1086360..4562c80 100644
+--- a/src/validation/ParentSchema.ts
++++ b/src/validation/ParentSchema.ts
+@@ -1,4 +1,5 @@
+ import z from "zod";
++import { photoSelectionShape, refinePhotoCount } from "./photoSelection";
+ 
+ const Sex = {
+   MALE: "male",
+@@ -18,16 +19,17 @@ export const parentSchema = z.object({
+     .max(5, "Максимум 5 фотографий"),
+ });
+ 
+-export const updateParentSchema = z.object({
+-  nameUa: z.string().min(1, "Имя (UA) обязательно"),
+-  nameEn: z.string().min(1, "Имя (EN) обязательно"),
+-  color: z.string().min(1, "Цвет обязателен"),
+-  breed: z.string().min(1, "Порода обязательна"),
+-  sex: z.enum(Sex, "rrtt"),
++export const updateParentSchema = z
++  .object({
++    nameUa: z.string().trim().min(1, "Имя (UA) обязательно"),
++    nameEn: z.string().trim().min(1, "Имя (EN) обязательно"),
++    color: z.string().min(1, "Цвет обязателен"),
++    breed: z.string().min(1, "Порода обязательна"),
++    sex: z.enum(Sex, "Выберите пол"),
+ 
+-  retainedImages: z.array(z.string()), // URLs of images to keep
+-  newImages: z.array(z.any()).max(5, "Максимум 5 новых фотографий"), // New files
+-});
++    ...photoSelectionShape,
++  })
++  .superRefine(refinePhotoCount);
+ 
+ export type UpdateParentFormValues = z.infer<typeof updateParentSchema>;
+ export type ParentFormValues = z.infer<typeof parentSchema>;
+diff --git a/src/validation/kittenSchema.ts b/src/validation/kittenSchema.ts
+index 7af29fd..cc3fe27 100644
+--- a/src/validation/kittenSchema.ts
++++ b/src/validation/kittenSchema.ts
+@@ -1,4 +1,5 @@
+ import { z } from "zod";
++import { photoSelectionShape, refinePhotoCount } from "./photoSelection";
+ 
+ export enum KittenStatus {
+   OFFLINE = "offline",
+@@ -29,20 +30,24 @@ export const kittenSchema = z.object({
+     .max(5, "Максимум 5 фотографий"),
+ });
+ 
+-export const updateKittenSchema = z.object({
+-  nameUa: z.string().min(1, "Имя (UA) обязательно"),
+-  nameEn: z.string().min(1, "Имя (EN) обязательно"),
+-  color: z.string().min(1, "Цвет обязателен"),
+-  birthDay: z.string().nonempty("Дата рождения обязательна"),
+-  breed: z.string().min(1, "Порода обязательна"),
+-  sex: z.enum(Sex, "rrtt"),
++export const KITTEN_STATUSES = ["offline", "active", "booked", "out"] as const;
+ 
+-  breeding: z.string(),
+-  pet: z.string(),
++export const updateKittenSchema = z
++  .object({
++    nameUa: z.string().trim().min(1, "Имя (UA) обязательно"),
++    nameEn: z.string().trim().min(1, "Имя (EN) обязательно"),
++    color: z.string().min(1, "Цвет обязателен"),
++    birthDay: z.string().nonempty("Дата рождения обязательна"),
++    breed: z.string().min(1, "Порода обязательна"),
++    sex: z.enum(Sex, "Выберите пол"),
++    status: z.enum(KITTEN_STATUSES, "Выберите статус"),
+ 
+-  retainedImages: z.array(z.string()), // URLs of images to keep
+-  newImages: z.array(z.any()).max(5, "Максимум 5 новых фотографий"), // New files
+-});
++    breeding: z.string().trim(),
++    pet: z.string().trim(),
++
++    ...photoSelectionShape,
++  })
++  .superRefine(refinePhotoCount);
+ 
+ export type UpdateKittenFormValues = z.infer<typeof updateKittenSchema>;
+ export type KittenFormValues = z.infer<typeof kittenSchema>;
+diff --git a/src/validation/photoSelection.ts b/src/validation/photoSelection.ts
+new file mode 100644
+index 0000000..491d1f8
+--- /dev/null
++++ b/src/validation/photoSelection.ts
+@@ -0,0 +1,31 @@
++import { z } from "zod";
++
++export const MAX_PHOTOS = 5;
++
++// Общая часть схем редактирования котёнка и родителя.
++// Порядок важен: первое фото итога станет главным.
++export const photoSelectionShape = {
++  retainedImages: z.array(z.string()), // full-URL старых фото, которые остаются
++  newImages: z.array(z.instanceof(File)), // новые файлы, встанут после старых
++};
++
++export const refinePhotoCount = (
++  values: { retainedImages: string[]; newImages: File[] },
++  context: z.RefinementCtx,
++) => {
++  const total = values.retainedImages.length + values.newImages.length;
++  if (total < 1) {
++    context.addIssue({
++      code: "custom",
++      path: ["newImages"],
++      message: "Добавьте хотя бы одно фото",
++    });
++  }
++  if (total > MAX_PHOTOS) {
++    context.addIssue({
++      code: "custom",
++      path: ["newImages"],
++      message: `Максимум ${MAX_PHOTOS} фотографий`,
++    });
++  }
++};

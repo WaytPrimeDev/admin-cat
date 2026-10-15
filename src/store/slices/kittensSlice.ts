@@ -114,7 +114,8 @@ const kittensSlice = createSlice({
           (k) => k._id === action.payload.data._id,
         );
         if (index !== -1) {
-          state.items[index] = action.payload.data;
+          // PATCH-ответ не содержит вычисляемого isTelegramPublished — не теряем его
+          state.items[index] = { ...state.items[index], ...action.payload.data };
         }
       })
       .addCase(deleteKitten.fulfilled, (state, action) => {

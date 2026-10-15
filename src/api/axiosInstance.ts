@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Создаем инстанс Axios
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: "http://localhost:3000"
 });
 
 // Request interceptor: добавляем токен авторизации ко всем запросам

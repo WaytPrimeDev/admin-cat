@@ -144,7 +144,6 @@ const ParentCard = ({
                       </svg>
                     </button>
                     <button
-                      disabled
                       className={styles.iconBtn}
                       onClick={() => editParent(parent)}
                       aria-label="Edit"
