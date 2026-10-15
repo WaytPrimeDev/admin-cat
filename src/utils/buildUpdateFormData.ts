@@ -1,20 +1,23 @@
 import type { UpdateKittenFormValues } from "../validation/kittenSchema";
 import type { UpdateParentFormValues } from "../validation/ParentSchema";
+import { splitPhotos, type PhotoItem } from "../validation/photoSelection";
 
 /*
  * Собирают multipart-тела для PATCH /cats/kitten/:id и PATCH /cats/parent/:id.
  * Контракт бэкенда (arlenBack, validation/catSchemas.ts):
  * - файлы — в поле "images" (multer: upload.array("images", 5));
- * - retainedImages — JSON-строка массива full-URL, порядок = порядок фото;
- * - новые файлы встают после сохранённых, первое фото итога — главное.
+ * - retainedImages — JSON-строка массива full-URL старых фото, которые остаются;
+ * - imagesOrder — JSON-строка итогового порядка: full-URL либо "new:<индекс файла>",
+ *   благодаря ей новое фото может встать перед старыми;
+ * - первое фото итога — главное.
  */
 
-const appendPhotos = (
-  formData: FormData,
-  values: { retainedImages: string[]; newImages: File[] },
-) => {
-  formData.append("retainedImages", JSON.stringify(values.retainedImages));
-  values.newImages.forEach((file) => formData.append("images", file));
+const appendPhotos = (formData: FormData, values: { photos: PhotoItem[] }) => {
+  const { retainedImages, newImages, imagesOrder } = splitPhotos(values.photos);
+
+  formData.append("retainedImages", JSON.stringify(retainedImages));
+  newImages.forEach((file) => formData.append("images", file));
+  formData.append("imagesOrder", JSON.stringify(imagesOrder));
 };
 
 export const buildUpdateKittenFormData = (

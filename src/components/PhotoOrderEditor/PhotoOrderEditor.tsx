@@ -16,40 +16,38 @@ import {
 import { useMemo } from "react";
 
 import type { KittenImage } from "../../types";
-import { MAX_PHOTOS } from "../../validation/photoSelection";
+import {
+  MAX_PHOTOS,
+  photoId,
+  type PhotoItem,
+} from "../../validation/photoSelection";
 import { SortablePhoto } from "../SortablePhoto/SortablePhoto";
 import styles from "./PhotoOrderEditor.module.css";
 
 // Совпадает с fileFilter multer на бэкенде
 const ACCEPTED_IMAGE_TYPES = "image/jpeg,image/png,image/webp,image/gif";
 
-const fileId = (file: File) =>
-  `${file.name}-${file.size}-${file.lastModified}`;
-
 interface PhotoOrderEditorProps {
   inputId: string;
   existingImages: readonly KittenImage[];
-  retainedImages: string[];
-  newImages: File[];
-  onChange: (retainedImages: string[], newImages: File[]) => void;
+  photos: PhotoItem[];
+  onChange: (photos: PhotoItem[]) => void;
   error?: string;
 }
 
 /**
- * Редактор фото для форм редактирования: сохранённые фото + новые файлы.
- * Бэкенд ставит новые фото после сохранённых, поэтому перетаскивать можно
- * только внутри своей группы; нумерация сквозная, первое фото — главное.
+ * Редактор фото для форм редактирования: сохранённые фото и новые файлы живут
+ * в одном списке, поэтому перетаскивать можно любое фото на любое место —
+ * в том числе новое на первое, чтобы сделать его главным.
  */
 export const PhotoOrderEditor = ({
   inputId,
   existingImages,
-  retainedImages,
-  newImages,
+  photos,
   onChange,
   error,
 }: PhotoOrderEditorProps) => {
-  const photoCount = retainedImages.length + newImages.length;
-  const isLimitReached = photoCount >= MAX_PHOTOS;
+  const isLimitReached = photos.length >= MAX_PHOTOS;
 
   // Превью — лёгкая mobile-версия, идентификатор для бэкенда — full
   const previewByFullUrl = useMemo(
@@ -64,57 +62,43 @@ export const PhotoOrderEditor = ({
     }),
   );
 
+  const photoIds = useMemo(() => photos.map(photoId), [photos]);
+
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
     if (!over || active.id === over.id) return;
 
-    const retainedFrom = retainedImages.indexOf(String(active.id));
-    const retainedTo = retainedImages.indexOf(String(over.id));
-    if (retainedFrom !== -1 && retainedTo !== -1) {
-      onChange(arrayMove(retainedImages, retainedFrom, retainedTo), newImages);
-      return;
-    }
+    const from = photoIds.indexOf(String(active.id));
+    const to = photoIds.indexOf(String(over.id));
+    if (from === -1 || to === -1) return;
 
-    const newIds = newImages.map(fileId);
-    const newFrom = newIds.indexOf(String(active.id));
-    const newTo = newIds.indexOf(String(over.id));
-    if (newFrom !== -1 && newTo !== -1) {
-      onChange(retainedImages, arrayMove(newImages, newFrom, newTo));
-    }
+    onChange(arrayMove(photos, from, to));
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const picked = Array.from(event.target.files ?? []);
     event.target.value = "";
 
-    const knownIds = new Set(newImages.map(fileId));
+    const knownIds = new Set(photoIds);
     const accepted = picked
-      .filter((file) => !knownIds.has(fileId(file)))
-      .slice(0, MAX_PHOTOS - photoCount);
+      .map((file): PhotoItem => ({ kind: "new", file }))
+      .filter((photo) => !knownIds.has(photoId(photo)))
+      .slice(0, MAX_PHOTOS - photos.length);
 
-    onChange(retainedImages, [...newImages, ...accepted]);
+    onChange([...photos, ...accepted]);
   };
 
-  const removeRetained = (url: string) =>
-    onChange(
-      retainedImages.filter((retainedUrl) => retainedUrl !== url),
-      newImages,
-    );
-
-  const removeNew = (file: File) =>
-    onChange(
-      retainedImages,
-      newImages.filter((newFile) => newFile !== file),
-    );
+  const removePhoto = (id: string) =>
+    onChange(photos.filter((photo) => photoId(photo) !== id));
 
   return (
     <div className={styles.group}>
       <span className={styles.label}>
-        Photos ({photoCount}/{MAX_PHOTOS})
+        Photos ({photos.length}/{MAX_PHOTOS})
       </span>
       <p className={styles.hint}>
-        Перетаскивайте, чтобы изменить порядок. Первое фото (★) — главное.
-        Новые фото добавляются после текущих. Удалённые фото пропадут только
-        после сохранения.
+        Перетаскивайте, чтобы изменить порядок. Первое фото (★) — главное,
+        им может стать и только что добавленное. Удалённые фото пропадут
+        только после сохранения.
       </p>
 
       <label
@@ -147,40 +131,30 @@ export const PhotoOrderEditor = ({
         onChange={handleFileChange}
       />
 
-      {photoCount > 0 && (
+      {photos.length > 0 && (
         <div className={styles.previewContainer}>
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
             onDragEnd={handleDragEnd}
           >
-            <SortableContext
-              items={retainedImages}
-              strategy={rectSortingStrategy}
-            >
-              {retainedImages.map((url, index) => (
-                <SortablePhoto
-                  key={url}
-                  id={url}
-                  source={previewByFullUrl.get(url) ?? url}
-                  index={index}
-                  onRemove={() => removeRetained(url)}
-                />
-              ))}
-            </SortableContext>
-            <SortableContext
-              items={newImages.map(fileId)}
-              strategy={rectSortingStrategy}
-            >
-              {newImages.map((file, index) => (
-                <SortablePhoto
-                  key={fileId(file)}
-                  id={fileId(file)}
-                  source={file}
-                  index={retainedImages.length + index}
-                  onRemove={() => removeNew(file)}
-                />
-              ))}
+            <SortableContext items={photoIds} strategy={rectSortingStrategy}>
+              {photos.map((photo, index) => {
+                const id = photoIds[index];
+                return (
+                  <SortablePhoto
+                    key={id}
+                    id={id}
+                    source={
+                      photo.kind === "retained"
+                        ? (previewByFullUrl.get(photo.url) ?? photo.url)
+                        : photo.file
+                    }
+                    index={index}
+                    onRemove={() => removePhoto(id)}
+                  />
+                );
+              })}
             </SortableContext>
           </DndContext>
         </div>

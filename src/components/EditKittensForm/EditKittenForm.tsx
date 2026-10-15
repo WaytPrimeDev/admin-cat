@@ -13,6 +13,7 @@ import { updateKitten } from "../../store/slices/kittensSlice";
 import type { Kitten, KittenPrice } from "../../types";
 import { buildUpdateKittenFormData } from "../../utils/buildUpdateFormData";
 import { withCurrentOption } from "../../utils/withCurrentOption";
+import type { PhotoItem } from "../../validation/photoSelection";
 import { PhotoOrderEditor } from "../PhotoOrderEditor/PhotoOrderEditor";
 import formStyles from "../AddKittenForm/AddKittenForm.module.css";
 import styles from "./EditKittenForm.module.css";
@@ -43,9 +44,10 @@ const EditKittenForm = ({ kitten, onClose }: EditKittenFormProps) => {
     handleSubmit,
     setValue,
     control,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isValid },
   } = useForm<UpdateKittenFormValues>({
     resolver: zodResolver(updateKittenSchema),
+    mode: "onChange",
     defaultValues: {
       nameUa: kitten.nameUa,
       nameEn: kitten.nameEn,
@@ -57,13 +59,14 @@ const EditKittenForm = ({ kitten, onClose }: EditKittenFormProps) => {
       birthDay: kitten.birthDay?.slice(0, 10) ?? "",
       breeding: toPriceInput(kitten.price?.breeding),
       pet: toPriceInput(kitten.price?.pet),
-      retainedImages: kitten.images.map((image) => image.full),
-      newImages: [],
+      photos: kitten.images.map((image) => ({
+        kind: "retained" as const,
+        url: image.full,
+      })),
     },
   });
 
-  const retainedImages = useWatch({ control, name: "retainedImages" });
-  const newImages = useWatch({ control, name: "newImages" });
+  const photos = useWatch({ control, name: "photos" });
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -72,9 +75,8 @@ const EditKittenForm = ({ kitten, onClose }: EditKittenFormProps) => {
     };
   }, []);
 
-  const setPhotos = (nextRetained: string[], nextNew: File[]) => {
-    setValue("retainedImages", nextRetained, { shouldValidate: true });
-    setValue("newImages", nextNew, { shouldValidate: true });
+  const setPhotos = (nextPhotos: PhotoItem[]) => {
+    setValue("photos", nextPhotos, { shouldValidate: true });
   };
 
   const onSubmit = async (values: UpdateKittenFormValues) => {
@@ -285,10 +287,9 @@ const EditKittenForm = ({ kitten, onClose }: EditKittenFormProps) => {
           <PhotoOrderEditor
             inputId="edit-kitten-photos"
             existingImages={kitten.images}
-            retainedImages={retainedImages}
-            newImages={newImages}
+            photos={photos}
             onChange={setPhotos}
-            error={errors.newImages?.message}
+            error={errors.photos?.message}
           />
 
           {submitError && (
@@ -307,7 +308,7 @@ const EditKittenForm = ({ kitten, onClose }: EditKittenFormProps) => {
             <button
               type="submit"
               className={formStyles.submitBtn}
-              disabled={isSubmitting}
+              disabled={!isValid || isSubmitting}
             >
               {isSubmitting ? "Saving..." : "Save Changes"}
             </button>

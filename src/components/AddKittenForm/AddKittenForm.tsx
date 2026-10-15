@@ -47,10 +47,18 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
     reset,
     setValue,
     control,
-    formState: { errors },
+    formState: { errors, isValid, isSubmitting },
   } = useForm<KittenFormValues>({
     resolver: zodResolver(kittenSchema),
+    mode: "onChange",
     defaultValues: {
+      nameUa: "",
+      nameEn: "",
+      color: "",
+      breed: "",
+      birthDay: "",
+      breeding: "",
+      pet: "",
       images: [],
     },
   });
@@ -373,11 +381,16 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
               type="button"
               className={styles.cancelBtn}
               onClick={() => closeForm()}
+              disabled={isSubmitting}
             >
               Cancel
             </button>
-            <button type="submit" className={styles.submitBtn}>
-              Save Kitten
+            <button
+              type="submit"
+              className={styles.submitBtn}
+              disabled={!isValid || isSubmitting}
+            >
+              {isSubmitting ? "Saving..." : "Save Kitten"}
             </button>
           </div>
         </form>

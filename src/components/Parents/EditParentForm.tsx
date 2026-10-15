@@ -12,6 +12,7 @@ import { updateParent } from "../../store/slices/parentsSlice";
 import type { Parent } from "../../types";
 import { buildUpdateParentFormData } from "../../utils/buildUpdateFormData";
 import { withCurrentOption } from "../../utils/withCurrentOption";
+import type { PhotoItem } from "../../validation/photoSelection";
 import { PhotoOrderEditor } from "../PhotoOrderEditor/PhotoOrderEditor";
 import formStyles from "../AddParentForm/AddParentForm.module.css";
 import styles from "./EditParentForm.module.css";
@@ -31,22 +32,24 @@ const EditParentForm = ({ parent, onClose }: EditParentFormProps) => {
     handleSubmit,
     setValue,
     control,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isValid },
   } = useForm<UpdateParentFormValues>({
     resolver: zodResolver(updateParentSchema),
+    mode: "onChange",
     defaultValues: {
       nameUa: parent.nameUa,
       nameEn: parent.nameEn,
       color: parent.color,
       breed: parent.breed,
       sex: parent.sex,
-      retainedImages: parent.images.map((image) => image.full),
-      newImages: [],
+      photos: parent.images.map((image) => ({
+        kind: "retained" as const,
+        url: image.full,
+      })),
     },
   });
 
-  const retainedImages = useWatch({ control, name: "retainedImages" });
-  const newImages = useWatch({ control, name: "newImages" });
+  const photos = useWatch({ control, name: "photos" });
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -55,9 +58,8 @@ const EditParentForm = ({ parent, onClose }: EditParentFormProps) => {
     };
   }, []);
 
-  const setPhotos = (nextRetained: string[], nextNew: File[]) => {
-    setValue("retainedImages", nextRetained, { shouldValidate: true });
-    setValue("newImages", nextNew, { shouldValidate: true });
+  const setPhotos = (nextPhotos: PhotoItem[]) => {
+    setValue("photos", nextPhotos, { shouldValidate: true });
   };
 
   const onSubmit = async (values: UpdateParentFormValues) => {
@@ -205,10 +207,9 @@ const EditParentForm = ({ parent, onClose }: EditParentFormProps) => {
           <PhotoOrderEditor
             inputId="edit-parent-photos"
             existingImages={parent.images}
-            retainedImages={retainedImages}
-            newImages={newImages}
+            photos={photos}
             onChange={setPhotos}
-            error={errors.newImages?.message}
+            error={errors.photos?.message}
           />
 
           {submitError && (
@@ -227,7 +228,7 @@ const EditParentForm = ({ parent, onClose }: EditParentFormProps) => {
             <button
               type="submit"
               className={formStyles.submitBtn}
-              disabled={isSubmitting}
+              disabled={!isValid || isSubmitting}
             >
               {isSubmitting ? "Saving..." : "Save Changes"}
             </button>

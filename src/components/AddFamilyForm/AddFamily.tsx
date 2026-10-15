@@ -23,10 +23,13 @@ const AddFamilyForm = ({ editShowForm }: AddFamilyFormProps) => {
     register,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isValid, isSubmitting },
   } = useForm<FamilyFormInput, undefined, FamilyFormValues>({
     resolver: zodResolver(familySchema),
+    mode: "onChange",
     defaultValues: {
+      name: "",
+      breed: "",
       dad: undefined,
       mom: undefined,
       kittens: [],
@@ -236,11 +239,16 @@ const AddFamilyForm = ({ editShowForm }: AddFamilyFormProps) => {
               type="button"
               className={styles.cancelBtn}
               onClick={() => editShowForm(false)}
+              disabled={isSubmitting}
             >
               Cancel
             </button>
-            <button type="submit" className={styles.submitBtn}>
-              Save Family
+            <button
+              type="submit"
+              className={styles.submitBtn}
+              disabled={!isValid || isSubmitting}
+            >
+              {isSubmitting ? "Saving..." : "Save Family"}
             </button>
           </div>
         </form>

@@ -46,10 +46,15 @@ const AddParentForm = ({ editShowForm }: AddParentFormProps) => {
     setValue,
     reset,
     control,
-    formState: { errors },
+    formState: { errors, isValid, isSubmitting },
   } = useForm<ParentFormValues>({
     resolver: zodResolver(parentSchema),
+    mode: "onChange",
     defaultValues: {
+      nameUa: "",
+      nameEn: "",
+      color: "",
+      breed: "",
       images: [],
     },
   });
@@ -327,11 +332,16 @@ const AddParentForm = ({ editShowForm }: AddParentFormProps) => {
               type="button"
               className={styles.cancelBtn}
               onClick={() => editShowForm(false)}
+              disabled={isSubmitting}
             >
               Cancel
             </button>
-            <button type="submit" className={styles.submitBtn}>
-              Save Parent
+            <button
+              type="submit"
+              className={styles.submitBtn}
+              disabled={!isValid || isSubmitting}
+            >
+              {isSubmitting ? "Saving..." : "Save Parent"}
             </button>
           </div>
         </form>
