@@ -1,17 +1,12 @@
 import {
   DndContext,
   closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
   type DragEndEvent,
 } from "@dnd-kit/core";
 
 import {
   arrayMove,
   SortableContext,
-  sortableKeyboardCoordinates,
   rectSortingStrategy,
 } from "@dnd-kit/sortable";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -25,6 +20,7 @@ import {
 } from "../../validation/kittenSchema";
 import { useAppDispatch, type RootState } from "../../store";
 import { addKitten } from "../../store/slices/kittensSlice";
+import { usePhotoDndSensors } from "../../hooks/usePhotoDndSensors";
 import { SortablePhoto } from "../SortablePhoto/SortablePhoto";
 import { AdminDynamicSelect } from "../AdminDynamicSelect/AdminDynamicSelect";
 import { useSelector } from "react-redux";
@@ -124,12 +120,7 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
     }
   };
 
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
-  );
+  const sensors = usePhotoDndSensors();
 
   const onSubmit = async (data: KittenFormValues) => {
     const formData = new FormData();
@@ -323,6 +314,11 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
 
           <div className={styles.formGroup}>
             <label>Photos (Up to 5)</label>
+            <p className={styles.hint}>
+              Перетягивайте фото, чтобы изменить порядок. На телефоне и планшете
+              сначала нажмите и удерживайте фото, потом тяните. Первое фото (★) —
+              главное.
+            </p>
             <label className={styles.uploadBtn} htmlFor="file-upload">
               <svg
                 width="16"

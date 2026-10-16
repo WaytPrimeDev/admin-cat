@@ -30,6 +30,14 @@
   border-color: #007bff;
 }
 
+/* Фото, которое тянут: поднимаем над остальными и показываем, что оно "взято" */
+.previewItem.dragging {
+  z-index: 20;
+  border-color: #007bff;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  opacity: 0.92;
+}
+
 /* Область, за которую можно тянуть (картинка) */
 .dragHandle {
   width: 100%;
@@ -37,6 +45,18 @@
   cursor: grab;
   overflow: hidden;
   border-radius: 8px;
+  /* Без этого на телефоне жест уходит браузеру (скролл/зум) и фото не двигается */
+  touch-action: manipulation;
+  /* Долгое нажатие не должно выделять текст и открывать меню картинки */
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.previewItem.dragging .dragHandle {
+  cursor: grabbing;
+  touch-action: none;
 }
 
 .dragHandle:active {
@@ -89,4 +109,20 @@
 
 .removeSmall:hover {
   background-color: #d9363e;
+}
+
+/* На тач-устройствах крестик и сами фото крупнее: пальцем надо попадать */
+@media (hover: none) and (pointer: coarse) {
+  .previewItem {
+    width: 96px;
+    height: 96px;
+  }
+
+  .removeSmall {
+    width: 32px;
+    height: 32px;
+    top: -10px;
+    right: -10px;
+    font-size: 20px;
+  }
 }

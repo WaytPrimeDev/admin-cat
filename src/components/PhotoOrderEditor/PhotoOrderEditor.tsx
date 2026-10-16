@@ -1,19 +1,16 @@
 import {
   DndContext,
   closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
   type DragEndEvent,
 } from "@dnd-kit/core";
 import {
   arrayMove,
   SortableContext,
-  sortableKeyboardCoordinates,
   rectSortingStrategy,
 } from "@dnd-kit/sortable";
 import { useMemo } from "react";
+
+import { usePhotoDndSensors } from "../../hooks/usePhotoDndSensors";
 
 import type { KittenImage } from "../../types";
 import {
@@ -55,12 +52,7 @@ export const PhotoOrderEditor = ({
     [existingImages],
   );
 
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
-  );
+  const sensors = usePhotoDndSensors();
 
   const photoIds = useMemo(() => photos.map(photoId), [photos]);
 
@@ -96,7 +88,8 @@ export const PhotoOrderEditor = ({
         Photos ({photos.length}/{MAX_PHOTOS})
       </span>
       <p className={styles.hint}>
-        Перетаскивайте, чтобы изменить порядок. Первое фото (★) — главное,
+Перетаскивайте, чтобы изменить порядок (на телефоне и планшете —
+        нажмите и удерживайте фото, затем тяните). Первое фото (★) — главное,
         им может стать и только что добавленное. Удалённые фото пропадут
         только после сохранения.
       </p>

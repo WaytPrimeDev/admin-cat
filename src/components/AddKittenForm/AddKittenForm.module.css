@@ -199,6 +199,13 @@
   background-color: #f0f0ff;
 }
 
+.hint {
+  margin: 0 0 8px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #6b7280;
+}
+
 .previewContainer {
   display: flex;
   flex-wrap: wrap;
