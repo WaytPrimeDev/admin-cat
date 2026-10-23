@@ -8,43 +8,27 @@ import { useState, type Dispatch, type SetStateAction } from "react";
 import type { Kitten } from "../../types";
 import ViewKittenModal from "../ViewKittenModal/ViewKittenModal";
 
-import api from "../../api/axiosInstance";
+import TelegramPublishModal from "../TelegramPublishModal/TelegramPublishModal";
 
 // Микро-компонент кнопки публикации в Telegram
 const TelegramPublishBtn = ({
-  kittenId,
+  kitten,
   initialPublished = false,
 }: {
-  kittenId: string;
+  kitten: Kitten;
   initialPublished?: boolean;
 }) => {
-  const [isLoading, setIsLoading] = useState(false);
   const [isPublished, setIsPublished] = useState(initialPublished);
-
-  const handlePublish = async () => {
-    setIsLoading(true);
-    try {
-      await api.post(`/tgbot/${kittenId}`);
-      setIsPublished(true);
-    } catch (error) {
-      console.error(error);
-      alert("Ошибка публикации");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
-    <button
-      onClick={handlePublish}
-      disabled={isPublished || isLoading}
-      className={`${styles.socialBtn} ${isPublished ? styles.published : ""}`}
-      aria-label="Publish to Telegram"
-      title={isPublished ? "Уже в Telegram" : "Опубликовать в Telegram"}
-    >
-      {isLoading ? (
-        <span className={styles.spinner}>⏳</span>
-      ) : (
+    <>
+      <button
+        onClick={() => setIsModalOpen(true)}
+        className={`${styles.socialBtn} ${isPublished ? styles.published : ""}`}
+        aria-label="Publish to Telegram"
+        title={isPublished ? "Уже в Telegram" : "Опубликовать в Telegram"}
+      >
         <svg
           width="18"
           height="18"
@@ -57,8 +41,16 @@ const TelegramPublishBtn = ({
             fill={isPublished ? "#16a34a" : "#8a8ab5"}
           />
         </svg>
+      </button>
+      {isModalOpen && (
+        <TelegramPublishModal
+          kitten={kitten}
+          isPublished={isPublished}
+          onClose={() => setIsModalOpen(false)}
+          onPublished={() => setIsPublished(true)}
+        />
       )}
-    </button>
+    </>
   );
 };
 
@@ -204,7 +196,7 @@ const KittensCard = ({ editKitten, queryKittens }: KittenCardProps) => {
               <td data-label="SOCIALS">
                 <div className={styles.socialsGroup}>
                   <TelegramPublishBtn
-                    kittenId={kitten._id}
+                    kitten={kitten}
                     initialPublished={kitten.isTelegramPublished}
                   />
                   <button

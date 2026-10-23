@@ -1,7 +1,10 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useRef } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import styles from "./SortablePhoto.module.css";
+
+const TRANSPARENT_PIXEL =
+  "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 
 interface Props {
   id: string;
@@ -27,19 +30,23 @@ export const SortablePhoto = ({ id, source, onRemove, index }: Props) => {
     transition,
   };
 
-  // Создаём локальный URL один раз на файл, а не на каждый ре-рендер при перетаскивании
-  const previewUrl = useMemo(
-    () => (typeof source === "string" ? source : URL.createObjectURL(source)),
-    [source],
-  );
+  const imgRef = useRef<HTMLImageElement>(null);
 
-  // Освобождаем URL при размонтировании, а не в onLoad: на мобильных браузер
-  // может перерисовать картинку во время перетаскивания, и отозванный URL
-  // оставил бы пустой квадрат.
+  // blob-URL создаём и отзываем в одном эффекте и пишем прямо в DOM: держать
+  // его в useMemo нельзя — в StrictMode уборка эффекта отзывает ссылку, а
+  // useMemo при повторном прогоне новую не пересчитывает, и в превью остаётся
+  // битая картинка. Отзыв именно при размонтировании, а не в onLoad: на
+  // мобильных браузер может перерисовать картинку во время перетаскивания, и
+  // отозванный URL оставил бы пустой квадрат.
   useEffect(() => {
-    if (typeof source === "string") return;
-    return () => URL.revokeObjectURL(previewUrl);
-  }, [previewUrl, source]);
+    const img = imgRef.current;
+    if (typeof source === "string" || !img) return;
+
+    const objectUrl = URL.createObjectURL(source);
+    img.src = objectUrl;
+
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [source]);
 
   return (
     <div
@@ -54,7 +61,10 @@ export const SortablePhoto = ({ id, source, onRemove, index }: Props) => {
         className={styles.dragHandle}
       >
         <img
-          src={previewUrl}
+          ref={imgRef}
+          // Для файла src проставляет эффект; до этого — прозрачный пиксель,
+          // чтобы не мелькала иконка битой картинки
+          src={typeof source === "string" ? source : TRANSPARENT_PIXEL}
           alt="preview"
           className={styles.previewImage}
           // Иначе на мобильных долгое нажатие открывает меню «сохранить

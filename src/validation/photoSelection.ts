@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const MAX_PHOTOS = 5;
+export const MAX_PHOTOS = 10;
 
 // Токен нового файла в imagesOrder: индекс в массиве отправляемых файлов
 export const NEW_PHOTO_TOKEN_PREFIX = "new:";

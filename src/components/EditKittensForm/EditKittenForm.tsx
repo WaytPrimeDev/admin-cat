@@ -13,6 +13,7 @@ import { updateKitten } from "../../store/slices/kittensSlice";
 import type { Kitten, KittenPrice } from "../../types";
 import { buildUpdateKittenFormData } from "../../utils/buildUpdateFormData";
 import { withCurrentOption } from "../../utils/withCurrentOption";
+import { getTodayDateString } from "../../utils/today";
 import type { PhotoItem } from "../../validation/photoSelection";
 import { PhotoOrderEditor } from "../PhotoOrderEditor/PhotoOrderEditor";
 import formStyles from "../AddKittenForm/AddKittenForm.module.css";
@@ -210,6 +211,7 @@ const EditKittenForm = ({ kitten, onClose }: EditKittenFormProps) => {
               <input
                 id="edit-kitten-birthDay"
                 type="date"
+                max={getTodayDateString()}
                 {...register("birthDay")}
                 className={formStyles.input}
               />

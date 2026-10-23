@@ -23,10 +23,17 @@ import {
   parentSchema,
   type ParentFormValues,
 } from "../../validation/ParentSchema";
+import { MAX_PHOTOS } from "../../validation/photoSelection";
 import { useAppDispatch, type RootState } from "../../store";
 import { addParent } from "../../store/slices/parentsSlice";
 import { SortablePhoto } from "../SortablePhoto/SortablePhoto";
 import { AdminDynamicSelect } from "../AdminDynamicSelect/AdminDynamicSelect";
+import {
+  FieldHint,
+  MissingFieldsNotice,
+  RequiredLegend,
+  RequiredMark,
+} from "../RequiredField/RequiredField";
 import { useSelector } from "react-redux";
 import {
   addBreed,
@@ -39,6 +46,16 @@ interface AddParentFormProps {
   editShowForm: Dispatch<SetStateAction<boolean>>;
 }
 
+// Названия обязательных полей для сводки под формой
+const REQUIRED_LABELS: Record<string, string> = {
+  nameUa: "Name (UA)",
+  nameEn: "Name (EN)",
+  breed: "Breed",
+  color: "Color / Pattern",
+  sex: "Gender",
+  images: "Photos",
+};
+
 const AddParentForm = ({ editShowForm }: AddParentFormProps) => {
   const {
     register,
@@ -46,7 +63,7 @@ const AddParentForm = ({ editShowForm }: AddParentFormProps) => {
     setValue,
     reset,
     control,
-    formState: { errors, isValid, isSubmitting },
+    formState: { errors, isSubmitting },
   } = useForm<ParentFormValues>({
     resolver: zodResolver(parentSchema),
     mode: "onChange",
@@ -78,7 +95,7 @@ const AddParentForm = ({ editShowForm }: AddParentFormProps) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files);
       setSelectedFiles(() => {
-        const combined = newFiles.slice(0, 5);
+        const combined = newFiles.slice(0, MAX_PHOTOS);
         setValue("images", combined, { shouldValidate: true });
         return combined;
       });
@@ -198,26 +215,38 @@ const AddParentForm = ({ editShowForm }: AddParentFormProps) => {
 
         {/* Тело формы */}
         <form onSubmit={handleSubmit(onSubmit)} className={styles.formBody}>
+          <RequiredLegend />
+
           <div className={styles.gridRow}>
             <div className={styles.formGroup}>
-              <label>Name (UA)</label>
+              <label>
+                Name (UA)
+                <RequiredMark />
+              </label>
               <input
                 placeholder="e.g., Луна"
                 {...register("nameUa")}
                 className={styles.input}
+                aria-invalid={Boolean(errors.nameUa)}
               />
+              <FieldHint>Кличка для украинской версии сайта</FieldHint>
               {errors.nameUa && (
                 <span className={styles.error}>{errors.nameUa.message}</span>
               )}
             </div>
 
             <div className={styles.formGroup}>
-              <label>Name (EN)</label>
+              <label>
+                Name (EN)
+                <RequiredMark />
+              </label>
               <input
                 placeholder="e.g., Luna"
                 {...register("nameEn")}
                 className={styles.input}
+                aria-invalid={Boolean(errors.nameEn)}
               />
+              <FieldHint>Кличка для английской версии сайта</FieldHint>
               {errors.nameEn && (
                 <span className={styles.error}>{errors.nameEn.message}</span>
               )}
@@ -228,12 +257,14 @@ const AddParentForm = ({ editShowForm }: AddParentFormProps) => {
             <div className={styles.formGroup}>
               <AdminDynamicSelect
                 label="Breed"
+                required
                 options={breeds}
                 registerProps={register("breed")}
                 currentValue={selectedBreed}
                 onAdd={handleAddBreed}
                 onRemove={handleRemoveBreed}
               />
+              <FieldHint>Нет нужной породы — добавьте её кнопкой ➕</FieldHint>
               {errors.breed && (
                 <span className={styles.error}>{errors.breed.message}</span>
               )}
@@ -242,12 +273,16 @@ const AddParentForm = ({ editShowForm }: AddParentFormProps) => {
             <div className={styles.formGroup}>
               <AdminDynamicSelect
                 label="Color / Pattern"
+                required
                 options={colors}
                 registerProps={register("color")}
                 currentValue={selectedColor}
                 onAdd={handleAddColor}
                 onRemove={handleRemoveColor}
               />
+              <FieldHint>
+                Нет нужного окраса — добавьте его кнопкой ➕
+              </FieldHint>
               {errors.color && (
                 <span className={styles.error}>{errors.color.message}</span>
               )}
@@ -257,8 +292,15 @@ const AddParentForm = ({ editShowForm }: AddParentFormProps) => {
           {/* Пол занимает отдельную строку (на десктопе можно сделать на всю ширину или оставить слева) */}
           <div className={styles.gridRow}>
             <div className={styles.formGroup}>
-              <label>Gender</label>
-              <select {...register("sex")} className={styles.input}>
+              <label>
+                Gender
+                <RequiredMark />
+              </label>
+              <select
+                {...register("sex")}
+                className={styles.input}
+                aria-invalid={Boolean(errors.sex)}
+              >
                 <option value="" disabled>
                   Select gender
                 </option>
@@ -272,7 +314,15 @@ const AddParentForm = ({ editShowForm }: AddParentFormProps) => {
           </div>
 
           <div className={styles.formGroup}>
-            <label>Photos (Up to 5)</label>
+            <label>
+              Photos
+              <RequiredMark />
+            </label>
+            <FieldHint>
+              Нужно от 1 до {MAX_PHOTOS} фото. Перетягивайте фото, чтобы
+              изменить порядок. На телефоне и планшете сначала нажмите и
+              удерживайте фото, потом тяните. Первое фото (★) — главное.
+            </FieldHint>
             <label className={styles.uploadBtn} htmlFor="parent-file-upload">
               <svg
                 width="16"
@@ -326,6 +376,8 @@ const AddParentForm = ({ editShowForm }: AddParentFormProps) => {
             )}
           </div>
 
+          <MissingFieldsNotice errors={errors} labels={REQUIRED_LABELS} />
+
           {/* Кнопки */}
           <div className={styles.footer}>
             <button
@@ -336,10 +388,12 @@ const AddParentForm = ({ editShowForm }: AddParentFormProps) => {
             >
               Cancel
             </button>
+            {/* Кнопка активна всегда: клик по ней показывает, чего не хватает,
+                вместо молчаливо заблокированной кнопки */}
             <button
               type="submit"
               className={styles.submitBtn}
-              disabled={!isValid || isSubmitting}
+              disabled={isSubmitting}
             >
               {isSubmitting ? "Saving..." : "Save Parent"}
             </button>

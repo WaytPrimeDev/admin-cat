@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { UseFormRegisterReturn } from "react-hook-form";
 import { useAppDispatch } from "../../store";
 import { clearError } from "../../store/slices/filterSlice";
+import { RequiredMark } from "../RequiredField/RequiredField";
 
 export interface SelectOption {
   _id: string; // или id, если на бекенде по-другому
@@ -12,6 +13,7 @@ export interface SelectOption {
 
 interface AdminDynamicSelectProps {
   label: string;
+  required?: boolean;
   options: SelectOption[];
   registerProps: UseFormRegisterReturn;
   currentValue: string;
@@ -22,6 +24,7 @@ interface AdminDynamicSelectProps {
 
 export const AdminDynamicSelect = ({
   label,
+  required = false,
   options,
   registerProps,
   currentValue,
@@ -71,7 +74,10 @@ export const AdminDynamicSelect = ({
 
   return (
     <div className="form-group">
-      <label>{label}</label>
+      <label>
+        {label}
+        {required && <RequiredMark />}
+      </label>
 
       {isAdding ? (
         <div style={{ display: "flex", gap: "8px" }}>

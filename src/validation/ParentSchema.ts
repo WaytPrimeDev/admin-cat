@@ -1,5 +1,5 @@
 import z from "zod";
-import { photoSelectionShape } from "./photoSelection";
+import { MAX_PHOTOS, photoSelectionShape } from "./photoSelection";
 
 const Sex = {
   MALE: "male",
@@ -16,7 +16,7 @@ export const parentSchema = z.object({
   images: z
     .array(z.any())
     .min(1, "Добавьте хотя бы одно фото")
-    .max(5, "Максимум 5 фотографий"),
+    .max(MAX_PHOTOS, `Максимум ${MAX_PHOTOS} фотографий`),
 });
 
 export const updateParentSchema = z.object({

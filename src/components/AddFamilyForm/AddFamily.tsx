@@ -13,17 +13,30 @@ import {
 import { createFamily } from "../../store/slices/familiesSlice";
 import { fetchKittens } from "../../store/slices/kittensSlice";
 import { fetchParents } from "../../store/slices/parentsSlice";
+import {
+  FieldHint,
+  MissingFieldsNotice,
+  RequiredLegend,
+  RequiredMark,
+} from "../RequiredField/RequiredField";
 
 interface AddFamilyFormProps {
   editShowForm: Dispatch<SetStateAction<boolean>>;
 }
+
+// Названия обязательных полей для сводки под формой
+const REQUIRED_LABELS: Record<string, string> = {
+  name: "Family / Litter Name",
+  breed: "Breed",
+  kittens: "Litter (Kittens)",
+};
 
 const AddFamilyForm = ({ editShowForm }: AddFamilyFormProps) => {
   const {
     register,
     handleSubmit,
     reset,
-    formState: { errors, isValid, isSubmitting },
+    formState: { errors, isSubmitting },
   } = useForm<FamilyFormInput, undefined, FamilyFormValues>({
     resolver: zodResolver(familySchema),
     mode: "onChange",
@@ -116,6 +129,8 @@ const AddFamilyForm = ({ editShowForm }: AddFamilyFormProps) => {
 
         {/* Тело формы */}
         <form className={styles.formBody} onSubmit={handleSubmit(onSubmit)}>
+          <RequiredLegend />
+
           {/* Секция: Общая информация */}
           <div className={styles.sectionBox}>
             <div className={styles.sectionHeader}>
@@ -125,21 +140,33 @@ const AddFamilyForm = ({ editShowForm }: AddFamilyFormProps) => {
 
             <div className={styles.gridRow}>
               <div className={styles.formGroup}>
-                <label>Family / Litter Name</label>
+                <label>
+                  Family / Litter Name
+                  <RequiredMark />
+                </label>
                 <input
                   type="text"
                   placeholder="e.g., Spring Litter 2026"
                   className={styles.input}
                   {...register("name")}
+                  aria-invalid={Boolean(errors.name)}
                 />
+                <FieldHint>Как помёт будет называться в списке</FieldHint>
                 {errors.name && (
                   <span className={styles.error}>{errors.name.message}</span>
                 )}
               </div>
 
               <div className={styles.formGroup}>
-                <label>Breed</label>
-                <select className={styles.select} {...register("breed")}>
+                <label>
+                  Breed
+                  <RequiredMark />
+                </label>
+                <select
+                  className={styles.select}
+                  {...register("breed")}
+                  aria-invalid={Boolean(errors.breed)}
+                >
                   <option value="">Select breed</option>
                   {breeds.map((breed) => (
                     <option key={breed._id} value={breed.name}>
@@ -162,6 +189,7 @@ const AddFamilyForm = ({ editShowForm }: AddFamilyFormProps) => {
             </div>
             <div className={styles.formGroup}>
               <label>Select Father</label>
+              <FieldHint>Необязательно — можно оставить «Unknown»</FieldHint>
               <select className={styles.select} {...register("dad")}>
                 <option value="">Not selected (Unknown)</option>
                 {sexParents.dad.map((parent) => (
@@ -184,6 +212,7 @@ const AddFamilyForm = ({ editShowForm }: AddFamilyFormProps) => {
             </div>
             <div className={styles.formGroup}>
               <label>Select Mother</label>
+              <FieldHint>Необязательно — можно оставить «Unknown»</FieldHint>
               <select className={styles.select} {...register("mom")}>
                 <option value="">Not selected (Unknown)</option>
                 {sexParents.mom.map((parent) => (
@@ -205,7 +234,15 @@ const AddFamilyForm = ({ editShowForm }: AddFamilyFormProps) => {
               <div className={styles.sectionLine}></div>
             </div>
             <div className={styles.formGroup}>
-              <label>Select kittens belonging to this family (min. 1)</label>
+              <label>
+                Select kittens belonging to this family
+                <RequiredMark />
+              </label>
+              <FieldHint>
+                Отметьте минимум одного котёнка. В списке только котята без
+                семьи — если нужного нет, сначала открепите его от текущей
+                семьи.
+              </FieldHint>
               {showKittens.length > 0 ? (
                 <div className={styles.checkboxGroup}>
                   {showKittens.map((kitten) => (
@@ -233,6 +270,8 @@ const AddFamilyForm = ({ editShowForm }: AddFamilyFormProps) => {
             </div>
           </div>
 
+          <MissingFieldsNotice errors={errors} labels={REQUIRED_LABELS} />
+
           {/* Подвал с кнопками */}
           <div className={styles.footer}>
             <button
@@ -243,10 +282,12 @@ const AddFamilyForm = ({ editShowForm }: AddFamilyFormProps) => {
             >
               Cancel
             </button>
+            {/* Кнопка активна всегда: клик по ней показывает, чего не хватает,
+                вместо молчаливо заблокированной кнопки */}
             <button
               type="submit"
               className={styles.submitBtn}
-              disabled={!isValid || isSubmitting}
+              disabled={isSubmitting}
             >
               {isSubmitting ? "Saving..." : "Save Family"}
             </button>

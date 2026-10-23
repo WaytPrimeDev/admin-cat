@@ -274,3 +274,14 @@
     width: auto; /* Кнопки сужаются до размера текста */
   }
 }
+
+/* Подсветка поля, которое не прошло валидацию */
+.input[aria-invalid="true"] {
+  border-color: #dc2626;
+  background-color: #fef2f2;
+}
+
+.input[aria-invalid="true"]:focus {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+}

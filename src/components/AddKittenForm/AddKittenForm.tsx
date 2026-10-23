@@ -1,8 +1,4 @@
-import {
-  DndContext,
-  closestCenter,
-  type DragEndEvent,
-} from "@dnd-kit/core";
+import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core";
 
 import {
   arrayMove,
@@ -18,11 +14,19 @@ import {
   kittenSchema,
   type KittenFormValues,
 } from "../../validation/kittenSchema";
+import { MAX_PHOTOS } from "../../validation/photoSelection";
+import { getTodayDateString } from "../../utils/today";
 import { useAppDispatch, type RootState } from "../../store";
 import { addKitten } from "../../store/slices/kittensSlice";
 import { usePhotoDndSensors } from "../../hooks/usePhotoDndSensors";
 import { SortablePhoto } from "../SortablePhoto/SortablePhoto";
 import { AdminDynamicSelect } from "../AdminDynamicSelect/AdminDynamicSelect";
+import {
+  FieldHint,
+  MissingFieldsNotice,
+  RequiredLegend,
+  RequiredMark,
+} from "../RequiredField/RequiredField";
 import { useSelector } from "react-redux";
 import {
   addBreed,
@@ -36,6 +40,17 @@ interface AddKittenFormProps {
   editShowForm: Dispatch<SetStateAction<boolean>>;
 }
 
+// Названия обязательных полей для сводки под формой
+const REQUIRED_LABELS: Record<string, string> = {
+  nameUa: "Name (UA)",
+  nameEn: "Name (EN)",
+  breed: "Breed",
+  color: "Color / Pattern",
+  birthDay: "Date of Birth",
+  sex: "Gender",
+  images: "Photos",
+};
+
 const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
   const {
     register,
@@ -43,7 +58,7 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
     reset,
     setValue,
     control,
-    formState: { errors, isValid, isSubmitting },
+    formState: { errors, isSubmitting },
   } = useForm<KittenFormValues>({
     resolver: zodResolver(kittenSchema),
     mode: "onChange",
@@ -155,7 +170,7 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
       const newFiles = Array.from(e.target.files);
 
       setSelectedFiles(() => {
-        const combined = newFiles.slice(0, 5);
+        const combined = newFiles.slice(0, MAX_PHOTOS);
         setValue("images", combined, { shouldValidate: true });
         return combined;
       });
@@ -206,26 +221,38 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
 
         {/* Тело формы */}
         <form onSubmit={handleSubmit(onSubmit)} className={styles.formBody}>
+          <RequiredLegend />
+
           <div className={styles.gridRow}>
             <div className={styles.formGroup}>
-              <label>Name (UA)</label>
+              <label>
+                Name (UA)
+                <RequiredMark />
+              </label>
               <input
                 placeholder="e.g., Пушок"
                 {...register("nameUa")}
                 className={styles.input}
+                aria-invalid={Boolean(errors.nameUa)}
               />
+              <FieldHint>Кличка украинской версии сайта</FieldHint>
               {errors.nameUa && (
                 <span className={styles.error}>{errors.nameUa.message}</span>
               )}
             </div>
 
             <div className={styles.formGroup}>
-              <label>Name (EN)</label>
+              <label>
+                Name (EN)
+                <RequiredMark />
+              </label>
               <input
                 placeholder="e.g., Snowball"
                 {...register("nameEn")}
                 className={styles.input}
+                aria-invalid={Boolean(errors.nameEn)}
               />
+              <FieldHint>Кличка для английской версии сайта</FieldHint>
               {errors.nameEn && (
                 <span className={styles.error}>{errors.nameEn.message}</span>
               )}
@@ -236,12 +263,14 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
             <div className={styles.formGroup}>
               <AdminDynamicSelect
                 label="Breed"
+                required
                 options={breeds}
                 registerProps={register("breed")}
                 currentValue={selectedBreed}
                 onAdd={handleAddBreed}
                 onRemove={handleRemoveBreed}
               />
+              <FieldHint>Нет нужной породы — добавьте её кнопкой ➕</FieldHint>
               {errorBreed && <p className={styles.error}>{errorBreed}</p>}
               {errors.breed && (
                 <span className={styles.error}>{errors.breed.message}</span>
@@ -251,12 +280,16 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
             <div className={styles.formGroup}>
               <AdminDynamicSelect
                 label="Color / Pattern"
+                required
                 options={colors}
                 registerProps={register("color")}
                 currentValue={selectedColor}
                 onAdd={handleAddColor}
                 onRemove={handleRemoveColor}
               />
+              <FieldHint>
+                Нет нужного окраса — добавьте его кнопкой ➕
+              </FieldHint>
               {errorColor && <p className={styles.error}>{errorColor}</p>}
               {errors.color && (
                 <span className={styles.error}>{errors.color.message}</span>
@@ -266,11 +299,16 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
 
           <div className={styles.gridRow}>
             <div className={styles.formGroup}>
-              <label>Date of Birth</label>
+              <label>
+                Date of Birth
+                <RequiredMark />
+              </label>
               <input
                 type="date"
+                max={getTodayDateString()}
                 {...register("birthDay")}
                 className={styles.input}
+                aria-invalid={Boolean(errors.birthDay)}
               />
               {errors.birthDay && (
                 <span className={styles.error}>{errors.birthDay.message}</span>
@@ -278,8 +316,15 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
             </div>
 
             <div className={styles.formGroup}>
-              <label>Gender</label>
-              <select {...register("sex")} className={styles.input}>
+              <label>
+                Gender
+                <RequiredMark />
+              </label>
+              <select
+                {...register("sex")}
+                className={styles.input}
+                aria-invalid={Boolean(errors.sex)}
+              >
                 <option value="">Select gender</option>
                 <option value="male">Male (Самец)</option>
                 <option value="female">Female (Самка)</option>
@@ -299,6 +344,7 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
                 {...register("breeding")}
                 className={styles.input}
               />
+              <FieldHint>Необязательно. Пусто — цена не показывается</FieldHint>
             </div>
 
             <div className={styles.formGroup}>
@@ -309,15 +355,19 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
                 {...register("pet")}
                 className={styles.input}
               />
+              <FieldHint>Необязательно. Пусто — цена не показывается</FieldHint>
             </div>
           </div>
 
           <div className={styles.formGroup}>
-            <label>Photos (Up to 5)</label>
+            <label>
+              Photos
+              <RequiredMark />
+            </label>
             <p className={styles.hint}>
-              Перетягивайте фото, чтобы изменить порядок. На телефоне и планшете
-              сначала нажмите и удерживайте фото, потом тяните. Первое фото (★) —
-              главное.
+              Нужно от 1 до {MAX_PHOTOS} фото. Перетягивайте фото, чтобы
+              изменить порядок. На телефоне и планшете сначала нажмите и
+              удерживайте фото, потом тяните. Первое фото (★) — главное.
             </p>
             <label className={styles.uploadBtn} htmlFor="file-upload">
               <svg
@@ -372,6 +422,8 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
             )}
           </div>
 
+          <MissingFieldsNotice errors={errors} labels={REQUIRED_LABELS} />
+
           <div className={styles.footer}>
             <button
               type="button"
@@ -381,10 +433,12 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
             >
               Cancel
             </button>
+            {/* Кнопка активна всегда: клик по ней показывает, чего не хватает,
+                вместо молчаливо заблокированной кнопки */}
             <button
               type="submit"
               className={styles.submitBtn}
-              disabled={!isValid || isSubmitting}
+              disabled={isSubmitting}
             >
               {isSubmitting ? "Saving..." : "Save Kitten"}
             </button>
