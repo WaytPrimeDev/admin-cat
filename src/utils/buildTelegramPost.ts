@@ -12,9 +12,16 @@ const formatBirthDay = (birthDay: string) => {
 export const buildTelegramPost = (kitten: Kitten): string => {
   const isMale = kitten.sex === "male";
   const petPrice = kitten.price?.pet;
+  const petPriceBreeding = kitten.price?.breeding;
   const emojiPrice =
     petPrice !== null && petPrice !== undefined && Number(petPrice) > 0
       ? `${numberToEmoji(petPrice)} $`
+      : "Уточнюйте";
+  const emojiPriceBreeding =
+    petPriceBreeding !== null &&
+    petPriceBreeding !== undefined &&
+    Number(petPriceBreeding) > 0
+      ? `${numberToEmoji(petPriceBreeding)} $`
       : "Уточнюйте";
 
   return `
@@ -28,6 +35,7 @@ export const buildTelegramPost = (kitten: Kitten): string => {
 
 🎨 Забарвлення: ${kitten.color}
 
-💰 Ціна в домашні улюбленці: ${emojiPrice}
+${ petPrice !== null && petPrice !== undefined && Number(petPrice) > 0 && `💰 Ціна в домашні улюбленці: ${emojiPrice}` }
+${ petPriceBreeding !== null && petPriceBreeding !== undefined && Number(petPriceBreeding) > 0 && `💰 Ціна для розведення: ${emojiPriceBreeding}` }
 `.trim();
 };
