@@ -62,13 +62,13 @@ const AddFamilyForm = ({ editShowForm }: AddFamilyFormProps) => {
     };
   }, []);
 
-  const showKittens = useMemo(() => {
-    const kittensArr = kittens.filter((kitten) => kitten.familyId === null);
-    return [...kittensArr];
-  }, [kittens]);
-
-  console.log(showKittens);
-  console.log(errors);
+  // Свободным считаем котёнка без семьи в любом виде: null, undefined или пустая строка.
+  // Строгая проверка === null теряла только что добавленных котят,
+  // у которых поля familyId в ответе нет вовсе
+  const showKittens = useMemo(
+    () => kittens.filter((kitten) => !kitten.familyId),
+    [kittens],
+  );
 
   const sexParents = useMemo(() => {
     const mom = parents.filter((parent) => parent.sex === "female");

@@ -56,7 +56,8 @@ export interface Kitten {
   color: string;
   birthDay: string;
   status: KittenStatus;
-  familyId: string;
+  // у нового котёнка семьи ещё нет: бэкенд отдаёт null либо вовсе не присылает поле
+  familyId?: string | null;
   breed: string;
   sex: KittenSex;
   price: KittenPrice;
@@ -91,7 +92,7 @@ export interface Parent {
   nameEn: string;
   color: string;
   status: KittenStatus;
-  familyId: string[];
+  familyId?: string[] | null;
   breed: string;
   sex: KittenSex;
   images: KittenImage[];
