@@ -8,21 +8,29 @@ const formatBirthDay = (birthDay: string) => {
   return date.toLocaleDateString("uk-UA");
 };
 
+const hasPrice = (price: number | string | null | undefined): price is number | string =>
+  price !== null && price !== undefined && Number(price) > 0;
+
 // Стандартный текст поста для Telegram
 export const buildTelegramPost = (kitten: Kitten): string => {
   const isMale = kitten.sex === "male";
   const petPrice = kitten.price?.pet;
   const petPriceBreeding = kitten.price?.breeding;
-  const emojiPrice =
-    petPrice !== null && petPrice !== undefined && Number(petPrice) > 0
-      ? `${numberToEmoji(petPrice)} $`
-      : "Уточнюйте";
-  const emojiPriceBreeding =
-    petPriceBreeding !== null &&
-    petPriceBreeding !== undefined &&
-    Number(petPriceBreeding) > 0
-      ? `${numberToEmoji(petPriceBreeding)} $`
-      : "Уточнюйте";
+
+  const priceLines: string[] = [];
+  if (hasPrice(petPrice)) {
+    priceLines.push(
+      `💰 Ціна в домашні улюбленці: ${numberToEmoji(petPrice)} $`
+    );
+  }
+  if (hasPrice(petPriceBreeding)) {
+    priceLines.push(
+      `💰 Ціна для розведення: ${numberToEmoji(petPriceBreeding)} $`
+    );
+  }
+  if (priceLines.length === 0) {
+    priceLines.push("💰 Ціна: Уточнюйте");
+  }
 
   return `
 🐾 **Дуже ${isMale ? "Цікавий котик" : "Цікава кошечка"} ${kitten.nameUa} у ${kitten.color} забарвленні**
@@ -35,7 +43,6 @@ export const buildTelegramPost = (kitten: Kitten): string => {
 
 🎨 Забарвлення: ${kitten.color}
 
-${ petPrice !== null && petPrice !== undefined && Number(petPrice) > 0 && `💰 Ціна в домашні улюбленці: ${emojiPrice}` }
-${ petPriceBreeding !== null && petPriceBreeding !== undefined && Number(petPriceBreeding) > 0 && `💰 Ціна для розведення: ${emojiPriceBreeding}` }
+${priceLines.join("\n\n")}
 `.trim();
 };
