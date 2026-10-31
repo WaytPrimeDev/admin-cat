@@ -17,7 +17,7 @@ export const fetchParents = createAsyncThunk(
   "parents/fetchParents",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get<GetParentResponse>("/cats/parents");
+      const response = await api.get<GetParentResponse>("/cats/parents?page=1&perPage=100000");
       return response.data;
     } catch (error) {
       const err = error as AxiosError<{ message: string }>;

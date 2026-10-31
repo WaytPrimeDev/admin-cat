@@ -19,7 +19,7 @@ export const fetchFamilies = createAsyncThunk(
   "families/fetchFamilies",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get<GetFamilyResponse>("/families");
+      const response = await api.get<GetFamilyResponse>("/families?page=1&perPage=100000");
       return response.data;
     } catch (error) {
       const err = error as AxiosError<{ message: string }>;

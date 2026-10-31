@@ -17,7 +17,7 @@ export const fetchKittens = createAsyncThunk(
   "kittens/fetchKittens",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get<KittenResponse>("/cats/kittens");
+      const response = await api.get<KittenResponse>("/cats/kittens?page=1&perPage=100000");
       return response.data;
     } catch (error) {
       const err = error as AxiosError<{ message: string }>;
