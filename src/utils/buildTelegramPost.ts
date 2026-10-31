@@ -44,7 +44,7 @@ export const buildTelegramPost = (kitten: Kitten): string => {
 🎨 Забарвлення: ${kitten.color}
 
 ${priceLines.join("\n\n")}
-
+💌👀♥️
 📸 Instagram: [natalya.turusheva_1](https://www.instagram.com/natalya.turusheva_1)
 `.trim();
 };
