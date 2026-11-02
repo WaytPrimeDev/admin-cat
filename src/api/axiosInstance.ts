@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Создаем инстанс Axios
 const api = axios.create({
-  baseURL: "https://arlenback-production.up.railway.app"
+  baseURL: "https://arlenback-b39e4.containers.snapdeploy.app"
 });
 
 // Request interceptor: добавляем токен авторизации ко всем запросам
