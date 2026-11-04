@@ -26,12 +26,14 @@ import type { Dispatch, SetStateAction } from "react";
 import type { Family } from "../../types";
 
 interface FamilyCardProps {
+  editFamily: Dispatch<SetStateAction<Family | null>>;
   editLocalFamily: Dispatch<SetStateAction<Family[]>>;
   localFamilies: Family[];
   isReordering: boolean;
 }
 
 const FamilyCard = ({
+  editFamily,
   editLocalFamily,
   localFamilies,
   isReordering,
@@ -112,6 +114,7 @@ const FamilyCard = ({
                   <SortableFamilyItem
                     key={family._id}
                     family={family}
+                    onEdit={() => editFamily(family)}
                     isReordering={isReordering}
                     isExpanded={expandedFamilyId === family._id}
                     onToggleExpand={() => toggleExpand(family._id)}
@@ -130,6 +133,7 @@ const FamilyCard = ({
                 <tbody>
                   <SortableFamilyItem
                     family={activeFamily}
+                    onEdit={() => {}}
                     isReordering={isReordering}
                     isOverlay={true}
                     isExpanded={false}

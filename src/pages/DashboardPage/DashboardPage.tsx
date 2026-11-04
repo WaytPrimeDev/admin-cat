@@ -7,6 +7,7 @@ import { fetchParents } from "../../store/slices/parentsSlice";
 import { fetchFamilies } from "../../store/slices/familiesSlice";
 import { getRandomQuote, type CatQuote } from "../../utils/getRandomQuote"; // Импортируем утилиту
 
+
 const DashboardPage: React.FC = () => {
   const dispatch = useAppDispatch();
 
@@ -168,7 +169,18 @@ const DashboardPage: React.FC = () => {
   };
 
   const isLoading = kittensLoading || parentsLoading || familiesLoading;
+// useEffect(() => {
+  
+//   const interval = setInterval(() => {
+//    dispatch(fetchKittens());
+//    console.log(interval);
+//   }, 10000); // Обновление каждые 30 секунд
 
+ 
+
+
+// return () => clearInterval(interval); 
+// }, [dispatch]);
   return (
     <div className={styles.container}>
       {/* Шапка */}

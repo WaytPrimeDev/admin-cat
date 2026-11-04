@@ -11,6 +11,7 @@ import styles from "./FamiliesPage.module.css";
 
 import FamilyCard from "../../components/FamilyCard/FamilyCard";
 import AddFamilyForm from "../../components/AddFamilyForm/AddFamily";
+import EditFamilyForm from "../../components/EditFamilyForm/EditFamilyForm";
 import { fetchBreeds } from "../../store/slices/filterSlice";
 import type { Family } from "../../types";
 
@@ -20,6 +21,7 @@ const FamiliesPage: React.FC = () => {
     (state: RootState) => state.families,
   );
   const [showForm, setShowForm] = useState(false);
+  const [editingFamily, setEditingFamily] = useState<Family | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   const [localFamilies, setLocalFamilies] = useState<Family[]>([]);
@@ -130,9 +132,17 @@ const FamiliesPage: React.FC = () => {
       {familiesError && <div className={styles.error}>{familiesError}</div>}
       {showForm && <AddFamilyForm editShowForm={setShowForm} />}
 
+      {editingFamily && (
+        <EditFamilyForm
+          family={editingFamily}
+          onClose={() => setEditingFamily(null)}
+        />
+      )}
+
       {queryFamilies.length > 0 ? (
         <div className={styles.tableContainer}>
           <FamilyCard
+            editFamily={setEditingFamily}
             editLocalFamily={setLocalFamilies}
             localFamilies={queryFamilies}
             isReordering={isReordering}

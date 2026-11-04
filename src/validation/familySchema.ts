@@ -21,13 +21,13 @@ export const familySchema = z.object({
   dad: z.string().optional().nullable(),
 });
 
-// Схема обновления
+// Схема обновления: поля совпадают с созданием, чтобы PATCH принимал тот же payload
 export const updateFamilySchema = z.object({
   name: z.string().min(1, "Имя семьи обязательно"),
   breed: z.string().min(1, "Порода обязательна"),
   displayOrder: z.number().optional(),
 
-  kittensIds: z
+  kittens: z
     .union([z.string(), z.array(z.string()), z.undefined(), z.null()])
     .transform((val) => {
       if (!val) return [];

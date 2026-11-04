@@ -156,11 +156,12 @@ export interface UpdateParentRequest {
 
 export interface UpdateFamilyRequest {
   name: string;
-  displayOrder: number;
+  breed: string;
+  kittens: string[];
 
-  dad: string;
-  mom: string;
-  kittensIds: string[];
+  displayOrder?: number;
+  dad?: string | null;
+  mom?: string | null;
 }
 
 export interface MyKnownError {
