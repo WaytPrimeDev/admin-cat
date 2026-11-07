@@ -169,18 +169,18 @@ const DashboardPage: React.FC = () => {
   };
 
   const isLoading = kittensLoading || parentsLoading || familiesLoading;
-// useEffect(() => {
+useEffect(() => {
   
-//   const interval = setInterval(() => {
-//    dispatch(fetchKittens());
-//    console.log(interval);
-//   }, 10000); // Обновление каждые 30 секунд
+  const interval = setInterval(() => {
+   dispatch(fetchKittens());
+   console.log(interval);
+  }, 10000); // Обновление каждые 30 секунд
 
  
 
 
-// return () => clearInterval(interval); 
-// }, [dispatch]);
+return () => clearInterval(interval); 
+}, [dispatch]);
   return (
     <div className={styles.container}>
       {/* Шапка */}

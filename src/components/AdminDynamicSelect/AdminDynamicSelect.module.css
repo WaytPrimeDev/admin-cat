@@ -1,4 +1,66 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0; /* даёт колонке грида сжиматься */
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+.select,
 .addInput {
-  flex: 1;
-  min-width: 10px;
+  flex: 1 1 0;
+  min-width: 0; /* не растёт от длинных опций */
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid #e1e1e8;
+  border-radius: 8px;
+  background-color: #fafafc;
+  font-size: 14px;
+  color: #1a1a33;
+  box-sizing: border-box;
+  outline: none;
+  text-overflow: ellipsis;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+.select:focus,
+.addInput:focus {
+  border-color: #4a4ae2;
+  background-color: #fff;
+  box-shadow: 0 0 0 3px rgba(74, 74, 226, 0.1);
+}
+
+.iconBtn {
+  flex: 0 0 40px; /* фиксированный размер, не сжимается */
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid #e1e1e8;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.iconBtn:hover:not(:disabled) {
+  background-color: #f0f0f5;
+}
+
+.iconBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }

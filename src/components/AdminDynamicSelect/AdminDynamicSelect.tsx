@@ -73,76 +73,81 @@ export const AdminDynamicSelect = ({
   const dispatch = useAppDispatch();
 
   return (
-    <div className="form-group">
-      <label>
-        {label}
-        {required && <RequiredMark />}
-      </label>
+  <div className={styles.root}>
+    <label>
+      {label}
+      {required && <RequiredMark />}
+    </label>
 
-      {isAdding ? (
-        <div style={{ display: "flex", gap: "8px" }}>
-          <input
-            className={styles.addInput}
-            type="text"
-            value={newValue}
-            onChange={(e) => setNewValue(e.target.value)}
-            placeholder={`Новое значение...`}
-            disabled={isLoading}
-          />
-
-          <button
-            type="button"
-            onClick={handleAdd}
-            disabled={isLoading || !newValue.trim()}
-          >
-            💾
-          </button>
-          <button
-            type="button"
-            onClick={() => setIsAdding(false)}
-            disabled={isLoading}
-          >
-            ❌
-          </button>
-        </div>
-      ) : (
-        <div style={{ display: "flex", gap: "8px" }}>
-          <select
-            {...registerProps}
-            style={{ flex: 1 }}
-            disabled={isLoading}
-            onBlur={(e) => {
-              // Проверка: если фокус ушел за пределы всего блока компонента
-              if (!e.currentTarget.contains(e.relatedTarget)) {
-                dispatch(clearError());
-              }
-            }}
-          >
-            <option value="">-- Выберите --</option>
-            {options.map((opt) => (
-              <option key={opt._id} value={opt.name}>
-                {opt.name}
-              </option>
-            ))}
-          </select>
-          <button
-            type="button"
-            onClick={() => setIsAdding(true)}
-            disabled={isLoading}
-            title="Добавить"
-          >
-            ➕
-          </button>
-          <button
-            type="button"
-            onClick={handleDelete}
-            disabled={isLoading || !currentValue}
-            title="Удалить выбранное"
-          >
-            🗑️
-          </button>
-        </div>
-      )}
-    </div>
-  );
+    {isAdding ? (
+      <div className={styles.controls}>
+        <input
+          className={styles.addInput}
+          type="text"
+          value={newValue}
+          onChange={(e) => setNewValue(e.target.value)}
+          placeholder="Новое значение..."
+          disabled={isLoading}
+        />
+        <button
+          type="button"
+          className={styles.iconBtn}
+          onClick={handleAdd}
+          disabled={isLoading || !newValue.trim()}
+          title="Сохранить"
+        >
+          💾
+        </button>
+        <button
+          type="button"
+          className={styles.iconBtn}
+          onClick={() => setIsAdding(false)}
+          disabled={isLoading}
+          title="Отмена"
+        >
+          ❌
+        </button>
+      </div>
+    ) : (
+      <div className={styles.controls}>
+        <select
+          {...registerProps}
+          className={styles.select}
+          disabled={isLoading}
+          onBlur={(e) => {
+            registerProps.onBlur(e); // см. замечание ниже
+            if (!e.currentTarget.contains(e.relatedTarget)) {
+              dispatch(clearError());
+            }
+          }}
+        >
+          <option value="">-- Выберите --</option>
+          {options.map((opt) => (
+            <option key={opt._id} value={opt.name}>
+              {opt.name}
+            </option>
+          ))}
+        </select>
+        <button
+          type="button"
+          className={styles.iconBtn}
+          onClick={() => setIsAdding(true)}
+          disabled={isLoading}
+          title="Добавить"
+        >
+          ➕
+        </button>
+        <button
+          type="button"
+          className={styles.iconBtn}
+          onClick={handleDelete}
+          disabled={isLoading || !currentValue}
+          title="Удалить выбранное"
+        >
+          🗑️
+        </button>
+      </div>
+    )}
+  </div>
+);
 };
