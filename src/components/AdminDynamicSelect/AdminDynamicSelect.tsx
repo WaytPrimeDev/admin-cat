@@ -51,6 +51,7 @@ export const AdminDynamicSelect = ({
     }
   };
 
+
   const handleDelete = async (e: React.MouseEvent) => {
     e.preventDefault();
     if (!currentValue) return;
@@ -122,7 +123,8 @@ export const AdminDynamicSelect = ({
           }}
         >
           <option value="">-- Выберите --</option>
-          {options.map((opt) => (
+          {[...options]
+      .sort((a, b) => a.name.localeCompare(b.name)).map((opt) => (
             <option key={opt._id} value={opt.name}>
               {opt.name}
             </option>
