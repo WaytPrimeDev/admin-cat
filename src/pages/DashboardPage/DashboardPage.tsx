@@ -12,7 +12,7 @@ const DashboardPage: React.FC = () => {
   const dispatch = useAppDispatch();
 
   // Достаем данные из Redux
-  const { items: kittens, isLoading: kittensLoading } = useSelector(
+  const { items: kittens , isLoading: kittensLoading } = useSelector(
     (state: RootState) => state.kittens,
   );
   const { items: parents, isLoading: parentsLoading } = useSelector(
@@ -36,7 +36,7 @@ const DashboardPage: React.FC = () => {
   const stats = [
     {
       title: "Total Parents",
-      value: parents.length.toString(),
+      value: parents?.length?.toString(),
       subtext: "Breeding cats",
       icon: (
         <svg
@@ -58,7 +58,7 @@ const DashboardPage: React.FC = () => {
     },
     {
       title: "Total Kittens",
-      value: kittens.length.toString(),
+      value: kittens?.length?.toString(),
       subtext: "Registered in system",
       icon: (
         <svg
@@ -77,7 +77,7 @@ const DashboardPage: React.FC = () => {
     },
     {
       title: "Total Families",
-      value: families.length.toString(),
+      value: families?.length?.toString(),
       subtext: "Mating pairs & litters",
       icon: (
         <svg
