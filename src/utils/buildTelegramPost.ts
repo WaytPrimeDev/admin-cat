@@ -62,5 +62,6 @@ export const buildTelegramPost = (kitten: Kitten): string => {
 ${priceLines.join("\n\n")}
 💌👀♥️
 📸 <a href="${INSTAGRAM_URL}">Наш Instagram</a>
+#${kitten.nameUa}
 `.trim();
 };
