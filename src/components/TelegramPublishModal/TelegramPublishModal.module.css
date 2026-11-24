@@ -231,3 +231,91 @@
 .primary:hover:not(:disabled) {
   background: #1b87ba;
 }
+
+/* Блоки "пост" и "объявление" внутри модалки опубликованного котёнка */
+.section {
+  padding-top: 14px;
+  border-top: 1px solid #ededf3;
+  margin-top: 14px;
+}
+
+.section:first-of-type {
+  padding-top: 0;
+  border-top: none;
+  margin-top: 0;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.sectionHead .hint {
+  margin: 0;
+}
+
+.sectionActions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.sectionHead .sectionActions {
+  margin-top: 0;
+}
+
+/* Уже опубликованный текст — только для чтения */
+.postBox {
+  margin: 0;
+  box-sizing: border-box;
+  max-height: 260px;
+  overflow-y: auto;
+  background: #f8f8fc;
+  border: 1px solid #e1e1e8;
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #1a1a33;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.loadingText {
+  margin: 0;
+  font-size: 13px;
+  color: #8a8ab5;
+  background: #f8f8fc;
+  border: 1px dashed #e1e1e8;
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+.btnSm {
+  border: none;
+  border-radius: 8px;
+  padding: 7px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btnSm:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.danger {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.danger:hover:not(:disabled) {
+  background: #fee2e2;
+}

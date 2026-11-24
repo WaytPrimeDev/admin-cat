@@ -20,10 +20,17 @@ const appendPhotos = (formData: FormData, values: { photos: PhotoItem[] }) => {
   formData.append("imagesOrder", JSON.stringify(imagesOrder));
 };
 
+/*
+ * Слаг отправляем только если его реально меняли: он уже может быть
+ * в чужих ссылках и в поиске. Переименование записи слаг не меняет.
+ */
 export const buildUpdateKittenFormData = (
   values: UpdateKittenFormValues,
+  slug?: string,
 ): FormData => {
   const formData = new FormData();
+
+  if (slug) formData.append("slug", slug);
 
   formData.append("nameUa", values.nameUa);
   formData.append("nameEn", values.nameEn);
@@ -41,8 +48,11 @@ export const buildUpdateKittenFormData = (
 
 export const buildUpdateParentFormData = (
   values: UpdateParentFormValues,
+  slug?: string,
 ): FormData => {
   const formData = new FormData();
+
+  if (slug) formData.append("slug", slug);
 
   formData.append("nameUa", values.nameUa);
   formData.append("nameEn", values.nameEn);

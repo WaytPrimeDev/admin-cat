@@ -50,7 +50,8 @@ const EditFamilyForm = ({ family, onClose }: EditFamilyFormProps) => {
     mode: "onChange",
     defaultValues: {
       name: family.name ?? "",
-      breed: family.breed ?? "",
+      // в значении селекта лежит _id породы, а не название
+      breed: family.breed?._id ?? "",
       mom: family.parents?.mom ?? "",
       dad: family.parents?.dad ?? "",
       kittens: family.kittens ?? [],
@@ -193,14 +194,16 @@ const EditFamilyForm = ({ family, onClose }: EditFamilyFormProps) => {
                 >
                   <option value="">Select breed</option>
                   {breeds.map((breed) => (
-                    <option key={breed._id} value={breed.name}>
-                      {breed.name}
+                    <option key={breed._id} value={breed._id} title={breed.nameEn}>
+                      {breed.nameUa}
                     </option>
                   ))}
                   {/* Порода семьи могла быть удалена из справочника — не теряем её */}
                   {family.breed &&
-                    !breeds.some((breed) => breed.name === family.breed) && (
-                      <option value={family.breed}>{family.breed}</option>
+                    !breeds.some((breed) => breed._id === family.breed?._id) && (
+                      <option value={family.breed._id}>
+                        {family.breed.nameUa}
+                      </option>
                     )}
                 </select>
                 {errors.breed && (

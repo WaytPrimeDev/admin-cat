@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import styles from "./ParentCard.module.css";
+import SlugLink from "../SlugLink/SlugLink";
 import { useAppDispatch, type RootState } from "../../store";
 import type { Dispatch, SetStateAction } from "react";
 import type { Parent } from "../../types";
 import { deleteParent } from "../../store/slices/parentsSlice";
+import { refNameUa } from "../../utils/referenceName";
 
 interface ParentCardProps {
   editParent: Dispatch<SetStateAction<Parent | null>>;
@@ -83,10 +85,11 @@ const ParentCard = ({
                   <div className={styles.nameText}>
                     {parent.nameEn || parent.nameUa}
                   </div>
+                  <SlugLink kind="parents" slug={parent.slug} compact />
                 </td>
 
                 <td data-label="BREED" className={styles.mutedText}>
-                  {parent.breed || "Not specified"}
+                  {refNameUa(parent.breed, "Not specified")}
                 </td>
 
                 <td data-label="SEX" className={styles.mutedText}>

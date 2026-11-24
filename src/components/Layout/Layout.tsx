@@ -21,6 +21,8 @@ const Layout: React.FC = () => {
     { path: "/kittens", label: "Kittens", icon: "🐱" },
     { path: "/parents", label: "Parents", icon: "👥" },
     { path: "/families", label: "Families", icon: "🤍" },
+    { path: "/breeds", label: "Breeds", icon: "🏷️" },
+    { path: "/colors", label: "Colors", icon: "🎨" },
     // { path: "/reservations", label: "Reservations", icon: "📅" },
     // { path: "/finance", label: "Finance", icon: "💰" },
     // { path: "/settings", label: "Settings", icon: "⚙️" },

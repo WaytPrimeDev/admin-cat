@@ -27,7 +27,9 @@ import { MAX_PHOTOS } from "../../validation/photoSelection";
 import { useAppDispatch, type RootState } from "../../store";
 import { addParent } from "../../store/slices/parentsSlice";
 import { SortablePhoto } from "../SortablePhoto/SortablePhoto";
-import { AdminDynamicSelect } from "../AdminDynamicSelect/AdminDynamicSelect";
+import { ReferenceSelect } from "../ReferenceSelect/ReferenceSelect";
+import ColorFormModal from "../ColorFormModal/ColorFormModal";
+import SlugField from "../SlugField/SlugField";
 import {
   FieldHint,
   MissingFieldsNotice,
@@ -35,12 +37,8 @@ import {
   RequiredMark,
 } from "../RequiredField/RequiredField";
 import { useSelector } from "react-redux";
-import {
-  addBreed,
-  addColor,
-  deleteBreed,
-  deleteColor,
-} from "../../store/slices/filterSlice";
+import { deleteColor } from "../../store/slices/filterSlice";
+import type { ColorRef } from "../../types";
 
 interface AddParentFormProps {
   editShowForm: Dispatch<SetStateAction<boolean>>;
@@ -76,12 +74,17 @@ const AddParentForm = ({ editShowForm }: AddParentFormProps) => {
     },
   });
 
+  const slugValue = useWatch({ control, name: "slug" });
+  const nameEnValue = useWatch({ control, name: "nameEn" });
   const selectedColor = useWatch({ control, name: "color" });
   const selectedBreed = useWatch({ control, name: "breed" });
 
   const dispatch = useAppDispatch();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const { colors, breeds } = useSelector((state: RootState) => state.filters);
+  const [isColorModalOpen, setIsColorModalOpen] = useState(false);
+  const { colors, breeds, errorColor, errorBreed } = useSelector(
+    (state: RootState) => state.filters,
+  );
 
   // Блокируем скролл страницы, пока открыто модальное окно
   useEffect(() => {
@@ -103,30 +106,14 @@ const AddParentForm = ({ editShowForm }: AddParentFormProps) => {
     }
   };
 
-  const handleAddColor = async (name: string) => {
-    const newColor = await dispatch(addColor({ name })).unwrap();
-    setTimeout(() => {
-      setValue("color", newColor.name);
-    }, 0);
+  // Созданный в модалке окрас сразу подставляем в форму
+  const handleColorCreated = (color: ColorRef) => {
+    setValue("color", color._id, { shouldValidate: true });
   };
 
   const handleRemoveColor = async (id: string) => {
-    const optionToDelete = colors.find((color) => color.name === selectedColor);
     await dispatch(deleteColor(id)).unwrap();
-    if (optionToDelete?._id === id) setValue("color", "");
-  };
-
-  const handleAddBreed = async (name: string) => {
-    const newBreed = await dispatch(addBreed({ name })).unwrap();
-    setTimeout(() => {
-      setValue("breed", newBreed.name); // Исправлена опечатка (было "color")
-    }, 0);
-  };
-
-  const handleRemoveBreed = async (id: string) => {
-    await dispatch(deleteBreed(id)).unwrap();
-    const optionToDelete = breeds.find((breed) => breed.name === selectedBreed); // Исправлено (было selectedColor)
-    if (optionToDelete?._id === id) setValue("breed", "");
+    if (selectedColor === id) setValue("color", "");
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -162,6 +149,9 @@ const AddParentForm = ({ editShowForm }: AddParentFormProps) => {
 
     formData.append("nameUa", data.nameUa);
     formData.append("nameEn", data.nameEn);
+    // Пустое поле в запрос не кладём — бэкенд соберёт слаг из nameEn
+    const slug = data.slug?.trim();
+    if (slug) formData.append("slug", slug);
     formData.append("color", data.color);
     formData.append("breed", data.breed);
     formData.append("sex", data.sex);
@@ -183,8 +173,10 @@ const AddParentForm = ({ editShowForm }: AddParentFormProps) => {
   };
 
   return (
-    <div className={styles.overlay} onClick={() => editShowForm(false)}>
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+    <div className={styles.overlay}>
+      {/* Клик по фону модалку не закрывает — только кнопки внутри формы,
+          чтобы случайным кликом не потерять введённые данные */}
+      <div className={styles.modal}>
         {/* Шапка */}
         <div className={styles.header}>
           <div className={styles.headerText}>
@@ -253,36 +245,51 @@ const AddParentForm = ({ editShowForm }: AddParentFormProps) => {
             </div>
           </div>
 
+          <SlugField
+            id="add-parent-slug"
+            kind="parents"
+            mode="create"
+            value={slugValue ?? ""}
+            sourceName={nameEnValue ?? ""}
+            inputProps={register("slug")}
+            error={errors.slug?.message}
+          />
+
           <div className={styles.gridRow}>
             <div className={styles.formGroup}>
-              <AdminDynamicSelect
+              <ReferenceSelect
                 label="Breed"
                 required
+                id="add-parent-breed"
                 options={breeds}
                 registerProps={register("breed")}
                 currentValue={selectedBreed}
-                onAdd={handleAddBreed}
-                onRemove={handleRemoveBreed}
               />
-              <FieldHint>Нет нужной породы — добавьте её кнопкой ➕</FieldHint>
+              <FieldHint>
+                Нет нужной породы — добавьте её на странице Breeds (там же фото
+                породы)
+              </FieldHint>
+              {errorBreed && <p className={styles.error}>{errorBreed}</p>}
               {errors.breed && (
                 <span className={styles.error}>{errors.breed.message}</span>
               )}
             </div>
 
             <div className={styles.formGroup}>
-              <AdminDynamicSelect
+              <ReferenceSelect
                 label="Color / Pattern"
                 required
+                id="add-parent-color"
                 options={colors}
                 registerProps={register("color")}
                 currentValue={selectedColor}
-                onAdd={handleAddColor}
+                onAddClick={() => setIsColorModalOpen(true)}
                 onRemove={handleRemoveColor}
               />
               <FieldHint>
-                Нет нужного окраса — добавьте его кнопкой ➕
+                Нет нужного окраса — добавьте его кнопкой ➕ (UA + EN)
               </FieldHint>
+              {errorColor && <p className={styles.error}>{errorColor}</p>}
               {errors.color && (
                 <span className={styles.error}>{errors.color.message}</span>
               )}
@@ -400,6 +407,16 @@ const AddParentForm = ({ editShowForm }: AddParentFormProps) => {
           </div>
         </form>
       </div>
+
+      {/* Модалка нового окраса стоит рядом с формой */}
+      {isColorModalOpen && (
+        <div onClick={(e) => e.stopPropagation()}>
+          <ColorFormModal
+            onClose={() => setIsColorModalOpen(false)}
+            onSaved={handleColorCreated}
+          />
+        </div>
+      )}
     </div>
   );
 };

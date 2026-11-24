@@ -1,5 +1,14 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import type { FilterState, MyKnownError } from "../../types";
+import type {
+  AddBreedResponse,
+  AddColorRequest,
+  AddColorResponse,
+  FilterState,
+  GetBreedsResponse,
+  GetColorsResponse,
+  MyKnownError,
+  UpdateReferenceRequest,
+} from "../../types";
 import api from "../../api/axiosInstance";
 import type { AxiosError } from "axios";
 
@@ -15,7 +24,7 @@ export const fetchColors = createAsyncThunk(
   "filters/fetchColors",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get("/filters/colors");
+      const response = await api.get<GetColorsResponse>("/filters/colors");
       return response.data;
     } catch (error) {
       const err = error as AxiosError<{ message: string }>;
@@ -26,20 +35,45 @@ export const fetchColors = createAsyncThunk(
   },
 );
 
-export const addColor = createAsyncThunk(
-  "filters/addColor",
-  async (formData: { name: string }, { rejectWithValue }) => {
-    try {
-      const response = await api.post("/filters/color", formData);
-      return response.data;
-    } catch (error) {
-      const err = error as AxiosError<{ message: string }>;
-      return rejectWithValue(
-        err.response?.data?.message || "Failed to fetch kittens",
-      );
-    }
-  },
-);
+// Окрас создаётся как JSON: nameUa и nameEn обязательны, поля name больше нет
+export const addColor = createAsyncThunk<
+  AddColorResponse,
+  AddColorRequest,
+  { rejectValue: string }
+>("filters/addColor", async (payload, { rejectWithValue }) => {
+  try {
+    const response = await api.post<AddColorResponse>(
+      "/filters/color",
+      payload,
+    );
+    return response.data;
+  } catch (error) {
+    const err = error as AxiosError<MyKnownError>;
+    return rejectWithValue(
+      err.response?.data?.message || "Не удалось добавить окрас",
+    );
+  }
+});
+
+// Правка окраса: JSON, отправляем только изменённые поля
+export const updateColor = createAsyncThunk<
+  AddColorResponse,
+  { id: string; payload: UpdateReferenceRequest },
+  { rejectValue: string }
+>("filters/updateColor", async ({ id, payload }, { rejectWithValue }) => {
+  try {
+    const response = await api.patch<AddColorResponse>(
+      `/filters/color/${id}`,
+      payload,
+    );
+    return response.data;
+  } catch (error) {
+    const err = error as AxiosError<MyKnownError>;
+    return rejectWithValue(
+      err.response?.data?.message || "Не удалось изменить окрас",
+    );
+  }
+});
 
 export const deleteColor = createAsyncThunk<
   string,
@@ -53,7 +87,7 @@ export const deleteColor = createAsyncThunk<
     const err = error as AxiosError<MyKnownError>;
 
     return rejectWithValue(
-      err.response?.data?.message || "Failed to delete color",
+      err.response?.data?.message || "Не удалось удалить окрас",
     );
   }
 });
@@ -62,7 +96,7 @@ export const fetchBreeds = createAsyncThunk(
   "filters/fetchBreeds",
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get("/filters/breeds");
+      const response = await api.get<GetBreedsResponse>("/filters/breeds");
       return response.data;
     } catch (error) {
       const err = error as AxiosError<{ message: string }>;
@@ -73,20 +107,50 @@ export const fetchBreeds = createAsyncThunk(
   },
 );
 
-export const addBreed = createAsyncThunk(
-  "filters/addBreed",
-  async (formData: { name: string }, { rejectWithValue }) => {
-    try {
-      const response = await api.post("/filters/breed", formData);
-      return response.data;
-    } catch (error) {
-      const err = error as AxiosError<{ message: string }>;
-      return rejectWithValue(
-        err.response?.data?.message || "Failed to fetch kittens",
-      );
-    }
-  },
-);
+// Порода создаётся через multipart: названия + ровно одно фото в поле image.
+// Content-Type руками не ставим — axios сам подставит boundary
+export const addBreed = createAsyncThunk<
+  AddBreedResponse,
+  FormData,
+  { rejectValue: string }
+>("filters/addBreed", async (formData, { rejectWithValue }) => {
+  try {
+    const response = await api.post<AddBreedResponse>(
+      "/filters/breed",
+      formData,
+    );
+    return response.data;
+  } catch (error) {
+    const err = error as AxiosError<MyKnownError>;
+    return rejectWithValue(
+      err.response?.data?.message || "Не удалось добавить породу",
+    );
+  }
+});
+
+/*
+ * Правка породы: FormData, если меняют фото (поле image), иначе JSON.
+ * Пустой file-input к FormData не прикладываем вовсе — иначе бэкенд
+ * воспримет это как замену фото.
+ */
+export const updateBreed = createAsyncThunk<
+  AddBreedResponse,
+  { id: string; payload: FormData | UpdateReferenceRequest },
+  { rejectValue: string }
+>("filters/updateBreed", async ({ id, payload }, { rejectWithValue }) => {
+  try {
+    const response = await api.patch<AddBreedResponse>(
+      `/filters/breed/${id}`,
+      payload,
+    );
+    return response.data;
+  } catch (error) {
+    const err = error as AxiosError<MyKnownError>;
+    return rejectWithValue(
+      err.response?.data?.message || "Не удалось изменить породу",
+    );
+  }
+});
 
 export const deleteBreed = createAsyncThunk<
   string,
@@ -100,7 +164,7 @@ export const deleteBreed = createAsyncThunk<
     const err = error as AxiosError<MyKnownError>;
 
     return rejectWithValue(
-      err.response?.data?.message || "Failed to delete breed",
+      err.response?.data?.message || "Не удалось удалить породу",
     );
   }
 });
@@ -131,6 +195,20 @@ const filterSlice = createSlice({
       })
       .addCase(addColor.fulfilled, (state, action) => {
         state.colors.push(action.payload.data);
+        state.errorColor = null;
+      })
+      .addCase(addColor.rejected, (state, action) => {
+        state.errorColor = action.payload ?? "An unknown error occurred";
+      })
+      .addCase(updateColor.fulfilled, (state, action) => {
+        const index = state.colors.findIndex(
+          (color) => color._id === action.payload.data._id,
+        );
+        if (index !== -1) state.colors[index] = action.payload.data;
+        state.errorColor = null;
+      })
+      .addCase(updateColor.rejected, (state, action) => {
+        state.errorColor = action.payload ?? "An unknown error occurred";
       })
       .addCase(deleteColor.fulfilled, (state, action) => {
         state.colors = state.colors.filter(
@@ -155,6 +233,20 @@ const filterSlice = createSlice({
       })
       .addCase(addBreed.fulfilled, (state, action) => {
         state.breeds.push(action.payload.data);
+        state.errorBreed = null;
+      })
+      .addCase(addBreed.rejected, (state, action) => {
+        state.errorBreed = action.payload ?? "An unknown error occurred";
+      })
+      .addCase(updateBreed.fulfilled, (state, action) => {
+        const index = state.breeds.findIndex(
+          (breed) => breed._id === action.payload.data._id,
+        );
+        if (index !== -1) state.breeds[index] = action.payload.data;
+        state.errorBreed = null;
+      })
+      .addCase(updateBreed.rejected, (state, action) => {
+        state.errorBreed = action.payload ?? "An unknown error occurred";
       })
       .addCase(deleteBreed.fulfilled, (state, action) => {
         state.breeds = state.breeds.filter(

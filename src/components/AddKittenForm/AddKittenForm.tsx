@@ -20,7 +20,9 @@ import { useAppDispatch, type RootState } from "../../store";
 import { addKitten } from "../../store/slices/kittensSlice";
 import { usePhotoDndSensors } from "../../hooks/usePhotoDndSensors";
 import { SortablePhoto } from "../SortablePhoto/SortablePhoto";
-import { AdminDynamicSelect } from "../AdminDynamicSelect/AdminDynamicSelect";
+import { ReferenceSelect } from "../ReferenceSelect/ReferenceSelect";
+import ColorFormModal from "../ColorFormModal/ColorFormModal";
+import SlugField from "../SlugField/SlugField";
 import {
   FieldHint,
   MissingFieldsNotice,
@@ -28,13 +30,8 @@ import {
   RequiredMark,
 } from "../RequiredField/RequiredField";
 import { useSelector } from "react-redux";
-import {
-  addBreed,
-  addColor,
-  clearError,
-  deleteBreed,
-  deleteColor,
-} from "../../store/slices/filterSlice";
+import { clearError, deleteColor } from "../../store/slices/filterSlice";
+import type { ColorRef } from "../../types";
 
 interface AddKittenFormProps {
   editShowForm: Dispatch<SetStateAction<boolean>>;
@@ -77,10 +74,13 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
   const dispatch = useAppDispatch();
 
   // Отслеживаем текущие выбранные значения
+  const slugValue = useWatch({ control, name: "slug" });
+  const nameEnValue = useWatch({ control, name: "nameEn" });
   const selectedColor = useWatch({ control, name: "color" });
   const selectedBreed = useWatch({ control, name: "breed" });
 
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [isColorModalOpen, setIsColorModalOpen] = useState(false);
   const { colors, breeds, errorColor, errorBreed } = useSelector(
     (state: RootState) => state.filters,
   );
@@ -93,31 +93,14 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
     };
   }, []);
 
-  const handleAddColor = async (name: string) => {
-    const newColor = await dispatch(addColor({ name })).unwrap();
-    setTimeout(() => {
-      setValue("color", newColor.name);
-    }, 0);
+  // Созданный в модалке окрас сразу подставляем в форму
+  const handleColorCreated = (color: ColorRef) => {
+    setValue("color", color._id, { shouldValidate: true });
   };
 
   const handleRemoveColor = async (id: string) => {
-    const optionToDelete = colors.find((color) => color.name === selectedColor);
     await dispatch(deleteColor(id)).unwrap();
-    if (optionToDelete?._id === id) setValue("color", "");
-  };
-
-  const handleAddBreed = async (name: string) => {
-    const newBreed = await dispatch(addBreed({ name })).unwrap();
-    setTimeout(() => {
-      setValue("breed", newBreed.name); // Исправлена опечатка (было "color")
-    }, 0);
-  };
-
-  const handleRemoveBreed = async (id: string) => {
-    await dispatch(deleteBreed(id)).unwrap();
-    const optionToDelete = breeds.find((breed) => breed.name === selectedBreed); // Исправлена опечатка
-
-    if (optionToDelete?._id === id) setValue("breed", "");
+    if (selectedColor === id) setValue("color", "");
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -146,6 +129,9 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
     formData.append("color", data.color);
     formData.append("breed", data.breed);
     formData.append("sex", data.sex);
+    // Пустое поле в запрос не кладём — бэкенд соберёт слаг из nameEn
+    const slug = data.slug?.trim();
+    if (slug) formData.append("slug", slug);
     formData.append("breeding", String(data.breeding));
     formData.append("pet", String(data.pet));
 
@@ -190,8 +176,10 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
   };
 
   return (
-    <div className={styles.overlay} onClick={() => closeForm()}>
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+    <div className={styles.overlay}>
+      {/* Клик по фону модалку не закрывает — только кнопки внутри формы,
+          чтобы случайным кликом не потерять введённые данные */}
+      <div className={styles.modal}>
         {/* Шапка модалки */}
         <div className={styles.header}>
           <div className={styles.headerText}>
@@ -259,18 +247,30 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
             </div>
           </div>
 
+          <SlugField
+            id="add-kitten-slug"
+            kind="kittens"
+            mode="create"
+            value={slugValue ?? ""}
+            sourceName={nameEnValue ?? ""}
+            inputProps={register("slug")}
+            error={errors.slug?.message}
+          />
+
           <div className={styles.gridRow}>
             <div className={styles.formGroup}>
-              <AdminDynamicSelect
+              <ReferenceSelect
                 label="Breed"
                 required
+                id="add-kitten-breed"
                 options={breeds}
                 registerProps={register("breed")}
                 currentValue={selectedBreed}
-                onAdd={handleAddBreed}
-                onRemove={handleRemoveBreed}
               />
-              <FieldHint>Нет нужной породы — добавьте её кнопкой ➕</FieldHint>
+              <FieldHint>
+                Нет нужной породы — добавьте её на странице Breeds (там же фото
+                породы)
+              </FieldHint>
               {errorBreed && <p className={styles.error}>{errorBreed}</p>}
               {errors.breed && (
                 <span className={styles.error}>{errors.breed.message}</span>
@@ -278,17 +278,18 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
             </div>
 
             <div className={styles.formGroup}>
-              <AdminDynamicSelect
+              <ReferenceSelect
                 label="Color / Pattern"
                 required
+                id="add-kitten-color"
                 options={colors}
                 registerProps={register("color")}
                 currentValue={selectedColor}
-                onAdd={handleAddColor}
+                onAddClick={() => setIsColorModalOpen(true)}
                 onRemove={handleRemoveColor}
               />
               <FieldHint>
-                Нет нужного окраса — добавьте его кнопкой ➕
+                Нет нужного окраса — добавьте его кнопкой ➕ (UA + EN)
               </FieldHint>
               {errorColor && <p className={styles.error}>{errorColor}</p>}
               {errors.color && (
@@ -445,6 +446,16 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
           </div>
         </form>
       </div>
+
+      {/* Модалка нового окраса стоит рядом с формой, клик по ней не закрывает форму */}
+      {isColorModalOpen && (
+        <div onClick={(e) => e.stopPropagation()}>
+          <ColorFormModal
+            onClose={() => setIsColorModalOpen(false)}
+            onSaved={handleColorCreated}
+          />
+        </div>
+      )}
       {/* <svg className={styles.catIcon} viewBox="0 0 24 24">
         <path d="M12 5c.67 0 1.35.09 2 .26 1.78-2 5.03-2.84 6.42-2.26 1.4.58-.42 7-.42 7 .57 1.07 1 2.24 1 3.44C21 17.9 16.97 21 12 21s-9-3-9-7.56c0-1.25.5-2.4 1-3.44 0 0-1.89-6.42-.5-7 1.39-.58 4.72.23 6.5 2.23A9.04 9.04 0 0 1 12 5Z"></path>
         <path d="M8 14v.5"></path>

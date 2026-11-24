@@ -1,5 +1,6 @@
 import type { Kitten } from "../types";
 import { numberToEmoji } from "./numberToEmoji";
+import { refNameUa } from "./referenceName";
 
 const INSTAGRAM_URL = "https://www.instagram.com/natalya.turusheva_1";
 
@@ -30,8 +31,9 @@ export const buildTelegramPost = (kitten: Kitten): string => {
 
   const nameUa = escapeHtml(kitten.nameUa);
   const nameEn = escapeHtml(kitten.nameEn);
-  const color = escapeHtml(kitten.color);
-  const breed = escapeHtml(kitten.breed);
+  // пост украиноязычный, поэтому берём украинские названия справочников
+  const color = escapeHtml(refNameUa(kitten.color, "Уточнюйте"));
+  const breed = escapeHtml(refNameUa(kitten.breed, "Уточнюйте"));
 
   const priceLines: string[] = [];
   if (hasPrice(petPrice)) {

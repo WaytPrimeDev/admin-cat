@@ -61,7 +61,8 @@ const FamiliesPage: React.FC = () => {
     return displayFamilies.filter(
       (family) =>
         family.name?.toLowerCase().includes(lowerCaseQuery) ||
-        family.breed?.toLowerCase().includes(lowerCaseQuery),
+        family.breed?.nameUa?.toLowerCase().includes(lowerCaseQuery) ||
+        family.breed?.nameEn?.toLowerCase().includes(lowerCaseQuery),
     );
   }, [displayFamilies, searchQuery]);
 

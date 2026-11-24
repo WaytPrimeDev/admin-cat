@@ -6,6 +6,7 @@ import { fetchKittens } from "../../store/slices/kittensSlice";
 import { fetchParents } from "../../store/slices/parentsSlice";
 import { fetchFamilies } from "../../store/slices/familiesSlice";
 import { getRandomQuote, type CatQuote } from "../../utils/getRandomQuote"; // Импортируем утилиту
+import { refNameUa } from "../../utils/referenceName";
 
 
 const DashboardPage: React.FC = () => {
@@ -131,7 +132,7 @@ const DashboardPage: React.FC = () => {
         id: p._id,
         type: "Parent Added",
         title: "New Breeding Parent",
-        desc: `${p.nameEn || p.nameUa} (${p.breed || "Breed not specified"})`,
+        desc: `${p.nameEn || p.nameUa} (${refNameUa(p.breed, "Breed not specified")})`,
         date: new Date(p.createdAt),
         color: "#cda34f",
       })),
@@ -147,7 +148,7 @@ const DashboardPage: React.FC = () => {
         id: k._id,
         type: "Kitten Added",
         title: "New Kitten Registered",
-        desc: `${k.nameEn || k.nameUa} (${k.breed || "Breed not specified"})`,
+        desc: `${k.nameEn || k.nameUa} (${refNameUa(k.breed, "Breed not specified")})`,
         date: new Date(k.createdAt),
         color: "#16a34a",
       })),

@@ -97,8 +97,10 @@ const AddFamilyForm = ({ editShowForm }: AddFamilyFormProps) => {
   };
 
   return (
-    <div className={styles.overlay} onClick={() => editShowForm(false)}>
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+    <div className={styles.overlay}>
+      {/* Клик по фону модалку не закрывает — только кнопки внутри формы,
+          чтобы случайным кликом не потерять введённые данные */}
+      <div className={styles.modal}>
         {/* Шапка модалки */}
         <div className={styles.header}>
           <div className={styles.headerText}>
@@ -169,8 +171,8 @@ const AddFamilyForm = ({ editShowForm }: AddFamilyFormProps) => {
                 >
                   <option value="">Select breed</option>
                   {breeds.map((breed) => (
-                    <option key={breed._id} value={breed.name}>
-                      {breed.name}
+                    <option key={breed._id} value={breed._id} title={breed.nameEn}>
+                      {breed.nameUa}
                     </option>
                   ))}
                 </select>

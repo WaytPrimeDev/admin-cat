@@ -1,0 +1,52 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.field label {
+  color: #2a2a3c;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.input {
+  padding: 10px 12px;
+  border: 1px solid #e1e1e8;
+  border-radius: 8px;
+  background: #fafaff;
+  color: #2a2a3c;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.input:focus-visible {
+  outline: 2px solid #5b5bd6;
+  outline-offset: 1px;
+}
+
+.hint {
+  margin: 0;
+  color: #8a8ab5;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.preview {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: #5b5bd6;
+}
+
+.warning {
+  margin: 0;
+  color: #b45309;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.error {
+  color: #dc2626;
+  font-size: 12px;
+}

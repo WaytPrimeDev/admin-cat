@@ -15,6 +15,7 @@ import { withCurrentOption } from "../../utils/withCurrentOption";
 import type { PhotoItem } from "../../validation/photoSelection";
 import { PhotoOrderEditor } from "../PhotoOrderEditor/PhotoOrderEditor";
 import formStyles from "../AddParentForm/AddParentForm.module.css";
+import SlugField from "../SlugField/SlugField";
 import styles from "./EditParentForm.module.css";
 
 interface EditParentFormProps {
@@ -39,8 +40,10 @@ const EditParentForm = ({ parent, onClose }: EditParentFormProps) => {
     defaultValues: {
       nameUa: parent.nameUa,
       nameEn: parent.nameEn,
-      color: parent.color,
-      breed: parent.breed,
+      slug: parent.slug ?? "",
+      // в значении селекта лежит _id справочной записи, а не название
+      color: parent.color?._id ?? "",
+      breed: parent.breed?._id ?? "",
       sex: parent.sex,
       photos: parent.images.map((image) => ({
         kind: "retained" as const,
@@ -50,6 +53,7 @@ const EditParentForm = ({ parent, onClose }: EditParentFormProps) => {
   });
 
   const photos = useWatch({ control, name: "photos" });
+  const slugValue = useWatch({ control, name: "slug" });
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -65,12 +69,21 @@ const EditParentForm = ({ parent, onClose }: EditParentFormProps) => {
   const onSubmit = async (values: UpdateParentFormValues) => {
     setSubmitError(null);
     try {
-      await dispatch(
+      // Слаг уходит только если его реально меняли: переименование
+      // родителя адрес не меняет, он уже в чужих ссылках
+      const nextSlug = values.slug?.trim();
+      const changedSlug =
+        nextSlug && nextSlug !== (parent.slug ?? "") ? nextSlug : undefined;
+
+      const response = await dispatch(
         updateParent({
           id: parent._id,
-          formData: buildUpdateParentFormData(values),
+          formData: buildUpdateParentFormData(values, changedSlug),
         }),
       ).unwrap();
+      // Бэкенд нормализует слаг и при коллизии вернёт luna-2 — значение
+      // берём из ответа, а не то, что ввёл админ
+      setValue("slug", response.data.slug ?? "");
       onClose();
     } catch (error) {
       setSubmitError(
@@ -147,6 +160,16 @@ const EditParentForm = ({ parent, onClose }: EditParentFormProps) => {
             </div>
           </div>
 
+          <SlugField
+            id="edit-parent-slug"
+            kind="parents"
+            mode="edit"
+            value={slugValue ?? ""}
+            sourceName={parent.nameEn}
+            inputProps={register("slug")}
+            error={errors.slug?.message}
+          />
+
           <div className={formStyles.gridRow}>
             <div className={formStyles.formGroup}>
               <label htmlFor="edit-parent-breed">Breed</label>
@@ -157,8 +180,8 @@ const EditParentForm = ({ parent, onClose }: EditParentFormProps) => {
               >
                 <option value="">-- Выберите --</option>
                 {withCurrentOption(breeds, parent.breed).map((breed) => (
-                  <option key={breed._id} value={breed.name}>
-                    {breed.name}
+                  <option key={breed._id} value={breed._id} title={breed.nameEn}>
+                    {breed.nameUa}
                   </option>
                 ))}
               </select>
@@ -176,8 +199,8 @@ const EditParentForm = ({ parent, onClose }: EditParentFormProps) => {
               >
                 <option value="">-- Выберите --</option>
                 {withCurrentOption(colors, parent.color).map((color) => (
-                  <option key={color._id} value={color.name}>
-                    {color.name}
+                  <option key={color._id} value={color._id} title={color.nameEn}>
+                    {color.nameUa}
                   </option>
                 ))}
               </select>

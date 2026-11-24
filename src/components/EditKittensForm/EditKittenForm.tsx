@@ -18,6 +18,7 @@ import type { PhotoItem } from "../../validation/photoSelection";
 import { PhotoOrderEditor } from "../PhotoOrderEditor/PhotoOrderEditor";
 import formStyles from "../AddKittenForm/AddKittenForm.module.css";
 import styles from "./EditKittenForm.module.css";
+import SlugField from "../SlugField/SlugField";
 
 const STATUS_LABELS: Record<(typeof KITTEN_STATUSES)[number], string> = {
   offline: "Offline (скрыт)",
@@ -52,12 +53,14 @@ const EditKittenForm = ({ kitten, onClose }: EditKittenFormProps) => {
     defaultValues: {
       nameUa: kitten.nameUa,
       nameEn: kitten.nameEn,
-      color: kitten.color,
-      breed: kitten.breed,
+      // в значении селекта лежит _id справочной записи, а не название
+      color: kitten.color?._id ?? "",
+      breed: kitten.breed?._id ?? "",
       sex: kitten.sex,
       status: kitten.status ?? "offline",
       // <input type="date"> принимает только YYYY-MM-DD, а с бэка приходит ISO
       birthDay: kitten.birthDay?.slice(0, 10) ?? "",
+      slug: kitten.slug ?? "",
       breeding: toPriceInput(kitten.price?.breeding),
       pet: toPriceInput(kitten.price?.pet),
       photos: kitten.images.map((image) => ({
@@ -68,6 +71,7 @@ const EditKittenForm = ({ kitten, onClose }: EditKittenFormProps) => {
   });
 
   const photos = useWatch({ control, name: "photos" });
+  const slugValue = useWatch({ control, name: "slug" });
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -83,12 +87,21 @@ const EditKittenForm = ({ kitten, onClose }: EditKittenFormProps) => {
   const onSubmit = async (values: UpdateKittenFormValues) => {
     setSubmitError(null);
     try {
-      await dispatch(
+      // Слаг уходит только если его реально меняли: переименование
+      // котёнка адрес не меняет, он уже в чужих ссылках
+      const nextSlug = values.slug?.trim();
+      const changedSlug =
+        nextSlug && nextSlug !== (kitten.slug ?? "") ? nextSlug : undefined;
+
+      const response = await dispatch(
         updateKitten({
           id: kitten._id,
-          formData: buildUpdateKittenFormData(values),
+          formData: buildUpdateKittenFormData(values, changedSlug),
         }),
       ).unwrap();
+      // Бэкенд нормализует слаг и при коллизии вернёт luna-2 — значение
+      // берём из ответа, а не то, что ввёл админ
+      setValue("slug", response.data.slug ?? "");
       onClose();
     } catch (error) {
       setSubmitError(
@@ -165,6 +178,16 @@ const EditKittenForm = ({ kitten, onClose }: EditKittenFormProps) => {
             </div>
           </div>
 
+          <SlugField
+            id="edit-kitten-slug"
+            kind="kittens"
+            mode="edit"
+            value={slugValue ?? ""}
+            sourceName={kitten.nameEn}
+            inputProps={register("slug")}
+            error={errors.slug?.message}
+          />
+
           <div className={formStyles.gridRow}>
             <div className={formStyles.formGroup}>
               <label htmlFor="edit-kitten-breed">Breed</label>
@@ -175,8 +198,8 @@ const EditKittenForm = ({ kitten, onClose }: EditKittenFormProps) => {
               >
                 <option value="">-- Выберите --</option>
                 {withCurrentOption(breeds, kitten.breed).map((breed) => (
-                  <option key={breed._id} value={breed.name}>
-                    {breed.name}
+                  <option key={breed._id} value={breed._id} title={breed.nameEn}>
+                    {breed.nameUa}
                   </option>
                 ))}
               </select>
@@ -194,8 +217,8 @@ const EditKittenForm = ({ kitten, onClose }: EditKittenFormProps) => {
               >
                 <option value="">-- Выберите --</option>
                 {withCurrentOption(colors, kitten.color).map((color) => (
-                  <option key={color._id} value={color.name}>
-                    {color.name}
+                  <option key={color._id} value={color._id} title={color.nameEn}>
+                    {color.nameUa}
                   </option>
                 ))}
               </select>

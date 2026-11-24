@@ -3,6 +3,7 @@ import { useSelector } from "react-redux";
 import styles from "./ViewParentModal.module.css";
 import type { RootState } from "../../store";
 import type { Parent } from "../../types";
+import { refNameUa } from "../../utils/referenceName";
 
 interface ViewParentModalProps {
   parent: Parent;
@@ -76,7 +77,7 @@ const ViewParentModal: React.FC<ViewParentModalProps> = ({
                   {parent.nameEn || parent.nameUa}
                 </h2>
               </div>
-              <p className={styles.subtitle}>{parent.breed}</p>
+              <p className={styles.subtitle}>{refNameUa(parent.breed)}</p>
             </div>
             <button
               className={styles.closeBtn}
@@ -143,10 +144,10 @@ const ViewParentModal: React.FC<ViewParentModalProps> = ({
                 {parent.sex === "male" ? "♂ Male" : "♀ Female"}
               </span>
               <span className={`${styles.chip} ${styles.chipPurple}`}>
-                {parent.breed}
+                {refNameUa(parent.breed)}
               </span>
               <span className={`${styles.chip} ${styles.chipGold}`}>
-                {parent.color}
+                {refNameUa(parent.color)}
               </span>
             </div>
 
@@ -163,13 +164,13 @@ const ViewParentModal: React.FC<ViewParentModalProps> = ({
               <div className={styles.detailRow}>
                 <span className={styles.detailLabel}>Порода</span>
                 <span className={`${styles.chip} ${styles.chipPurple}`}>
-                  {parent.breed}
+                  {refNameUa(parent.breed)}
                 </span>
               </div>
               <div className={styles.detailRow}>
                 <span className={styles.detailLabel}>Цвет</span>
                 <span className={`${styles.chip} ${styles.chipGold}`}>
-                  {parent.color}
+                  {refNameUa(parent.color)}
                 </span>
               </div>
               <div className={styles.detailRow}>

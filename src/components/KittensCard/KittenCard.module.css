@@ -271,3 +271,153 @@
     justify-content: flex-start;
   }
 }
+
+/* =========================================
+   ↕ Сортировка по заголовкам таблицы
+   ========================================= */
+.sortableTh {
+  white-space: nowrap;
+}
+
+.sortBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+  user-select: none;
+}
+
+.sortBtn:hover {
+  color: #5b5bd6;
+}
+
+.sortableTh.sortedTh .sortBtn {
+  color: #5b5bd6;
+}
+
+.sortArrow {
+  font-size: 10px;
+  line-height: 1;
+  opacity: 0.35;
+  transition: opacity 0.15s ease;
+}
+
+.sortBtn:hover .sortArrow {
+  opacity: 0.7;
+}
+
+.sortArrow.sortArrowActive {
+  opacity: 1;
+}
+
+/* =========================================
+   📱 Панель сортировки для мобильной раскладки
+   ========================================= */
+.mobileSortBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  background: white;
+  border: 1px solid #e1e1e8;
+  border-radius: 12px;
+  box-sizing: border-box;
+}
+
+.mobileSortLabel {
+  color: #8a8ab5;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.mobileSortSelect {
+  flex: 1 1 140px;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid #e1e1e8;
+  border-radius: 8px;
+  background: #fafaff;
+  color: #2a2a3c;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.mobileSortSelect:focus-visible,
+.mobileSortDirBtn:focus-visible {
+  outline: 2px solid #5b5bd6;
+  outline-offset: 1px;
+}
+
+.mobileSortDirBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid #e1e1e8;
+  border-radius: 8px;
+  background: #fafaff;
+  color: #5b5bd6;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.mobileSortDirBtn:disabled {
+  color: #b3b3c8;
+  cursor: default;
+}
+
+@media (max-width: 420px) {
+  .mobileSortDirText {
+    display: none;
+  }
+}
+
+/* На десктопе сортировка живёт в заголовках таблицы */
+@media (min-width: 1400px) {
+  .mobileSortBar {
+    display: none;
+  }
+}
+
+/* Предупреждение после удаления котёнка: пост в Telegram мог остаться */
+.deleteWarning {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border: 1px solid #fcd34d;
+  border-radius: 12px;
+  background: #fffbeb;
+  color: #92400e;
+  font-size: 13px;
+  line-height: 1.45;
+  box-sizing: border-box;
+}
+
+.deleteWarningClose {
+  flex: none;
+  padding: 0 2px;
+  border: none;
+  background: none;
+  color: #92400e;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+}

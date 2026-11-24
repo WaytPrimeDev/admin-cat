@@ -22,9 +22,11 @@ const Sex = {
 export const kittenSchema = z.object({
   nameUa: z.string().min(1, "Имя (UA) обязательно"),
   nameEn: z.string().min(1, "Имя (EN) обязательно"),
-  color: z.string().min(1, "Цвет обязателен"),
+  // Пустой слаг бэкенд соберёт сам из nameEn — в запрос такое поле не кладём
+  slug: z.string().optional(),
+  color: z.string().min(1, "Выберите окрас"),
   birthDay: birthDayField,
-  breed: z.string().min(1, "Порода обязательна"),
+  breed: z.string().min(1, "Выберите породу"),
   sex: z.enum(Sex, "Выберите пол"),
 
   breeding: z.string(),
@@ -41,9 +43,10 @@ export const KITTEN_STATUSES = ["offline", "active", "booked", "out"] as const;
 export const updateKittenSchema = z.object({
   nameUa: z.string().trim().min(1, "Имя (UA) обязательно"),
   nameEn: z.string().trim().min(1, "Имя (EN) обязательно"),
-  color: z.string().min(1, "Цвет обязателен"),
+  slug: z.string().optional(),
+  color: z.string().min(1, "Выберите окрас"),
   birthDay: birthDayField,
-  breed: z.string().min(1, "Порода обязательна"),
+  breed: z.string().min(1, "Выберите породу"),
   sex: z.enum(Sex, "Выберите пол"),
   status: z.enum(KITTEN_STATUSES, "Выберите статус"),
 

@@ -5,6 +5,7 @@ import type { RootState } from "../../store";
 import type { Kitten } from "../../types";
 import { getKittenAgeInWeeks } from "../../utils/kittenAge";
 import { getPluralWeeks } from "../../utils/getPluralWeeks";
+import { refNameUa } from "../../utils/referenceName";
 
 interface ViewKittenModalProps {
   kitten: Kitten;
@@ -76,7 +77,7 @@ const ViewKittenModal: React.FC<ViewKittenModalProps> = ({
           <div className={styles.header}>
             <div>
               <h2 className={styles.title}>{kitten.nameEn || kitten.nameUa}</h2>
-              <p className={styles.subtitle}>{kitten.breed}</p>
+              <p className={styles.subtitle}>{refNameUa(kitten.breed)}</p>
             </div>
             <button
               className={styles.closeBtn}
@@ -165,7 +166,7 @@ const ViewKittenModal: React.FC<ViewKittenModalProps> = ({
             <div className={styles.detailsTable}>
               <div className={styles.detailRow}>
                 <span className={styles.detailLabel}>Breed</span>
-                <span className={styles.detailValue}>{kitten.breed}</span>
+                <span className={styles.detailValue}>{refNameUa(kitten.breed)}</span>
               </div>
               <div className={styles.detailRow}>
                 <span className={styles.detailLabel}>Age</span>
@@ -173,7 +174,7 @@ const ViewKittenModal: React.FC<ViewKittenModalProps> = ({
               </div>
               <div className={styles.detailRow}>
                 <span className={styles.detailLabel}>Color / Variety</span>
-                <span className={styles.detailValue}>{kitten.color}</span>
+                <span className={styles.detailValue}>{refNameUa(kitten.color)}</span>
               </div>
             </div>
 
@@ -194,7 +195,7 @@ const ViewKittenModal: React.FC<ViewKittenModalProps> = ({
                           {father?.nameEn || father?.nameUa || "Unknown"}
                         </span>
                         <span className={styles.parentName}>
-                          {father?.breed}
+                          {refNameUa(father?.breed)}
                         </span>
                         <span className={`${styles.parentRole} ${styles.male}`}>
                           ♂ Sire
@@ -223,7 +224,7 @@ const ViewKittenModal: React.FC<ViewKittenModalProps> = ({
                           {mother?.nameEn || mother?.nameUa || "Unknown"}
                         </span>
                         <span className={styles.parentName}>
-                          {mother?.breed}
+                          {refNameUa(mother?.breed)}
                         </span>
                         <span
                           className={`${styles.parentRole} ${styles.female}`}

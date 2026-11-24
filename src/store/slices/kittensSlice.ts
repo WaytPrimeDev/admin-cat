@@ -4,6 +4,7 @@ import type {
   KittensState,
   KittenResponse,
   AddKittenResponse,
+  DeleteKittenResponse,
 } from "../../types";
 import type { AxiosError } from "axios";
 
@@ -72,12 +73,16 @@ export const addKitten = createAsyncThunk(
   },
 );
 
+// Возвращаем не только id, но и блок telegram из ответа:
+// по нему UI решает, предупреждать ли о застрявшем посте
 export const deleteKitten = createAsyncThunk(
   "kittens/deleteKitten",
   async (id: string, { rejectWithValue }) => {
     try {
-      await api.delete(`/cats/kitten/${id}`);
-      return id;
+      const response = await api.delete<DeleteKittenResponse>(
+        `/cats/kitten/${id}`,
+      );
+      return { id, telegram: response.data?.telegram ?? null };
     } catch (error) {
       const err = error as AxiosError<{ message: string }>;
       return rejectWithValue(
@@ -100,14 +105,20 @@ const kittensSlice = createSlice({
       .addCase(fetchKittens.fulfilled, (state, action) => {
         state.isLoading = false;
 
-        state.items = action.payload.data;
+        // Базовый порядок списка — от самых новых к старым,
+        // чтобы только что добавленный котёнок был в самом верху и после перезагрузки
+        state.items = [...action.payload.data].sort(
+          (a, b) =>
+            Date.parse(b.createdAt ?? "") - Date.parse(a.createdAt ?? "") || 0,
+        );
       })
       .addCase(fetchKittens.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
       })
       .addCase(addKitten.fulfilled, (state, action) => {
-        state.items.push(action.payload.data);
+        // Новый котёнок всегда первым в списке
+        state.items.unshift(action.payload.data);
       })
       .addCase(updateKitten.fulfilled, (state, action) => {
         const index = state.items.findIndex(
@@ -120,7 +131,7 @@ const kittensSlice = createSlice({
       })
       .addCase(deleteKitten.fulfilled, (state, action) => {
         state.items = state.items.filter(
-          (kitten) => kitten._id !== action.payload,
+          (kitten) => kitten._id !== action.payload.id,
         );
       });
   },

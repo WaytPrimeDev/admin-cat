@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Создаем инстанс Axios
 const api = axios.create({
-  baseURL: "https://arlenback-production.up.railway.app"
+  baseURL: "http://localhost:3000"
 });
 
 // Request interceptor: добавляем токен авторизации ко всем запросам

@@ -9,6 +9,7 @@ import { deleteFamily } from "../../store/slices/familiesSlice";
 import { fetchKittens } from "../../store/slices/kittensSlice";
 import { fetchParents } from "../../store/slices/parentsSlice";
 import type { Family, Kitten } from "../../types";
+import { refNameUa } from "../../utils/referenceName";
 
 interface SortableFamilyItemProps {
   family: Family;
@@ -88,7 +89,7 @@ const SortableFamilyItem: React.FC<SortableFamilyItemProps> = ({
               {family.name || "Untitled"}
             </span>
             <span className={styles.breedBadge}>
-              {family.breed || "Not specified"}
+              {refNameUa(family.breed, "Not specified")}
             </span>
           </div>
         </td>
@@ -133,7 +134,7 @@ const SortableFamilyItem: React.FC<SortableFamilyItemProps> = ({
 
         <td data-label="BREED" className={styles.breedCellDesktopOnly}>
           <span className={styles.breedText}>
-            {family.breed || "Not specified"}
+            {refNameUa(family.breed, "Not specified")}
           </span>
         </td>
 
