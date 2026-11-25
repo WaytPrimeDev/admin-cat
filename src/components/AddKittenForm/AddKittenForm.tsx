@@ -23,6 +23,7 @@ import { SortablePhoto } from "../SortablePhoto/SortablePhoto";
 import { ReferenceSelect } from "../ReferenceSelect/ReferenceSelect";
 import ColorFormModal from "../ColorFormModal/ColorFormModal";
 import SlugField from "../SlugField/SlugField";
+import VideoLinkField from "../VideoLinkField/VideoLinkField";
 import {
   FieldHint,
   MissingFieldsNotice,
@@ -39,13 +40,13 @@ interface AddKittenFormProps {
 
 // Названия обязательных полей для сводки под формой
 const REQUIRED_LABELS: Record<string, string> = {
-  nameUa: "Name (UA)",
-  nameEn: "Name (EN)",
-  breed: "Breed",
-  color: "Color / Pattern",
-  birthDay: "Date of Birth",
-  sex: "Gender",
-  images: "Photos",
+  nameUa: "Имя (UA)",
+  nameEn: "Имя (EN)",
+  breed: "Порода",
+  color: "Окрас / рисунок",
+  birthDay: "Дата рождения",
+  sex: "Пол",
+  images: "Фотографии",
 };
 
 const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
@@ -55,6 +56,7 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
     reset,
     setValue,
     control,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<KittenFormValues>({
     resolver: zodResolver(kittenSchema),
@@ -67,6 +69,7 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
       birthDay: "",
       breeding: "",
       pet: "",
+      videoId: "",
       images: [],
     },
   });
@@ -78,6 +81,7 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
   const nameEnValue = useWatch({ control, name: "nameEn" });
   const selectedColor = useWatch({ control, name: "color" });
   const selectedBreed = useWatch({ control, name: "breed" });
+  const videoValue = useWatch({ control, name: "videoId" });
 
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isColorModalOpen, setIsColorModalOpen] = useState(false);
@@ -134,6 +138,8 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
     if (slug) formData.append("slug", slug);
     formData.append("breeding", String(data.breeding));
     formData.append("pet", String(data.pet));
+    // Пустая строка = видео нет; бэкенд сам достанет id из ссылки
+    formData.append("videoId", data.videoId ?? "");
 
     if (selectedFiles.length > 0) {
       selectedFiles.forEach((file) => {
@@ -148,6 +154,11 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
       reset();
     } catch (err) {
       console.error("Ошибка при отправке:", err);
+      // Жалобу бэкенда на ссылку показываем у самого поля, а не только в консоли
+      const message = typeof err === "string" ? err : "";
+      if (/videoId|youtube/i.test(message)) {
+        setError("videoId", { type: "server", message });
+      }
     }
   };
 
@@ -183,13 +194,13 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
         {/* Шапка модалки */}
         <div className={styles.header}>
           <div className={styles.headerText}>
-            <h2>Add New Kitten</h2>
-            <p>Fill in the details below to register a kitten</p>
+            <h2>Новый котёнок</h2>
+            <p>Заполните поля ниже, чтобы добавить котёнка</p>
           </div>
           <button
             className={styles.closeBtn}
             onClick={() => closeForm()}
-            aria-label="Close"
+            aria-label="Закрыть"
           >
             <svg
               width="20"
@@ -214,11 +225,11 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
           <div className={styles.gridRow}>
             <div className={styles.formGroup}>
               <label>
-                Name (UA)
+                Имя (UA)
                 <RequiredMark />
               </label>
               <input
-                placeholder="e.g., Пушок"
+                placeholder="Например: Пушок"
                 {...register("nameUa")}
                 className={styles.input}
                 aria-invalid={Boolean(errors.nameUa)}
@@ -231,11 +242,11 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
 
             <div className={styles.formGroup}>
               <label>
-                Name (EN)
+                Имя (EN)
                 <RequiredMark />
               </label>
               <input
-                placeholder="e.g., Snowball"
+                placeholder="Например: Snowball"
                 {...register("nameEn")}
                 className={styles.input}
                 aria-invalid={Boolean(errors.nameEn)}
@@ -260,7 +271,7 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
           <div className={styles.gridRow}>
             <div className={styles.formGroup}>
               <ReferenceSelect
-                label="Breed"
+                label="Порода"
                 required
                 id="add-kitten-breed"
                 options={breeds}
@@ -268,7 +279,7 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
                 currentValue={selectedBreed}
               />
               <FieldHint>
-                Нет нужной породы — добавьте её на странице Breeds (там же фото
+                Нет нужной породы — добавьте её на странице «Породы» (там же фото
                 породы)
               </FieldHint>
               {errorBreed && <p className={styles.error}>{errorBreed}</p>}
@@ -279,7 +290,7 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
 
             <div className={styles.formGroup}>
               <ReferenceSelect
-                label="Color / Pattern"
+                label="Окрас / рисунок"
                 required
                 id="add-kitten-color"
                 options={colors}
@@ -301,7 +312,7 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
           <div className={styles.gridRow}>
             <div className={styles.formGroup}>
               <label>
-                Date of Birth
+                Дата рождения
                 <RequiredMark />
               </label>
               <input
@@ -318,7 +329,7 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
 
             <div className={styles.formGroup}>
               <label>
-                Gender
+                Пол
                 <RequiredMark />
               </label>
               <select
@@ -326,9 +337,9 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
                 className={styles.input}
                 aria-invalid={Boolean(errors.sex)}
               >
-                <option value="">Select gender</option>
-                <option value="male">Male (Самец)</option>
-                <option value="female">Female (Самка)</option>
+                <option value="">Выберите пол</option>
+                <option value="male">Кот (самец)</option>
+                <option value="female">Кошка (самка)</option>
               </select>
               {errors.sex && (
                 <span className={styles.error}>{errors.sex.message}</span>
@@ -338,10 +349,10 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
 
           <div className={styles.gridRow}>
             <div className={styles.formGroup}>
-              <label>Price for Breeding</label>
+              <label>Цена для разведения</label>
               <input
                 type="number"
-                placeholder="e.g., 3500"
+                placeholder="Например: 3500"
                 {...register("breeding")}
                 className={styles.input}
               />
@@ -349,10 +360,10 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
             </div>
 
             <div className={styles.formGroup}>
-              <label>Price as Pet</label>
+              <label>Цена как питомца</label>
               <input
                 type="number"
-                placeholder="e.g., 1500"
+                placeholder="Например: 1500"
                 {...register("pet")}
                 className={styles.input}
               />
@@ -360,9 +371,19 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
             </div>
           </div>
 
+          <VideoLinkField
+            id="add-kitten-video"
+            value={videoValue ?? ""}
+            inputProps={register("videoId")}
+            onClear={() =>
+              setValue("videoId", "", { shouldValidate: true, shouldDirty: true })
+            }
+            error={errors.videoId?.message}
+          />
+
           <div className={styles.formGroup}>
             <label>
-              Photos
+              Фотографии
               <RequiredMark />
             </label>
             <p className={styles.hint}>
@@ -383,7 +404,7 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
                 <polyline points="17 8 12 3 7 8"></polyline>
                 <line x1="12" y1="3" x2="12" y2="15"></line>
               </svg>
-              Choose Images
+              Выбрать фото
             </label>
             <input
               id="file-upload"
@@ -432,7 +453,7 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
               onClick={() => closeForm()}
               disabled={isSubmitting}
             >
-              Cancel
+              Отмена
             </button>
             {/* Кнопка активна всегда: клик по ней показывает, чего не хватает,
                 вместо молчаливо заблокированной кнопки */}
@@ -441,7 +462,7 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
               className={styles.submitBtn}
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Saving..." : "Save Kitten"}
+              {isSubmitting ? "Сохраняем..." : "Сохранить котёнка"}
             </button>
           </div>
         </form>

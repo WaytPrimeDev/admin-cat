@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
 import api from "../../api/axiosInstance";
+import { apiErrorMessage } from "../../utils/apiError";
 import type { AuthState, LoginRequest, LoginResponse } from "../../types";
 
 const initialState: AuthState = {
@@ -21,13 +22,8 @@ export const login = createAsyncThunk(
       const { user, accessToken } = response.data;
       return { user, token: accessToken };
     } catch (error) {
-      const defaultMessage = "Login failed";
-
-      const axiosLikeError = error as {
-        response?: { data?: { message?: string } };
-      };
       return rejectWithValue(
-        axiosLikeError.response?.data?.message || defaultMessage,
+        apiErrorMessage(error, "Не удалось войти — проверьте логин и пароль"),
       );
     }
   },

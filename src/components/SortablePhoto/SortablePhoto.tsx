@@ -65,7 +65,7 @@ export const SortablePhoto = ({ id, source, onRemove, index }: Props) => {
           // Для файла src проставляет эффект; до этого — прозрачный пиксель,
           // чтобы не мелькала иконка битой картинки
           src={typeof source === "string" ? source : TRANSPARENT_PIXEL}
-          alt="preview"
+          alt="Предпросмотр фото"
           className={styles.previewImage}
           // Иначе на мобильных долгое нажатие открывает меню «сохранить
           // изображение», а на десктопе стартует нативный drag браузера

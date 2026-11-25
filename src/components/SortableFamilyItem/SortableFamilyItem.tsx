@@ -10,6 +10,8 @@ import { fetchKittens } from "../../store/slices/kittensSlice";
 import { fetchParents } from "../../store/slices/parentsSlice";
 import type { Family, Kitten } from "../../types";
 import { refNameUa } from "../../utils/referenceName";
+import { kittenStatusLabel } from "../../utils/kittenStatus";
+import { getPluralKittens } from "../../utils/getPluralKittens";
 
 interface SortableFamilyItemProps {
   family: Family;
@@ -83,25 +85,25 @@ const SortableFamilyItem: React.FC<SortableFamilyItemProps> = ({
         } ${isOverlay ? styles.overlay : ""}`}
         // ВНИМАНИЕ: Мы убрали attributes и listeners отсюда!
       >
-        <td data-label="FAMILY">
+        <td data-label="СЕМЬЯ">
           <div className={styles.familyInfo}>
             <span className={styles.familyName}>
-              {family.name || "Untitled"}
+              {family.name || "Без названия"}
             </span>
             <span className={styles.breedBadge}>
-              {refNameUa(family.breed, "Not specified")}
+              {refNameUa(family.breed, "Порода не указана")}
             </span>
           </div>
         </td>
 
-        <td data-label="PARENTS">
+        <td data-label="РОДИТЕЛИ">
           <div className={styles.parentsPair}>
             <div className={styles.parentAvatarGroup}>
               {father ? (
                 <img
                   className={styles.parentAvatar}
                   src={father.images?.[0]?.full || "placeholder.jpg"}
-                  alt={father.nameEn || father.nameUa || "Father"}
+                  alt={father.nameEn || father.nameUa || "Отец"}
                 />
               ) : (
                 <div
@@ -115,7 +117,7 @@ const SortableFamilyItem: React.FC<SortableFamilyItemProps> = ({
                 <img
                   className={`${styles.parentAvatar} ${styles.motherAvatar}`}
                   src={mother.images?.[0]?.full || "placeholder.jpg"}
-                  alt={mother.nameEn || mother.nameUa || "Mother"}
+                  alt={mother.nameEn || mother.nameUa || "Мать"}
                 />
               ) : (
                 <div
@@ -126,19 +128,19 @@ const SortableFamilyItem: React.FC<SortableFamilyItemProps> = ({
               )}
             </div>
             <div className={styles.parentsNamesDesktop}>
-              <div>{father ? father.nameEn || father.nameUa : "No dad"}</div>
-              <div>{mother ? mother.nameEn || mother.nameUa : "No mom"}</div>
+              <div>{father ? father.nameEn || father.nameUa : "Отец не указан"}</div>
+              <div>{mother ? mother.nameEn || mother.nameUa : "Мать не указана"}</div>
             </div>
           </div>
         </td>
 
-        <td data-label="BREED" className={styles.breedCellDesktopOnly}>
+        <td data-label="ПОРОДА" className={styles.breedCellDesktopOnly}>
           <span className={styles.breedText}>
-            {refNameUa(family.breed, "Not specified")}
+            {refNameUa(family.breed, "Порода не указана")}
           </span>
         </td>
 
-        <td data-label="KITTENS" className={styles.kittensTableCell}>
+        <td data-label="КОТЯТА" className={styles.kittensTableCell}>
           <button
             className={styles.expandKittensBtn}
             onClick={onToggleExpand}
@@ -147,7 +149,9 @@ const SortableFamilyItem: React.FC<SortableFamilyItemProps> = ({
             <span className={styles.kittensCountBadge}>
               {familyKittens.length}
             </span>
-            <span className={styles.kittensText}>kittens</span>
+            <span className={styles.kittensText}>
+              {getPluralKittens(familyKittens.length)}
+            </span>
             <span
               className={`${styles.chevron} ${isExpanded ? styles.open : ""}`}
             >
@@ -156,7 +160,7 @@ const SortableFamilyItem: React.FC<SortableFamilyItemProps> = ({
           </button>
         </td>
 
-        <td data-label="ACTIONS" className={styles.actionsCell}>
+        <td data-label="ДЕЙСТВИЯ" className={styles.actionsCell}>
           <div className={styles.actionButtons}>
             {isReordering ? (
               /* КНОПКА-РУЧКА ДЛЯ DRAG-AND-DROP */
@@ -164,7 +168,7 @@ const SortableFamilyItem: React.FC<SortableFamilyItemProps> = ({
                 className={styles.dragHandleBtn}
                 {...attributes}
                 {...listeners}
-                title="Drag to reorder"
+                title="Перетащите, чтобы изменить порядок"
               >
                 <svg
                   width="24"
@@ -187,7 +191,7 @@ const SortableFamilyItem: React.FC<SortableFamilyItemProps> = ({
                 <button
                   className={styles.actionBtn}
                   onClick={onEdit}
-                  title="Edit family"
+                  title="Редактировать семью"
                   type="button"
                 >
                   <svg
@@ -207,7 +211,7 @@ const SortableFamilyItem: React.FC<SortableFamilyItemProps> = ({
                 <button
                   className={styles.actionBtn}
                   onClick={() => handleDelete(family._id)}
-                  title="Delete family"
+                  title="Удалить семью"
                   type="button"
                 >
                   <svg
@@ -236,7 +240,7 @@ const SortableFamilyItem: React.FC<SortableFamilyItemProps> = ({
           <td colSpan={5} className={styles.expandedCell}>
             <div className={styles.kittensContainer}>
               <div className={styles.kittensTitle}>
-                KITTENS FROM {family.name?.toUpperCase() || "THIS FAMILY"}
+                КОТЯТА ИЗ СЕМЬИ {family.name?.toUpperCase() || "БЕЗ НАЗВАНИЯ"}
               </div>
               <div className={styles.kittensList}>
                 {familyKittens.map((kitten) => (
@@ -260,7 +264,7 @@ const SortableFamilyItem: React.FC<SortableFamilyItemProps> = ({
                       </div>
                       <div className={styles.kittenChipStatus}>
                         <span className={styles.statusDot}></span>
-                        {(kitten as Kitten).status || "Unknown"}
+                        {kittenStatusLabel((kitten as Kitten).status)}
                       </div>
                     </div>
                   </div>

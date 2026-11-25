@@ -16,9 +16,12 @@ export const slugify = (value: string): string =>
 
 export type SlugKind = "kittens" | "parents" | "breeds";
 
-// Базовый адрес публичного сайта: VITE_SITE_URL в .env.
-// Не задан — копируем относительный путь, он всё равно пригоден для вставки
-const SITE_URL = (import.meta.env.VITE_SITE_URL ?? "").replace(/\/+$/, "");
+// Базовый адрес публичного сайта. Переопределяется VITE_SITE_URL в .env
+// (например, для стейджинга); по умолчанию — прод, чтобы скопированная
+// ссылка всегда была абсолютной и открывалась из Telegram или письма.
+export const SITE_URL = (
+  import.meta.env.VITE_SITE_URL || "https://koshenya.com"
+).replace(/\/+$/, "");
 
 export const sitePath = (kind: SlugKind, slug: string): string =>
   `/${kind}/${slug}`;

@@ -14,6 +14,7 @@ import AddFamilyForm from "../../components/AddFamilyForm/AddFamily";
 import EditFamilyForm from "../../components/EditFamilyForm/EditFamilyForm";
 import { fetchBreeds } from "../../store/slices/filterSlice";
 import type { Family } from "../../types";
+import { getPluralFamilies } from "../../utils/getPluralParents";
 
 const FamiliesPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -70,14 +71,14 @@ const FamiliesPage: React.FC = () => {
     <div className={styles.container}>
       <div className={styles.header}>
         <div className={styles.titleSection}>
-          <h2>Families</h2>
-          <p className={styles.subtitle}>Breeding lines and litter records</p>
+          <h2>Семьи</h2>
+          <p className={styles.subtitle}>Линии разведения и записи о помётах</p>
         </div>
         <button
           className={styles.addBtn}
           onClick={() => setShowForm(!showForm)}
         >
-          {showForm ? "Cancel" : "+ Add Family"}
+          {showForm ? "Отмена" : "+ Добавить семью"}
         </button>
       </div>
 
@@ -101,7 +102,7 @@ const FamiliesPage: React.FC = () => {
           <input
             type="text"
             className={styles.searchInput}
-            placeholder="Search families..."
+            placeholder="Поиск по названию или породе..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -112,18 +113,18 @@ const FamiliesPage: React.FC = () => {
         <div className={styles.controls}>
           {!isReordering ? (
             <button className={styles.editBtn} onClick={handleStartReordering}>
-              Reorder Families
+              Изменить порядок
             </button>
           ) : (
             <div className={styles.reorderActions}>
               <button className={styles.submitBtn} onClick={handleSaveOrder}>
-                Save Order
+                Сохранить порядок
               </button>
               <button
                 className={styles.cancelBtn}
                 onClick={() => setIsReordering(false)}
               >
-                Cancel
+                Отмена
               </button>
             </div>
           )}
@@ -152,14 +153,15 @@ const FamiliesPage: React.FC = () => {
       ) : (
         <p className={styles.emptyState}>
           {families.length === 0
-            ? "No families found."
-            : "No families match the search."}
+            ? "Семьи пока не добавлены."
+            : "По запросу ничего не найдено."}
         </p>
       )}
 
       {families.length > 0 && (
         <div className={styles.footer}>
-          {queryFamilies.length} of {families.length} families
+          Показано {queryFamilies.length} из {families.length}{" "}
+          {getPluralFamilies(families.length)}
         </div>
       )}
     </div>

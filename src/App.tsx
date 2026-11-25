@@ -34,7 +34,7 @@ function App() {
           <Route path="breeds" element={<BreedsPage />} />
           <Route path="colors" element={<ColorsPage />} />
         </Route>
-        <Route path="*" element={<>OOOPS...</>} />
+        <Route path="*" element={<>Страница не найдена</>} />
       </Routes>
     </Suspense>
   );

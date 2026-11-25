@@ -2,6 +2,8 @@ import type { Kitten } from "../types";
 import { numberToEmoji } from "./numberToEmoji";
 import { refNameUa } from "./referenceName";
 
+import { youtubeWatchUrl } from "./youtube";
+
 const INSTAGRAM_URL = "https://www.instagram.com/natalya.turusheva_1";
 
 // Телеграм рендерит пост с parse_mode: "HTML",
@@ -50,9 +52,17 @@ export const buildTelegramPost = (kitten: Kitten): string => {
     priceLines.push("💰 Ціна: Уточнюйте");
   }
 
+  // Видео необязательное: без videoId строку не добавляем вовсе
+  const videoLine = kitten.videoId
+    ? `🎬 <b><a href="${youtubeWatchUrl(kitten.videoId)}">Відео ${
+        isMale ? "котика" : "кошечки"
+      }</a></b>
+`
+    : "";
+
   return `
 🐾 <b>Дуже ${isMale ? "Цікавий котик" : "Цікава кошечка"} ${nameUa} у ${color} забарвленні</b>
-
+${videoLine}
 💞 ${nameEn} (${nameUa}) - ${formatBirthDay(kitten.birthDay)}, ${
     isMale ? "♂ Котик" : "♀ Кошечка"
   }
@@ -64,6 +74,7 @@ export const buildTelegramPost = (kitten: Kitten): string => {
 ${priceLines.join("\n\n")}
 💌👀♥️
 📸 <a href="${INSTAGRAM_URL}">Наш Instagram</a>
+🌐 <a href="https://koshenya.com">Наш сайт koshenya.com</a>
 #${kitten.nameUa}
 `.trim();
 };

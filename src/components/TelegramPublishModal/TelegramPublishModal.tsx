@@ -4,6 +4,11 @@ import type { Kitten, KittenStatus } from "../../types";
 import { buildTelegramPost } from "../../utils/buildTelegramPost";
 import api from "../../api/axiosInstance";
 import type { AxiosError } from "axios";
+import { apiErrorMessage } from "../../utils/apiError";
+import {
+  KITTEN_STATUS_OPTION_LABELS,
+  kittenStatusLabel,
+} from "../../utils/kittenStatus";
 
 // ---------------------------------------------------------------------------
 // Роуты бота. :id везде — id котёнка.
@@ -36,14 +41,13 @@ const asString = (value: unknown): string =>
 
 /*
  * Ошибки бэкенда несут осмысленный текст в message — лимит символов с фактической
- * длиной, «Пост не найден», причину отказа Telegram на 409. Показываем его как есть,
- * на свой обобщённый текст откатываемся только если message не пришёл.
+ * длиной, «Пост не найден», причину отказа Telegram на 409. Русский текст уходит
+ * в баннер как есть, английский (в том числе ответ Telegram API) переводит
+ * apiErrorMessage; на свой обобщённый текст откатываемся, только если
+ * сообщение не пришло или его не удалось разобрать.
  */
-const serverMessage = (e: unknown, fallback: string): string => {
-  const data = asRecord((e as AxiosError)?.response?.data);
-  const message = asString(data?.message).trim();
-  return message || fallback;
-};
+const serverMessage = (e: unknown, fallback: string): string =>
+  apiErrorMessage(e, fallback);
 
 const statusOf = (e: unknown): number | undefined =>
   (e as AxiosError)?.response?.status;
@@ -298,8 +302,10 @@ const TelegramPublishModal: React.FC<TelegramPublishModalProps> = ({
   const announceChanged = announceDraft !== publishedPost.announcement;
 
   return (
-    <div className={styles.overlay} onClick={onClose}>
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+    <div className={styles.overlay}>
+      {/* Клик по фону модалку не закрывает — только кнопки внутри:
+          случайным кликом не должны теряться введённые данные */}
+      <div className={styles.modal}>
         <div className={styles.header}>
           <div>
             <h2 className={styles.title}>
@@ -444,10 +450,12 @@ const TelegramPublishModal: React.FC<TelegramPublishModalProps> = ({
                           setStatus(e.target.value as KittenStatus | "")
                         }
                       >
-                        <option value="">Не менять ({kitten.status})</option>
+                        <option value="">
+                          Не менять ({kittenStatusLabel(kitten.status)})
+                        </option>
                         {STATUS_OPTIONS.map((option) => (
                           <option key={option} value={option}>
-                            {option}
+                            {KITTEN_STATUS_OPTION_LABELS[option]}
                           </option>
                         ))}
                       </select>

@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../../api/axiosInstance";
+import { apiErrorMessage } from "../../utils/apiError";
 import type {
   AddFamilyResponse,
   FamiliesState,
@@ -7,7 +8,6 @@ import type {
   UpdateFamilyRequest,
 } from "../../types";
 import type { FamilyFormValues } from "../../validation/familySchema";
-import type { AxiosError } from "axios";
 
 const initialState: FamiliesState = {
   items: [],
@@ -22,10 +22,9 @@ export const fetchFamilies = createAsyncThunk(
       const response = await api.get<GetFamilyResponse>("/families?page=1&perPage=100000");
       return response.data;
     } catch (error) {
-      const err = error as AxiosError<{ message: string }>;
 
       return rejectWithValue(
-        err.response?.data?.message || "Failed to fetch families",
+        apiErrorMessage(error, "Не удалось загрузить список семей"),
       );
     }
   },
@@ -40,9 +39,8 @@ export const createFamily = createAsyncThunk(
       );
       return response.data;
     } catch (error) {
-      const err = error as AxiosError<{ message: string }>;
       return rejectWithValue(
-        err.response?.data?.message || "Failed to update family",
+        apiErrorMessage(error, "Не удалось сохранить семью"),
       );
     }
   },
@@ -60,9 +58,8 @@ export const updateFamily = createAsyncThunk(
       );
       return response.data;
     } catch (error) {
-      const err = error as AxiosError<{ message: string }>;
       return rejectWithValue(
-        err.response?.data?.message || "Failed to update family",
+        apiErrorMessage(error, "Не удалось сохранить семью"),
       );
     }
   },
@@ -75,9 +72,8 @@ export const updateFamiliesOrder = createAsyncThunk(
       const response = await api.patch("/families/reorder", { orderedIds });
       return response.data; // Или можете просто вернуть orderedIds, чтобы обновить стейт Redux локально
     } catch (error) {
-      const err = error as AxiosError<{ message: string }>;
       return rejectWithValue(
-        err.response?.data?.message || "Ошибка сортировки",
+        apiErrorMessage(error, "Ошибка сортировки"),
       );
     }
   },
@@ -90,9 +86,8 @@ export const deleteFamily = createAsyncThunk(
       await api.delete(`/families/${id}`);
       return id;
     } catch (error) {
-      const err = error as AxiosError<{ message: string }>;
       return rejectWithValue(
-        err.response?.data?.message || "Failed to delete family",
+        apiErrorMessage(error, "Не удалось удалить семью"),
       );
     }
   },

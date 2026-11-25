@@ -421,3 +421,9 @@
   line-height: 1;
   cursor: pointer;
 }
+
+.videoMark {
+  margin-left: 6px;
+  font-size: 12px;
+  cursor: default;
+}

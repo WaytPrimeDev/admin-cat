@@ -12,6 +12,7 @@ import { fetchParents } from "../../store/slices/parentsSlice";
 import { fetchKittens } from "../../store/slices/kittensSlice";
 import { useAppDispatch, type RootState } from "../../store";
 import { fetchBreeds, fetchColors } from "../../store/slices/filterSlice";
+import { getPluralParents } from "../../utils/getPluralParents";
 
 const ParentsPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -48,14 +49,14 @@ const ParentsPage: React.FC = () => {
     <div className={styles.container}>
       <div className={styles.header}>
         <div className={styles.titleSection}>
-          <h2>Parents</h2>
-          <p className={styles.subtitle}>Breeding cats and their offspring</p>
+          <h2>Родители</h2>
+          <p className={styles.subtitle}>Кошки в разведении и их потомство</p>
         </div>
         <button
           className={styles.addBtn}
           onClick={() => setShowForm(!showForm)}
         >
-          {showForm ? "Cancel" : "+ Add Parent"}
+          {showForm ? "Отмена" : "+ Добавить родителя"}
         </button>
       </div>
 
@@ -79,7 +80,7 @@ const ParentsPage: React.FC = () => {
           <input
             type="text"
             className={styles.searchInput}
-            placeholder="Search by name..."
+            placeholder="Поиск по имени..."
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
@@ -104,7 +105,7 @@ const ParentsPage: React.FC = () => {
             <line x1="9" y1="8" x2="15" y2="8"></line>
             <line x1="17" y1="16" x2="23" y2="16"></line>
           </svg>
-          <span className={styles.filterText}>Filters</span>
+          <span className={styles.filterText}>Фильтры</span>
         </div>
       </div>
 
@@ -137,10 +138,11 @@ const ParentsPage: React.FC = () => {
             queryParents={queryParents} /* <-- ПЕРЕДАЕМ ФУНКЦИЮ В КАРТОЧКУ */
           />
         ) : (
-          <p className={styles.emptyState}>No parents found</p>
+          <p className={styles.emptyState}>Родители не найдены</p>
         )}
         <div className={styles.tableFooter}>
-          {queryParents?.length} of {parents?.length} parents
+          Показано {queryParents?.length} из {parents?.length}{" "}
+          {getPluralParents(parents?.length ?? 0)}
         </div>
       </div>
     </div>

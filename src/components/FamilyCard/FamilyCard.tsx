@@ -102,11 +102,11 @@ const FamilyCard = ({
             <table className={styles.table}>
               <thead>
                 <tr>
-                  <th>FAMILY NAME</th>
-                  <th>PARENTS</th>
-                  <th>BREED</th>
-                  <th>KITTENS</th>
-                  <th style={{ textAlign: "right" }}>ACTIONS</th>
+                  <th>НАЗВАНИЕ СЕМЬИ</th>
+                  <th>РОДИТЕЛИ</th>
+                  <th>ПОРОДА</th>
+                  <th>КОТЯТА</th>
+                  <th style={{ textAlign: "right" }}>ДЕЙСТВИЯ</th>
                 </tr>
               </thead>
               <tbody>

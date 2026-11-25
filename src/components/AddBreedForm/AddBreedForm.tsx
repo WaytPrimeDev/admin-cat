@@ -87,10 +87,11 @@ const AddBreedForm = ({ onClose }: AddBreedFormProps) => {
   };
 
   return (
-    <div className={styles.overlay} onClick={onClose}>
+    <div className={styles.overlay}>
+      {/* Клик по фону модалку не закрывает — только кнопки внутри:
+          случайным кликом не должны теряться введённые данные */}
       <div
         className={styles.modal}
-        onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-label="Новая порода"
       >
@@ -115,7 +116,7 @@ const AddBreedForm = ({ onClose }: AddBreedFormProps) => {
           <div className={styles.gridRow}>
             <div className={styles.field}>
               <label htmlFor="new-breed-ua">
-                Назва (UA) <span className={styles.required}>*</span>
+                Название (UA) <span className={styles.required}>*</span>
               </label>
               <input
                 id="new-breed-ua"
@@ -130,14 +131,14 @@ const AddBreedForm = ({ onClose }: AddBreedFormProps) => {
 
             <div className={styles.field}>
               <label htmlFor="new-breed-en">
-                Name (EN) <span className={styles.required}>*</span>
+                Название (EN) <span className={styles.required}>*</span>
               </label>
               <input
                 id="new-breed-en"
                 className={styles.input}
                 value={nameEn}
                 onChange={(e) => setNameEn(e.target.value)}
-                placeholder="e.g., Maine Coon"
+                placeholder="Например: Maine Coon"
                 disabled={isSaving}
               />
             </div>

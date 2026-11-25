@@ -372,7 +372,19 @@ const KittensCard = ({ editKitten, queryKittens }: KittenCardProps) => {
                 </div>
               </td>
               <td data-label="ИМЯ" className={styles.nameText}>
-                <div>{kitten.nameUa}</div>
+                <div>
+                  {kitten.nameUa}
+                  {/* Видно сразу, у кого видео уже привязано */}
+                  {kitten.videoId && (
+                    <span
+                      className={styles.videoMark}
+                      title="Есть видео с YouTube"
+                      aria-label="Есть видео с YouTube"
+                    >
+                      🎬
+                    </span>
+                  )}
+                </div>
                 <SlugLink kind="kittens" slug={kitten.slug} compact />
               </td>
               <td data-label="ПОРОДА" className={styles.mutedText}>

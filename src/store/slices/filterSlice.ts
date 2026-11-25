@@ -6,11 +6,10 @@ import type {
   FilterState,
   GetBreedsResponse,
   GetColorsResponse,
-  MyKnownError,
   UpdateReferenceRequest,
 } from "../../types";
 import api from "../../api/axiosInstance";
-import type { AxiosError } from "axios";
+import { apiErrorMessage } from "../../utils/apiError";
 
 const initialState: FilterState = {
   breeds: [],
@@ -27,9 +26,8 @@ export const fetchColors = createAsyncThunk(
       const response = await api.get<GetColorsResponse>("/filters/colors");
       return response.data;
     } catch (error) {
-      const err = error as AxiosError<{ message: string }>;
       return rejectWithValue(
-        err.response?.data?.message || "Failed to fetch kittens",
+        apiErrorMessage(error, "Не удалось загрузить список окрасов"),
       );
     }
   },
@@ -48,9 +46,8 @@ export const addColor = createAsyncThunk<
     );
     return response.data;
   } catch (error) {
-    const err = error as AxiosError<MyKnownError>;
     return rejectWithValue(
-      err.response?.data?.message || "Не удалось добавить окрас",
+      apiErrorMessage(error, "Не удалось добавить окрас"),
     );
   }
 });
@@ -68,9 +65,8 @@ export const updateColor = createAsyncThunk<
     );
     return response.data;
   } catch (error) {
-    const err = error as AxiosError<MyKnownError>;
     return rejectWithValue(
-      err.response?.data?.message || "Не удалось изменить окрас",
+      apiErrorMessage(error, "Не удалось изменить окрас"),
     );
   }
 });
@@ -84,10 +80,9 @@ export const deleteColor = createAsyncThunk<
     await api.delete(`/filters/color/${id}`);
     return id;
   } catch (error) {
-    const err = error as AxiosError<MyKnownError>;
 
     return rejectWithValue(
-      err.response?.data?.message || "Не удалось удалить окрас",
+      apiErrorMessage(error, "Не удалось удалить окрас"),
     );
   }
 });
@@ -99,9 +94,8 @@ export const fetchBreeds = createAsyncThunk(
       const response = await api.get<GetBreedsResponse>("/filters/breeds");
       return response.data;
     } catch (error) {
-      const err = error as AxiosError<{ message: string }>;
       return rejectWithValue(
-        err.response?.data?.message || "Failed to fetch kittens",
+        apiErrorMessage(error, "Не удалось загрузить список пород"),
       );
     }
   },
@@ -121,9 +115,8 @@ export const addBreed = createAsyncThunk<
     );
     return response.data;
   } catch (error) {
-    const err = error as AxiosError<MyKnownError>;
     return rejectWithValue(
-      err.response?.data?.message || "Не удалось добавить породу",
+      apiErrorMessage(error, "Не удалось добавить породу"),
     );
   }
 });
@@ -145,9 +138,8 @@ export const updateBreed = createAsyncThunk<
     );
     return response.data;
   } catch (error) {
-    const err = error as AxiosError<MyKnownError>;
     return rejectWithValue(
-      err.response?.data?.message || "Не удалось изменить породу",
+      apiErrorMessage(error, "Не удалось изменить породу"),
     );
   }
 });
@@ -161,10 +153,9 @@ export const deleteBreed = createAsyncThunk<
     await api.delete(`/filters/breed/${id}`);
     return id;
   } catch (error) {
-    const err = error as AxiosError<MyKnownError>;
 
     return rejectWithValue(
-      err.response?.data?.message || "Не удалось удалить породу",
+      apiErrorMessage(error, "Не удалось удалить породу"),
     );
   }
 });
@@ -198,7 +189,7 @@ const filterSlice = createSlice({
         state.errorColor = null;
       })
       .addCase(addColor.rejected, (state, action) => {
-        state.errorColor = action.payload ?? "An unknown error occurred";
+        state.errorColor = action.payload ?? "Неизвестная ошибка";
       })
       .addCase(updateColor.fulfilled, (state, action) => {
         const index = state.colors.findIndex(
@@ -208,7 +199,7 @@ const filterSlice = createSlice({
         state.errorColor = null;
       })
       .addCase(updateColor.rejected, (state, action) => {
-        state.errorColor = action.payload ?? "An unknown error occurred";
+        state.errorColor = action.payload ?? "Неизвестная ошибка";
       })
       .addCase(deleteColor.fulfilled, (state, action) => {
         state.colors = state.colors.filter(
@@ -216,7 +207,7 @@ const filterSlice = createSlice({
         );
       })
       .addCase(deleteColor.rejected, (state, action) => {
-        state.errorColor = action.payload ?? "An unknown error occurred";
+        state.errorColor = action.payload ?? "Неизвестная ошибка";
       })
       .addCase(fetchBreeds.pending, (state) => {
         state.isLoading = true;
@@ -236,7 +227,7 @@ const filterSlice = createSlice({
         state.errorBreed = null;
       })
       .addCase(addBreed.rejected, (state, action) => {
-        state.errorBreed = action.payload ?? "An unknown error occurred";
+        state.errorBreed = action.payload ?? "Неизвестная ошибка";
       })
       .addCase(updateBreed.fulfilled, (state, action) => {
         const index = state.breeds.findIndex(
@@ -246,7 +237,7 @@ const filterSlice = createSlice({
         state.errorBreed = null;
       })
       .addCase(updateBreed.rejected, (state, action) => {
-        state.errorBreed = action.payload ?? "An unknown error occurred";
+        state.errorBreed = action.payload ?? "Неизвестная ошибка";
       })
       .addCase(deleteBreed.fulfilled, (state, action) => {
         state.breeds = state.breeds.filter(
@@ -254,7 +245,7 @@ const filterSlice = createSlice({
         );
       })
       .addCase(deleteBreed.rejected, (state, action) => {
-        state.errorBreed = action.payload ?? "An unknown error occurred";
+        state.errorBreed = action.payload ?? "Неизвестная ошибка";
         state.isLoading = false;
       });
   },

@@ -1,12 +1,12 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../../api/axiosInstance";
+import { apiErrorMessage } from "../../utils/apiError";
 import type {
   KittensState,
   KittenResponse,
   AddKittenResponse,
   DeleteKittenResponse,
 } from "../../types";
-import type { AxiosError } from "axios";
 
 const initialState: KittensState = {
   items: [],
@@ -21,9 +21,8 @@ export const fetchKittens = createAsyncThunk(
       const response = await api.get<KittenResponse>("/cats/kittens?page=1&perPage=100000");
       return response.data;
     } catch (error) {
-      const err = error as AxiosError<{ message: string }>;
       return rejectWithValue(
-        err.response?.data?.message || "Failed to fetch kittens",
+        apiErrorMessage(error, "Не удалось загрузить данные"),
       );
     }
   },
@@ -45,9 +44,8 @@ export const updateKitten = createAsyncThunk(
       );
       return response.data;
     } catch (error) {
-      const err = error as AxiosError<{ message: string }>;
       return rejectWithValue(
-        err.response?.data?.message || "Failed to update kitten",
+        apiErrorMessage(error, "Не удалось сохранить котёнка"),
       );
     }
   },
@@ -65,9 +63,8 @@ export const addKitten = createAsyncThunk(
       );
       return response.data;
     } catch (error) {
-      const err = error as AxiosError<{ message: string }>;
       return rejectWithValue(
-        err.response?.data?.message || "Failed to update kitten",
+        apiErrorMessage(error, "Не удалось сохранить котёнка"),
       );
     }
   },
@@ -84,9 +81,8 @@ export const deleteKitten = createAsyncThunk(
       );
       return { id, telegram: response.data?.telegram ?? null };
     } catch (error) {
-      const err = error as AxiosError<{ message: string }>;
       return rejectWithValue(
-        err.response?.data?.message || "Failed to delete kitten",
+        apiErrorMessage(error, "Не удалось удалить котёнка"),
       );
     }
   },

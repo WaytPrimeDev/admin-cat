@@ -17,15 +17,15 @@ const Layout: React.FC = () => {
   };
 
   const menuItems = [
-    { path: "/dashboard", label: "Dashboard", icon: "📊" },
-    { path: "/kittens", label: "Kittens", icon: "🐱" },
-    { path: "/parents", label: "Parents", icon: "👥" },
-    { path: "/families", label: "Families", icon: "🤍" },
-    { path: "/breeds", label: "Breeds", icon: "🏷️" },
-    { path: "/colors", label: "Colors", icon: "🎨" },
-    // { path: "/reservations", label: "Reservations", icon: "📅" },
-    // { path: "/finance", label: "Finance", icon: "💰" },
-    // { path: "/settings", label: "Settings", icon: "⚙️" },
+    { path: "/dashboard", label: "Сводка", icon: "📊" },
+    { path: "/kittens", label: "Котята", icon: "🐱" },
+    { path: "/parents", label: "Родители", icon: "👥" },
+    { path: "/families", label: "Семьи", icon: "🤍" },
+    { path: "/breeds", label: "Породы", icon: "🏷️" },
+    { path: "/colors", label: "Окрасы", icon: "🎨" },
+    // { path: "/reservations", label: "Брони", icon: "📅" },
+    // { path: "/finance", label: "Финансы", icon: "💰" },
+    // { path: "/settings", label: "Настройки", icon: "⚙️" },
   ];
 
   return (
@@ -50,7 +50,7 @@ const Layout: React.FC = () => {
         <div className={styles.sidebarContent}>
           <div className={styles.logoSection}>
             <h1 className={styles.brandTitle}>Arlen Fluffy Plush</h1>
-            <p className={styles.brandSubtitle}>CAT CATTERY</p>
+            <p className={styles.brandSubtitle}>ПИТОМНИК КОШЕК</p>
           </div>
 
           <nav className={styles.nav}>
@@ -71,7 +71,7 @@ const Layout: React.FC = () => {
 
           <div className={styles.sidebarFooter}>
             <button className={styles.logoutBtn} onClick={handleLogout}>
-              Logout
+              Выйти
             </button>
             <p className={styles.copyright}>© 2026 Arlen Fluffy Plush</p>
           </div>

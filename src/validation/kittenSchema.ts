@@ -1,11 +1,26 @@
 import { z } from "zod";
 import { MAX_PHOTOS, photoSelectionShape } from "./photoSelection";
 import { isNotFutureDate } from "../utils/today";
+import { parseYoutubeId } from "../utils/youtube";
 
 const birthDayField = z
   .string()
   .nonempty("Дата рождения обязательна")
   .refine(isNotFutureDate, "Дата рождения не может быть в будущем");
+
+/*
+ * В форме держим ровно то, что ввёл админ (ссылку) — так он видит её при
+ * редактировании и может поправить. В videoId переводим только для превью,
+ * бэкенд сам сведёт ссылку к id. Пустая строка = видео нет / отвязать:
+ * поле не optional, чтобы тип формы совпадал с резолвером.
+ */
+const videoIdField = z
+  .string()
+  .trim()
+  .refine(
+    (value) => value === "" || parseYoutubeId(value) !== null,
+    "Не похоже на ссылку YouTube",
+  );
 
 export enum KittenStatus {
   OFFLINE = "offline",
@@ -32,6 +47,8 @@ export const kittenSchema = z.object({
   breeding: z.string(),
   pet: z.string(),
 
+  videoId: videoIdField,
+
   images: z
     .array(z.any())
     .min(1, "Добавьте хотя бы одно фото")
@@ -52,6 +69,8 @@ export const updateKittenSchema = z.object({
 
   breeding: z.string().trim(),
   pet: z.string().trim(),
+
+  videoId: videoIdField,
 
   ...photoSelectionShape,
 });

@@ -97,21 +97,20 @@ const EditParentForm = ({ parent, onClose }: EditParentFormProps) => {
   };
 
   return (
-    <div className={formStyles.overlay} onClick={closeForm}>
-      <div
-        className={formStyles.modal}
-        onClick={(event) => event.stopPropagation()}
-      >
+    <div className={formStyles.overlay}>
+      {/* Клик по фону модалку не закрывает — только кнопки внутри:
+          случайным кликом не должны теряться введённые данные */}
+      <div className={formStyles.modal}>
         <div className={formStyles.header}>
           <div className={formStyles.headerText}>
-            <h2>Edit Parent</h2>
+            <h2>Редактирование родителя</h2>
             <p>{parent.nameUa}</p>
           </div>
           <button
             type="button"
             className={formStyles.closeBtn}
             onClick={closeForm}
-            aria-label="Close"
+            aria-label="Закрыть"
           >
             <svg
               width="20"
@@ -132,7 +131,7 @@ const EditParentForm = ({ parent, onClose }: EditParentFormProps) => {
         <form onSubmit={handleSubmit(onSubmit)} className={formStyles.formBody}>
           <div className={formStyles.gridRow}>
             <div className={formStyles.formGroup}>
-              <label htmlFor="edit-parent-nameUa">Name (UA)</label>
+              <label htmlFor="edit-parent-nameUa">Имя (UA)</label>
               <input
                 id="edit-parent-nameUa"
                 {...register("nameUa")}
@@ -146,7 +145,7 @@ const EditParentForm = ({ parent, onClose }: EditParentFormProps) => {
             </div>
 
             <div className={formStyles.formGroup}>
-              <label htmlFor="edit-parent-nameEn">Name (EN)</label>
+              <label htmlFor="edit-parent-nameEn">Имя (EN)</label>
               <input
                 id="edit-parent-nameEn"
                 {...register("nameEn")}
@@ -172,7 +171,7 @@ const EditParentForm = ({ parent, onClose }: EditParentFormProps) => {
 
           <div className={formStyles.gridRow}>
             <div className={formStyles.formGroup}>
-              <label htmlFor="edit-parent-breed">Breed</label>
+              <label htmlFor="edit-parent-breed">Порода</label>
               <select
                 id="edit-parent-breed"
                 {...register("breed")}
@@ -191,7 +190,7 @@ const EditParentForm = ({ parent, onClose }: EditParentFormProps) => {
             </div>
 
             <div className={formStyles.formGroup}>
-              <label htmlFor="edit-parent-color">Color / Pattern</label>
+              <label htmlFor="edit-parent-color">Окрас / рисунок</label>
               <select
                 id="edit-parent-color"
                 {...register("color")}
@@ -212,14 +211,14 @@ const EditParentForm = ({ parent, onClose }: EditParentFormProps) => {
 
           <div className={formStyles.gridRow}>
             <div className={formStyles.formGroup}>
-              <label htmlFor="edit-parent-sex">Gender</label>
+              <label htmlFor="edit-parent-sex">Пол</label>
               <select
                 id="edit-parent-sex"
                 {...register("sex")}
                 className={formStyles.input}
               >
-                <option value="male">Male (Самец)</option>
-                <option value="female">Female (Самка)</option>
+                <option value="male">Кот (самец)</option>
+                <option value="female">Кошка (самка)</option>
               </select>
               {errors.sex && (
                 <span className={formStyles.error}>{errors.sex.message}</span>
@@ -246,14 +245,14 @@ const EditParentForm = ({ parent, onClose }: EditParentFormProps) => {
               onClick={closeForm}
               disabled={isSubmitting}
             >
-              Cancel
+              Отмена
             </button>
             <button
               type="submit"
               className={formStyles.submitBtn}
               disabled={!isValid || isSubmitting}
             >
-              {isSubmitting ? "Saving..." : "Save Changes"}
+              {isSubmitting ? "Сохраняем..." : "Сохранить изменения"}
             </button>
           </div>
         </form>

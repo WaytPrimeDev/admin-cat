@@ -46,12 +46,12 @@ interface AddParentFormProps {
 
 // Названия обязательных полей для сводки под формой
 const REQUIRED_LABELS: Record<string, string> = {
-  nameUa: "Name (UA)",
-  nameEn: "Name (EN)",
-  breed: "Breed",
-  color: "Color / Pattern",
-  sex: "Gender",
-  images: "Photos",
+  nameUa: "Имя (UA)",
+  nameEn: "Имя (EN)",
+  breed: "Порода",
+  color: "Окрас / рисунок",
+  sex: "Пол",
+  images: "Фотографии",
 };
 
 const AddParentForm = ({ editShowForm }: AddParentFormProps) => {
@@ -180,14 +180,14 @@ const AddParentForm = ({ editShowForm }: AddParentFormProps) => {
         {/* Шапка */}
         <div className={styles.header}>
           <div className={styles.headerText}>
-            <h2>Add New Parent</h2>
-            <p>Register a breeding cat in the cattery</p>
+            <h2>Новый родитель</h2>
+            <p>Добавить кошку или кота в разведение питомника</p>
           </div>
           <button
             type="button"
             className={styles.closeBtn}
             onClick={() => editShowForm(false)}
-            aria-label="Close"
+            aria-label="Закрыть"
           >
             <svg
               width="20"
@@ -212,11 +212,11 @@ const AddParentForm = ({ editShowForm }: AddParentFormProps) => {
           <div className={styles.gridRow}>
             <div className={styles.formGroup}>
               <label>
-                Name (UA)
+                Имя (UA)
                 <RequiredMark />
               </label>
               <input
-                placeholder="e.g., Луна"
+                placeholder="Например: Луна"
                 {...register("nameUa")}
                 className={styles.input}
                 aria-invalid={Boolean(errors.nameUa)}
@@ -229,11 +229,11 @@ const AddParentForm = ({ editShowForm }: AddParentFormProps) => {
 
             <div className={styles.formGroup}>
               <label>
-                Name (EN)
+                Имя (EN)
                 <RequiredMark />
               </label>
               <input
-                placeholder="e.g., Luna"
+                placeholder="Например: Luna"
                 {...register("nameEn")}
                 className={styles.input}
                 aria-invalid={Boolean(errors.nameEn)}
@@ -258,7 +258,7 @@ const AddParentForm = ({ editShowForm }: AddParentFormProps) => {
           <div className={styles.gridRow}>
             <div className={styles.formGroup}>
               <ReferenceSelect
-                label="Breed"
+                label="Порода"
                 required
                 id="add-parent-breed"
                 options={breeds}
@@ -266,7 +266,7 @@ const AddParentForm = ({ editShowForm }: AddParentFormProps) => {
                 currentValue={selectedBreed}
               />
               <FieldHint>
-                Нет нужной породы — добавьте её на странице Breeds (там же фото
+                Нет нужной породы — добавьте её на странице «Породы» (там же фото
                 породы)
               </FieldHint>
               {errorBreed && <p className={styles.error}>{errorBreed}</p>}
@@ -277,7 +277,7 @@ const AddParentForm = ({ editShowForm }: AddParentFormProps) => {
 
             <div className={styles.formGroup}>
               <ReferenceSelect
-                label="Color / Pattern"
+                label="Окрас / рисунок"
                 required
                 id="add-parent-color"
                 options={colors}
@@ -300,7 +300,7 @@ const AddParentForm = ({ editShowForm }: AddParentFormProps) => {
           <div className={styles.gridRow}>
             <div className={styles.formGroup}>
               <label>
-                Gender
+                Пол
                 <RequiredMark />
               </label>
               <select
@@ -309,10 +309,10 @@ const AddParentForm = ({ editShowForm }: AddParentFormProps) => {
                 aria-invalid={Boolean(errors.sex)}
               >
                 <option value="" disabled>
-                  Select gender
+                  Выберите пол
                 </option>
-                <option value="male">Male (Самец)</option>
-                <option value="female">Female (Самка)</option>
+                <option value="male">Кот (самец)</option>
+                <option value="female">Кошка (самка)</option>
               </select>
               {errors.sex && (
                 <span className={styles.error}>{errors.sex.message}</span>
@@ -322,7 +322,7 @@ const AddParentForm = ({ editShowForm }: AddParentFormProps) => {
 
           <div className={styles.formGroup}>
             <label>
-              Photos
+              Фотографии
               <RequiredMark />
             </label>
             <FieldHint>
@@ -343,7 +343,7 @@ const AddParentForm = ({ editShowForm }: AddParentFormProps) => {
                 <polyline points="17 8 12 3 7 8"></polyline>
                 <line x1="12" y1="3" x2="12" y2="15"></line>
               </svg>
-              Choose Images
+              Выбрать фото
             </label>
             <input
               id="parent-file-upload"
@@ -393,7 +393,7 @@ const AddParentForm = ({ editShowForm }: AddParentFormProps) => {
               onClick={() => editShowForm(false)}
               disabled={isSubmitting}
             >
-              Cancel
+              Отмена
             </button>
             {/* Кнопка активна всегда: клик по ней показывает, чего не хватает,
                 вместо молчаливо заблокированной кнопки */}
@@ -402,7 +402,7 @@ const AddParentForm = ({ editShowForm }: AddParentFormProps) => {
               className={styles.submitBtn}
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Saving..." : "Save Parent"}
+              {isSubmitting ? "Сохраняем..." : "Сохранить родителя"}
             </button>
           </div>
         </form>

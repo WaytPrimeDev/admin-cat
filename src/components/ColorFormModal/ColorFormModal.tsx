@@ -113,10 +113,11 @@ const ColorFormModal = ({ color, onClose, onSaved }: ColorFormModalProps) => {
   };
 
   return (
-    <div className={styles.overlay} onClick={isSaving ? undefined : onClose}>
+    <div className={styles.overlay}>
+      {/* Клик по фону модалку не закрывает — только кнопки внутри:
+          случайным кликом не должны теряться введённые данные */}
       <div
         className={styles.modal}
-        onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-label={isEdit ? "Правка окраса" : "Новый окрас"}
       >
@@ -146,14 +147,14 @@ const ColorFormModal = ({ color, onClose, onSaved }: ColorFormModalProps) => {
           <div className={styles.gridRow}>
             <div className={styles.field}>
               <label htmlFor="color-form-ua">
-                Назва (UA) <span className={styles.required}>*</span>
+                Название (UA) <span className={styles.required}>*</span>
               </label>
               <input
                 id="color-form-ua"
                 className={styles.input}
                 value={nameUa}
                 onChange={(e) => setNameUa(e.target.value)}
-                placeholder="напр., блакитний"
+                placeholder="Например: голубой"
                 disabled={isSaving}
                 autoFocus
               />
@@ -161,14 +162,14 @@ const ColorFormModal = ({ color, onClose, onSaved }: ColorFormModalProps) => {
 
             <div className={styles.field}>
               <label htmlFor="color-form-en">
-                Name (EN) <span className={styles.required}>*</span>
+                Название (EN) <span className={styles.required}>*</span>
               </label>
               <input
                 id="color-form-en"
                 className={styles.input}
                 value={nameEn}
                 onChange={(e) => setNameEn(e.target.value)}
-                placeholder="e.g., blue"
+                placeholder="Например: blue"
                 disabled={isSaving}
               />
             </div>

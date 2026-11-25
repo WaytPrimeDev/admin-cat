@@ -124,10 +124,11 @@ const EditBreedForm = ({ breed, onClose }: EditBreedFormProps) => {
   const currentPhoto = breed.image?.thumbnail || breed.image?.full || "";
 
   return (
-    <div className={styles.overlay} onClick={isSaving ? undefined : onClose}>
+    <div className={styles.overlay}>
+      {/* Клик по фону модалку не закрывает — только кнопки внутри:
+          случайным кликом не должны теряться введённые данные */}
       <div
         className={styles.modal}
-        onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-label="Правка породы"
       >
@@ -151,7 +152,7 @@ const EditBreedForm = ({ breed, onClose }: EditBreedFormProps) => {
           <div className={styles.gridRow}>
             <div className={styles.field}>
               <label htmlFor="edit-breed-ua">
-                Назва (UA) <span className={styles.required}>*</span>
+                Название (UA) <span className={styles.required}>*</span>
               </label>
               <input
                 id="edit-breed-ua"
@@ -165,7 +166,7 @@ const EditBreedForm = ({ breed, onClose }: EditBreedFormProps) => {
 
             <div className={styles.field}>
               <label htmlFor="edit-breed-en">
-                Name (EN) <span className={styles.required}>*</span>
+                Название (EN) <span className={styles.required}>*</span>
               </label>
               <input
                 id="edit-breed-en"

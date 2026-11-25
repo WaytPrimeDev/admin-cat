@@ -7,6 +7,8 @@ import { fetchParents } from "../../store/slices/parentsSlice";
 import { fetchFamilies } from "../../store/slices/familiesSlice";
 import { getRandomQuote, type CatQuote } from "../../utils/getRandomQuote"; // Импортируем утилиту
 import { refNameUa } from "../../utils/referenceName";
+import { KITTEN_STATUS_LABELS } from "../../utils/kittenStatus";
+import type { KittenStatus } from "../../types";
 
 
 const DashboardPage: React.FC = () => {
@@ -36,9 +38,9 @@ const DashboardPage: React.FC = () => {
   // 1. СТАТИСТИКА (Количество)
   const stats = [
     {
-      title: "Total Parents",
+      title: "Всего родителей",
       value: parents?.length?.toString(),
-      subtext: "Breeding cats",
+      subtext: "Кошки в разведении",
       icon: (
         <svg
           width="20"
@@ -58,9 +60,9 @@ const DashboardPage: React.FC = () => {
       ),
     },
     {
-      title: "Total Kittens",
+      title: "Всего котят",
       value: kittens?.length?.toString(),
-      subtext: "Registered in system",
+      subtext: "Зарегистрировано в системе",
       icon: (
         <svg
           width="20"
@@ -77,9 +79,9 @@ const DashboardPage: React.FC = () => {
       ),
     },
     {
-      title: "Total Families",
+      title: "Всего семей",
       value: families?.length?.toString(),
-      subtext: "Mating pairs & litters",
+      subtext: "Пары и помёты",
       icon: (
         <svg
           width="20"
@@ -97,29 +99,37 @@ const DashboardPage: React.FC = () => {
     },
   ];
 
-  // 2. СТАТУСЫ КОТЯТ
+  /*
+   * 2. СТАТУСЫ КОТЯТ
+   *
+   * Считаем по тем значениям, которые реально приходят с бэкенда:
+   * offline | active | booked | out. Раньше здесь искались available,
+   * reserved и sold — таких статусов в базе нет, поэтому две строки
+   * из трёх всегда показывали 0.
+   */
   const kittenStatus = useMemo(() => {
-    const available = kittens.filter(
-      (k) => k.status?.toLowerCase() === "available",
-    ).length;
-    const reserved = kittens.filter(
-      (k) => k.status?.toLowerCase() === "reserved",
-    ).length;
-    const offlineSold = kittens.filter((k) => {
-      const st = k.status?.toLowerCase();
-      return st === "offline" || st === "sold";
-    }).length;
+    const countOf = (status: KittenStatus) =>
+      kittens.filter((k) => k.status?.toLowerCase() === status).length;
 
     return [
       {
-        label: "Available",
-        count: available,
+        label: KITTEN_STATUS_LABELS.active,
+        count: countOf("active"),
         colorClass: styles.statusAvailable,
       },
-      { label: "Reserved", count: reserved, colorClass: styles.statusReserved },
       {
-        label: "Sold / Offline",
-        count: offlineSold,
+        label: KITTEN_STATUS_LABELS.booked,
+        count: countOf("booked"),
+        colorClass: styles.statusReserved,
+      },
+      {
+        label: KITTEN_STATUS_LABELS.out,
+        count: countOf("out"),
+        colorClass: styles.statusSold,
+      },
+      {
+        label: KITTEN_STATUS_LABELS.offline,
+        count: countOf("offline"),
         colorClass: styles.statusSold,
       },
     ];
@@ -131,24 +141,24 @@ const DashboardPage: React.FC = () => {
       ...parents.map((p) => ({
         id: p._id,
         type: "Parent Added",
-        title: "New Breeding Parent",
-        desc: `${p.nameEn || p.nameUa} (${refNameUa(p.breed, "Breed not specified")})`,
+        title: "Добавлен родитель",
+        desc: `${p.nameEn || p.nameUa} (${refNameUa(p.breed, "Порода не указана")})`,
         date: new Date(p.createdAt),
         color: "#cda34f",
       })),
       ...families.map((f) => ({
         id: f._id,
         type: "Family Created",
-        title: "New Family Record",
-        desc: `Litter name: ${f.name}`,
+        title: "Создана семья",
+        desc: `Название помёта: ${f.name}`,
         date: new Date(f.createdAt),
         color: "#2b1f5c",
       })),
       ...kittens.map((k) => ({
         id: k._id,
         type: "Kitten Added",
-        title: "New Kitten Registered",
-        desc: `${k.nameEn || k.nameUa} (${refNameUa(k.breed, "Breed not specified")})`,
+        title: "Добавлен котёнок",
+        desc: `${k.nameEn || k.nameUa} (${refNameUa(k.breed, "Порода не указана")})`,
         date: new Date(k.createdAt),
         color: "#16a34a",
       })),
@@ -160,7 +170,7 @@ const DashboardPage: React.FC = () => {
   }, [parents, families, kittens]);
 
   const formatDate = (date: Date) => {
-    return date.toLocaleString("en-GB", {
+    return date.toLocaleString("ru-RU", {
       day: "numeric",
       month: "short",
       year: "numeric",
@@ -186,12 +196,12 @@ return () => clearInterval(interval);
     <div className={styles.container}>
       {/* Шапка */}
       <div className={styles.header}>
-        <h1 className={styles.title}>Dashboard</h1>
-        <p className={styles.subtitle}>Overview of cattery operations</p>
+        <h1 className={styles.title}>Сводка</h1>
+        <p className={styles.subtitle}>Общая картина по питомнику</p>
       </div>
 
       {isLoading ? (
-        <p className={styles.loadingText}>Loading data from server...</p>
+        <p className={styles.loadingText}>Загружаем данные с сервера...</p>
       ) : (
         <>
           {/* Сетка карточек статистики (4 штуки) */}
@@ -236,7 +246,7 @@ return () => clearInterval(interval);
                     <span className={styles.quoteAuthor}>— {quote.author}</span>
                   </>
                 ) : (
-                  <p className={styles.quoteText}>Loading quote...</p>
+                  <p className={styles.quoteText}>Загружаем цитату...</p>
                 )}
               </div>
             </div>
@@ -244,9 +254,9 @@ return () => clearInterval(interval);
 
           {/* Основная сетка: Активность (слева) и Статусы (справа) */}
           <div className={styles.mainGrid}>
-            {/* Левая колонка: Recent Activity */}
+            {/* Левая колонка: последние изменения */}
             <div className={styles.activitySection}>
-              <h3 className={styles.sectionTitle}>Recent Activity</h3>
+              <h3 className={styles.sectionTitle}>Последние изменения</h3>
               <div className={styles.activityList}>
                 {recentActivity.length > 0 ? (
                   recentActivity.map((activity) => (
@@ -291,15 +301,15 @@ return () => clearInterval(interval);
                     </div>
                   ))
                 ) : (
-                  <p className={styles.emptyText}>No recent activity found.</p>
+                  <p className={styles.emptyText}>Пока ничего не происходило.</p>
                 )}
               </div>
             </div>
 
-            {/* Правая колонка: Status */}
+            {/* Правая колонка: статусы */}
             <div className={styles.sideGrid}>
               <div className={styles.sideCard}>
-                <h4 className={styles.smallSectionTitle}>KITTEN STATUS</h4>
+                <h4 className={styles.smallSectionTitle}>СТАТУСЫ КОТЯТ</h4>
                 <div className={styles.statusList}>
                   {kittenStatus.map((status, index) => (
                     <div key={index} className={styles.statusItem}>

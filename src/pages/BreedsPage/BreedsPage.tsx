@@ -59,13 +59,13 @@ const BreedsPage: React.FC = () => {
     <div className={styles.container}>
       <div className={styles.header}>
         <div className={styles.titleSection}>
-          <h2>Breeds</h2>
+          <h2>Породы</h2>
           <p className={styles.subtitle}>
             Справочник пород: названия по языкам и фото породы
           </p>
         </div>
         <button className={styles.addBtn} onClick={() => setShowForm(true)}>
-          + Add Breed
+          + Добавить породу
         </button>
       </div>
 
@@ -73,7 +73,7 @@ const BreedsPage: React.FC = () => {
         <input
           type="text"
           className={styles.searchInput}
-          placeholder="Search by name..."
+          placeholder="Поиск по названию..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
@@ -81,7 +81,7 @@ const BreedsPage: React.FC = () => {
           <button
             className={styles.clearSearchBtn}
             onClick={() => setSearchQuery("")}
-            aria-label="Clear search"
+            aria-label="Очистить поиск"
           >
             ✕
           </button>
@@ -155,15 +155,15 @@ const BreedsPage: React.FC = () => {
         </div>
       ) : (
         <div className={styles.emptyState}>
-          <p>No breeds found</p>
+          <p>Породы не найдены</p>
           <span className={styles.emptyStateSub}>
-            Добавьте породу кнопкой «+ Add Breed»
+            Добавьте породу кнопкой «+ Добавить породу»
           </span>
         </div>
       )}
 
       <div className={styles.footerCount}>
-        Showing {queryBreeds.length} of {breeds.length} breeds
+        Показано {queryBreeds.length} из {breeds.length} пород
       </div>
     </div>
   );

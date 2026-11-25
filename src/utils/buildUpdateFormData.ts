@@ -41,6 +41,8 @@ export const buildUpdateKittenFormData = (
   formData.append("birthDay", values.birthDay); // YYYY-MM-DD из <input type="date">
   formData.append("breeding", values.breeding);
   formData.append("pet", values.pet);
+  // Кладём безусловно: пустая строка = отвязать видео, бэкенд сведёт её к null
+  formData.append("videoId", values.videoId ?? "");
   appendPhotos(formData, values);
 
   return formData;

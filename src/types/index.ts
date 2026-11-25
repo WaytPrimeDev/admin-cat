@@ -128,6 +128,9 @@ export interface Kitten {
   sex: KittenSex;
   price: KittenPrice;
   images: KittenImage[];
+  // Видео с YouTube — только идентификатор ролика, сам файл нигде не хранится.
+  // null/отсутствие поля = видео нет
+  videoId?: string | null;
   parentId: {
     mom: string;
     dad: string;

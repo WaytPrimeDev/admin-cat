@@ -1,11 +1,11 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../../api/axiosInstance";
+import { apiErrorMessage } from "../../utils/apiError";
 import type {
   ParentsState,
   GetParentResponse,
   AddParentResponse,
 } from "../../types";
-import type { AxiosError } from "axios";
 
 const initialState: ParentsState = {
   items: [],
@@ -20,9 +20,8 @@ export const fetchParents = createAsyncThunk(
       const response = await api.get<GetParentResponse>("/cats/parents?page=1&perPage=100000");
       return response.data;
     } catch (error) {
-      const err = error as AxiosError<{ message: string }>;
       return rejectWithValue(
-        err.response?.data?.message || "Failed to fetch parents",
+        apiErrorMessage(error, "Не удалось загрузить список родителей"),
       );
     }
   },
@@ -43,9 +42,8 @@ export const updateParent = createAsyncThunk(
       );
       return response.data;
     } catch (error) {
-      const err = error as AxiosError<{ message: string }>;
       return rejectWithValue(
-        err.response?.data?.message || "Failed to update parent",
+        apiErrorMessage(error, "Не удалось сохранить родителя"),
       );
     }
   },
@@ -64,9 +62,8 @@ export const addParent = createAsyncThunk(
       );
       return response.data;
     } catch (error) {
-      const err = error as AxiosError<{ message: string }>;
       return rejectWithValue(
-        err.response?.data?.message || "Failed to update parent",
+        apiErrorMessage(error, "Не удалось сохранить родителя"),
       );
     }
   },
@@ -79,9 +76,8 @@ export const deleteParent = createAsyncThunk(
       await api.delete(`/cats/parent/${id}`);
       return id;
     } catch (error) {
-      const err = error as AxiosError<{ message: string }>;
       return rejectWithValue(
-        err.response?.data?.message || "Failed to delete parent",
+        apiErrorMessage(error, "Не удалось удалить родителя"),
       );
     }
   },
