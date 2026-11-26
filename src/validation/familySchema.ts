@@ -3,7 +3,7 @@ import { z } from "zod";
 // Схема создания
 export const familySchema = z.object({
   name: z.string().min(1, "Имя семьи обязательно"),
-  breed: z.string().min(1, "Порода обязательна"),
+  breed: z.string().min(1, "Выберите породу"),
 
   // Принимаем строку, массив строк, null или undefined
   kittens: z
@@ -24,7 +24,7 @@ export const familySchema = z.object({
 // Схема обновления: поля совпадают с созданием, чтобы PATCH принимал тот же payload
 export const updateFamilySchema = z.object({
   name: z.string().min(1, "Имя семьи обязательно"),
-  breed: z.string().min(1, "Порода обязательна"),
+  breed: z.string().min(1, "Выберите породу"),
   displayOrder: z.number().optional(),
 
   kittens: z

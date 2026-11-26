@@ -18,13 +18,10 @@ import type { PhotoItem } from "../../validation/photoSelection";
 import { PhotoOrderEditor } from "../PhotoOrderEditor/PhotoOrderEditor";
 import formStyles from "../AddKittenForm/AddKittenForm.module.css";
 import styles from "./EditKittenForm.module.css";
-
-const STATUS_LABELS: Record<(typeof KITTEN_STATUSES)[number], string> = {
-  offline: "Offline (скрыт)",
-  active: "Active (в продаже)",
-  booked: "Booked (забронирован)",
-  out: "Out (уехал)",
-};
+import SlugField from "../SlugField/SlugField";
+import VideoLinkField from "../VideoLinkField/VideoLinkField";
+import { youtubeWatchUrl } from "../../utils/youtube";
+import { KITTEN_STATUS_OPTION_LABELS } from "../../utils/kittenStatus";
 
 // Бэкенд хранит пустую цену как строку "null"
 const toPriceInput = (price: KittenPrice["breeding"] | string | undefined) =>
@@ -44,6 +41,7 @@ const EditKittenForm = ({ kitten, onClose }: EditKittenFormProps) => {
     register,
     handleSubmit,
     setValue,
+    setError,
     control,
     formState: { errors, isSubmitting, isValid },
   } = useForm<UpdateKittenFormValues>({
@@ -52,12 +50,17 @@ const EditKittenForm = ({ kitten, onClose }: EditKittenFormProps) => {
     defaultValues: {
       nameUa: kitten.nameUa,
       nameEn: kitten.nameEn,
-      color: kitten.color,
-      breed: kitten.breed,
+      // в значении селекта лежит _id справочной записи, а не название
+      color: kitten.color?._id ?? "",
+      breed: kitten.breed?._id ?? "",
       sex: kitten.sex,
       status: kitten.status ?? "offline",
       // <input type="date"> принимает только YYYY-MM-DD, а с бэка приходит ISO
       birthDay: kitten.birthDay?.slice(0, 10) ?? "",
+      slug: kitten.slug ?? "",
+      // Бэкенд хранит id, а админу показываем полную ссылку: её привычно
+      // читать и править. Нет видео — поле пустое
+      videoId: kitten.videoId ? youtubeWatchUrl(kitten.videoId) : "",
       breeding: toPriceInput(kitten.price?.breeding),
       pet: toPriceInput(kitten.price?.pet),
       photos: kitten.images.map((image) => ({
@@ -68,6 +71,8 @@ const EditKittenForm = ({ kitten, onClose }: EditKittenFormProps) => {
   });
 
   const photos = useWatch({ control, name: "photos" });
+  const slugValue = useWatch({ control, name: "slug" });
+  const videoValue = useWatch({ control, name: "videoId" });
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -83,17 +88,31 @@ const EditKittenForm = ({ kitten, onClose }: EditKittenFormProps) => {
   const onSubmit = async (values: UpdateKittenFormValues) => {
     setSubmitError(null);
     try {
-      await dispatch(
+      // Слаг уходит только если его реально меняли: переименование
+      // котёнка адрес не меняет, он уже в чужих ссылках
+      const nextSlug = values.slug?.trim();
+      const changedSlug =
+        nextSlug && nextSlug !== (kitten.slug ?? "") ? nextSlug : undefined;
+
+      const response = await dispatch(
         updateKitten({
           id: kitten._id,
-          formData: buildUpdateKittenFormData(values),
+          formData: buildUpdateKittenFormData(values, changedSlug),
         }),
       ).unwrap();
+      // Бэкенд нормализует слаг и при коллизии вернёт luna-2 — значение
+      // берём из ответа, а не то, что ввёл админ
+      setValue("slug", response.data.slug ?? "");
       onClose();
     } catch (error) {
-      setSubmitError(
-        typeof error === "string" ? error : "Не удалось сохранить котёнка",
-      );
+      const message =
+        typeof error === "string" ? error : "Не удалось сохранить котёнка";
+      // Ошибку по ссылке вешаем на поле, остальное — общим баннером
+      if (/videoId|youtube/i.test(message)) {
+        setError("videoId", { type: "server", message });
+      } else {
+        setSubmitError(message);
+      }
     }
   };
 
@@ -102,21 +121,20 @@ const EditKittenForm = ({ kitten, onClose }: EditKittenFormProps) => {
   };
 
   return (
-    <div className={formStyles.overlay} onClick={closeForm}>
-      <div
-        className={formStyles.modal}
-        onClick={(event) => event.stopPropagation()}
-      >
+    <div className={formStyles.overlay}>
+      {/* Клик по фону модалку не закрывает — только кнопки внутри:
+          случайным кликом не должны теряться введённые данные */}
+      <div className={formStyles.modal}>
         <div className={formStyles.header}>
           <div className={formStyles.headerText}>
-            <h2>Edit Kitten</h2>
+            <h2>Редактирование котёнка</h2>
             <p>{kitten.nameUa}</p>
           </div>
           <button
             type="button"
             className={formStyles.closeBtn}
             onClick={closeForm}
-            aria-label="Close"
+            aria-label="Закрыть"
           >
             <svg
               width="20"
@@ -137,7 +155,7 @@ const EditKittenForm = ({ kitten, onClose }: EditKittenFormProps) => {
         <form onSubmit={handleSubmit(onSubmit)} className={formStyles.formBody}>
           <div className={formStyles.gridRow}>
             <div className={formStyles.formGroup}>
-              <label htmlFor="edit-kitten-nameUa">Name (UA)</label>
+              <label htmlFor="edit-kitten-nameUa">Имя (UA)</label>
               <input
                 id="edit-kitten-nameUa"
                 {...register("nameUa")}
@@ -151,7 +169,7 @@ const EditKittenForm = ({ kitten, onClose }: EditKittenFormProps) => {
             </div>
 
             <div className={formStyles.formGroup}>
-              <label htmlFor="edit-kitten-nameEn">Name (EN)</label>
+              <label htmlFor="edit-kitten-nameEn">Имя (EN)</label>
               <input
                 id="edit-kitten-nameEn"
                 {...register("nameEn")}
@@ -165,9 +183,19 @@ const EditKittenForm = ({ kitten, onClose }: EditKittenFormProps) => {
             </div>
           </div>
 
+          <SlugField
+            id="edit-kitten-slug"
+            kind="kittens"
+            mode="edit"
+            value={slugValue ?? ""}
+            sourceName={kitten.nameEn}
+            inputProps={register("slug")}
+            error={errors.slug?.message}
+          />
+
           <div className={formStyles.gridRow}>
             <div className={formStyles.formGroup}>
-              <label htmlFor="edit-kitten-breed">Breed</label>
+              <label htmlFor="edit-kitten-breed">Порода</label>
               <select
                 id="edit-kitten-breed"
                 {...register("breed")}
@@ -175,8 +203,8 @@ const EditKittenForm = ({ kitten, onClose }: EditKittenFormProps) => {
               >
                 <option value="">-- Выберите --</option>
                 {withCurrentOption(breeds, kitten.breed).map((breed) => (
-                  <option key={breed._id} value={breed.name}>
-                    {breed.name}
+                  <option key={breed._id} value={breed._id} title={breed.nameEn}>
+                    {breed.nameUa}
                   </option>
                 ))}
               </select>
@@ -186,7 +214,7 @@ const EditKittenForm = ({ kitten, onClose }: EditKittenFormProps) => {
             </div>
 
             <div className={formStyles.formGroup}>
-              <label htmlFor="edit-kitten-color">Color / Pattern</label>
+              <label htmlFor="edit-kitten-color">Окрас / рисунок</label>
               <select
                 id="edit-kitten-color"
                 {...register("color")}
@@ -194,8 +222,8 @@ const EditKittenForm = ({ kitten, onClose }: EditKittenFormProps) => {
               >
                 <option value="">-- Выберите --</option>
                 {withCurrentOption(colors, kitten.color).map((color) => (
-                  <option key={color._id} value={color.name}>
-                    {color.name}
+                  <option key={color._id} value={color._id} title={color.nameEn}>
+                    {color.nameUa}
                   </option>
                 ))}
               </select>
@@ -207,7 +235,7 @@ const EditKittenForm = ({ kitten, onClose }: EditKittenFormProps) => {
 
           <div className={formStyles.gridRow}>
             <div className={formStyles.formGroup}>
-              <label htmlFor="edit-kitten-birthDay">Date of Birth</label>
+              <label htmlFor="edit-kitten-birthDay">Дата рождения</label>
               <input
                 id="edit-kitten-birthDay"
                 type="date"
@@ -223,14 +251,14 @@ const EditKittenForm = ({ kitten, onClose }: EditKittenFormProps) => {
             </div>
 
             <div className={formStyles.formGroup}>
-              <label htmlFor="edit-kitten-sex">Gender</label>
+              <label htmlFor="edit-kitten-sex">Пол</label>
               <select
                 id="edit-kitten-sex"
                 {...register("sex")}
                 className={formStyles.input}
               >
-                <option value="male">Male (Самец)</option>
-                <option value="female">Female (Самка)</option>
+                <option value="male">Кот (самец)</option>
+                <option value="female">Кошка (самка)</option>
               </select>
               {errors.sex && (
                 <span className={formStyles.error}>{errors.sex.message}</span>
@@ -240,7 +268,7 @@ const EditKittenForm = ({ kitten, onClose }: EditKittenFormProps) => {
 
           <div className={formStyles.gridRow}>
             <div className={formStyles.formGroup}>
-              <label htmlFor="edit-kitten-status">Status</label>
+              <label htmlFor="edit-kitten-status">Статус</label>
               <select
                 id="edit-kitten-status"
                 {...register("status")}
@@ -248,7 +276,7 @@ const EditKittenForm = ({ kitten, onClose }: EditKittenFormProps) => {
               >
                 {KITTEN_STATUSES.map((status) => (
                   <option key={status} value={status}>
-                    {STATUS_LABELS[status]}
+                    {KITTEN_STATUS_OPTION_LABELS[status]}
                   </option>
                 ))}
               </select>
@@ -262,29 +290,42 @@ const EditKittenForm = ({ kitten, onClose }: EditKittenFormProps) => {
 
           <div className={formStyles.gridRow}>
             <div className={formStyles.formGroup}>
-              <label htmlFor="edit-kitten-breeding">Price for Breeding</label>
+              <label htmlFor="edit-kitten-breeding">Цена для разведения</label>
               <input
                 id="edit-kitten-breeding"
                 type="number"
                 min="0"
-                placeholder="e.g., 3500"
+                placeholder="Например: 3500"
                 {...register("breeding")}
                 className={formStyles.input}
               />
             </div>
 
             <div className={formStyles.formGroup}>
-              <label htmlFor="edit-kitten-pet">Price as Pet</label>
+              <label htmlFor="edit-kitten-pet">Цена как питомца</label>
               <input
                 id="edit-kitten-pet"
                 type="number"
                 min="0"
-                placeholder="e.g., 1500"
+                placeholder="Например: 1500"
                 {...register("pet")}
                 className={formStyles.input}
               />
             </div>
           </div>
+
+          <VideoLinkField
+            id="edit-kitten-video"
+            value={videoValue ?? ""}
+            inputProps={register("videoId")}
+            onClear={() =>
+              setValue("videoId", "", {
+                shouldValidate: true,
+                shouldDirty: true,
+              })
+            }
+            error={errors.videoId?.message}
+          />
 
           <PhotoOrderEditor
             inputId="edit-kitten-photos"
@@ -305,14 +346,14 @@ const EditKittenForm = ({ kitten, onClose }: EditKittenFormProps) => {
               onClick={closeForm}
               disabled={isSubmitting}
             >
-              Cancel
+              Отмена
             </button>
             <button
               type="submit"
               className={formStyles.submitBtn}
               disabled={!isValid || isSubmitting}
             >
-              {isSubmitting ? "Saving..." : "Save Changes"}
+              {isSubmitting ? "Сохраняем..." : "Сохранить изменения"}
             </button>
           </div>
         </form>

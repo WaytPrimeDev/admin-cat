@@ -20,7 +20,10 @@ import { useAppDispatch, type RootState } from "../../store";
 import { addKitten } from "../../store/slices/kittensSlice";
 import { usePhotoDndSensors } from "../../hooks/usePhotoDndSensors";
 import { SortablePhoto } from "../SortablePhoto/SortablePhoto";
-import { AdminDynamicSelect } from "../AdminDynamicSelect/AdminDynamicSelect";
+import { ReferenceSelect } from "../ReferenceSelect/ReferenceSelect";
+import ColorFormModal from "../ColorFormModal/ColorFormModal";
+import SlugField from "../SlugField/SlugField";
+import VideoLinkField from "../VideoLinkField/VideoLinkField";
 import {
   FieldHint,
   MissingFieldsNotice,
@@ -28,13 +31,8 @@ import {
   RequiredMark,
 } from "../RequiredField/RequiredField";
 import { useSelector } from "react-redux";
-import {
-  addBreed,
-  addColor,
-  clearError,
-  deleteBreed,
-  deleteColor,
-} from "../../store/slices/filterSlice";
+import { clearError, deleteColor } from "../../store/slices/filterSlice";
+import type { ColorRef } from "../../types";
 
 interface AddKittenFormProps {
   editShowForm: Dispatch<SetStateAction<boolean>>;
@@ -42,13 +40,13 @@ interface AddKittenFormProps {
 
 // Названия обязательных полей для сводки под формой
 const REQUIRED_LABELS: Record<string, string> = {
-  nameUa: "Name (UA)",
-  nameEn: "Name (EN)",
-  breed: "Breed",
-  color: "Color / Pattern",
-  birthDay: "Date of Birth",
-  sex: "Gender",
-  images: "Photos",
+  nameUa: "Имя (UA)",
+  nameEn: "Имя (EN)",
+  breed: "Порода",
+  color: "Окрас / рисунок",
+  birthDay: "Дата рождения",
+  sex: "Пол",
+  images: "Фотографии",
 };
 
 const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
@@ -58,6 +56,7 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
     reset,
     setValue,
     control,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<KittenFormValues>({
     resolver: zodResolver(kittenSchema),
@@ -70,6 +69,7 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
       birthDay: "",
       breeding: "",
       pet: "",
+      videoId: "",
       images: [],
     },
   });
@@ -77,10 +77,14 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
   const dispatch = useAppDispatch();
 
   // Отслеживаем текущие выбранные значения
+  const slugValue = useWatch({ control, name: "slug" });
+  const nameEnValue = useWatch({ control, name: "nameEn" });
   const selectedColor = useWatch({ control, name: "color" });
   const selectedBreed = useWatch({ control, name: "breed" });
+  const videoValue = useWatch({ control, name: "videoId" });
 
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [isColorModalOpen, setIsColorModalOpen] = useState(false);
   const { colors, breeds, errorColor, errorBreed } = useSelector(
     (state: RootState) => state.filters,
   );
@@ -93,31 +97,14 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
     };
   }, []);
 
-  const handleAddColor = async (name: string) => {
-    const newColor = await dispatch(addColor({ name })).unwrap();
-    setTimeout(() => {
-      setValue("color", newColor.name);
-    }, 0);
+  // Созданный в модалке окрас сразу подставляем в форму
+  const handleColorCreated = (color: ColorRef) => {
+    setValue("color", color._id, { shouldValidate: true });
   };
 
   const handleRemoveColor = async (id: string) => {
-    const optionToDelete = colors.find((color) => color.name === selectedColor);
     await dispatch(deleteColor(id)).unwrap();
-    if (optionToDelete?._id === id) setValue("color", "");
-  };
-
-  const handleAddBreed = async (name: string) => {
-    const newBreed = await dispatch(addBreed({ name })).unwrap();
-    setTimeout(() => {
-      setValue("breed", newBreed.name); // Исправлена опечатка (было "color")
-    }, 0);
-  };
-
-  const handleRemoveBreed = async (id: string) => {
-    await dispatch(deleteBreed(id)).unwrap();
-    const optionToDelete = breeds.find((breed) => breed.name === selectedBreed); // Исправлена опечатка
-
-    if (optionToDelete?._id === id) setValue("breed", "");
+    if (selectedColor === id) setValue("color", "");
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -146,8 +133,13 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
     formData.append("color", data.color);
     formData.append("breed", data.breed);
     formData.append("sex", data.sex);
+    // Пустое поле в запрос не кладём — бэкенд соберёт слаг из nameEn
+    const slug = data.slug?.trim();
+    if (slug) formData.append("slug", slug);
     formData.append("breeding", String(data.breeding));
     formData.append("pet", String(data.pet));
+    // Пустая строка = видео нет; бэкенд сам достанет id из ссылки
+    formData.append("videoId", data.videoId ?? "");
 
     if (selectedFiles.length > 0) {
       selectedFiles.forEach((file) => {
@@ -162,6 +154,11 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
       reset();
     } catch (err) {
       console.error("Ошибка при отправке:", err);
+      // Жалобу бэкенда на ссылку показываем у самого поля, а не только в консоли
+      const message = typeof err === "string" ? err : "";
+      if (/videoId|youtube/i.test(message)) {
+        setError("videoId", { type: "server", message });
+      }
     }
   };
 
@@ -190,18 +187,20 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
   };
 
   return (
-    <div className={styles.overlay} onClick={() => closeForm()}>
-      <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+    <div className={styles.overlay}>
+      {/* Клик по фону модалку не закрывает — только кнопки внутри формы,
+          чтобы случайным кликом не потерять введённые данные */}
+      <div className={styles.modal}>
         {/* Шапка модалки */}
         <div className={styles.header}>
           <div className={styles.headerText}>
-            <h2>Add New Kitten</h2>
-            <p>Fill in the details below to register a kitten</p>
+            <h2>Новый котёнок</h2>
+            <p>Заполните поля ниже, чтобы добавить котёнка</p>
           </div>
           <button
             className={styles.closeBtn}
             onClick={() => closeForm()}
-            aria-label="Close"
+            aria-label="Закрыть"
           >
             <svg
               width="20"
@@ -226,11 +225,11 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
           <div className={styles.gridRow}>
             <div className={styles.formGroup}>
               <label>
-                Name (UA)
+                Имя (UA)
                 <RequiredMark />
               </label>
               <input
-                placeholder="e.g., Пушок"
+                placeholder="Например: Пушок"
                 {...register("nameUa")}
                 className={styles.input}
                 aria-invalid={Boolean(errors.nameUa)}
@@ -243,11 +242,11 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
 
             <div className={styles.formGroup}>
               <label>
-                Name (EN)
+                Имя (EN)
                 <RequiredMark />
               </label>
               <input
-                placeholder="e.g., Snowball"
+                placeholder="Например: Snowball"
                 {...register("nameEn")}
                 className={styles.input}
                 aria-invalid={Boolean(errors.nameEn)}
@@ -259,18 +258,30 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
             </div>
           </div>
 
+          <SlugField
+            id="add-kitten-slug"
+            kind="kittens"
+            mode="create"
+            value={slugValue ?? ""}
+            sourceName={nameEnValue ?? ""}
+            inputProps={register("slug")}
+            error={errors.slug?.message}
+          />
+
           <div className={styles.gridRow}>
             <div className={styles.formGroup}>
-              <AdminDynamicSelect
-                label="Breed"
+              <ReferenceSelect
+                label="Порода"
                 required
+                id="add-kitten-breed"
                 options={breeds}
                 registerProps={register("breed")}
                 currentValue={selectedBreed}
-                onAdd={handleAddBreed}
-                onRemove={handleRemoveBreed}
               />
-              <FieldHint>Нет нужной породы — добавьте её кнопкой ➕</FieldHint>
+              <FieldHint>
+                Нет нужной породы — добавьте её на странице «Породы» (там же фото
+                породы)
+              </FieldHint>
               {errorBreed && <p className={styles.error}>{errorBreed}</p>}
               {errors.breed && (
                 <span className={styles.error}>{errors.breed.message}</span>
@@ -278,17 +289,18 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
             </div>
 
             <div className={styles.formGroup}>
-              <AdminDynamicSelect
-                label="Color / Pattern"
+              <ReferenceSelect
+                label="Окрас / рисунок"
                 required
+                id="add-kitten-color"
                 options={colors}
                 registerProps={register("color")}
                 currentValue={selectedColor}
-                onAdd={handleAddColor}
+                onAddClick={() => setIsColorModalOpen(true)}
                 onRemove={handleRemoveColor}
               />
               <FieldHint>
-                Нет нужного окраса — добавьте его кнопкой ➕
+                Нет нужного окраса — добавьте его кнопкой ➕ (UA + EN)
               </FieldHint>
               {errorColor && <p className={styles.error}>{errorColor}</p>}
               {errors.color && (
@@ -300,7 +312,7 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
           <div className={styles.gridRow}>
             <div className={styles.formGroup}>
               <label>
-                Date of Birth
+                Дата рождения
                 <RequiredMark />
               </label>
               <input
@@ -317,7 +329,7 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
 
             <div className={styles.formGroup}>
               <label>
-                Gender
+                Пол
                 <RequiredMark />
               </label>
               <select
@@ -325,9 +337,9 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
                 className={styles.input}
                 aria-invalid={Boolean(errors.sex)}
               >
-                <option value="">Select gender</option>
-                <option value="male">Male (Самец)</option>
-                <option value="female">Female (Самка)</option>
+                <option value="">Выберите пол</option>
+                <option value="male">Кот (самец)</option>
+                <option value="female">Кошка (самка)</option>
               </select>
               {errors.sex && (
                 <span className={styles.error}>{errors.sex.message}</span>
@@ -337,10 +349,10 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
 
           <div className={styles.gridRow}>
             <div className={styles.formGroup}>
-              <label>Price for Breeding</label>
+              <label>Цена для разведения</label>
               <input
                 type="number"
-                placeholder="e.g., 3500"
+                placeholder="Например: 3500"
                 {...register("breeding")}
                 className={styles.input}
               />
@@ -348,10 +360,10 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
             </div>
 
             <div className={styles.formGroup}>
-              <label>Price as Pet</label>
+              <label>Цена как питомца</label>
               <input
                 type="number"
-                placeholder="e.g., 1500"
+                placeholder="Например: 1500"
                 {...register("pet")}
                 className={styles.input}
               />
@@ -359,9 +371,19 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
             </div>
           </div>
 
+          <VideoLinkField
+            id="add-kitten-video"
+            value={videoValue ?? ""}
+            inputProps={register("videoId")}
+            onClear={() =>
+              setValue("videoId", "", { shouldValidate: true, shouldDirty: true })
+            }
+            error={errors.videoId?.message}
+          />
+
           <div className={styles.formGroup}>
             <label>
-              Photos
+              Фотографии
               <RequiredMark />
             </label>
             <p className={styles.hint}>
@@ -382,7 +404,7 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
                 <polyline points="17 8 12 3 7 8"></polyline>
                 <line x1="12" y1="3" x2="12" y2="15"></line>
               </svg>
-              Choose Images
+              Выбрать фото
             </label>
             <input
               id="file-upload"
@@ -431,7 +453,7 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
               onClick={() => closeForm()}
               disabled={isSubmitting}
             >
-              Cancel
+              Отмена
             </button>
             {/* Кнопка активна всегда: клик по ней показывает, чего не хватает,
                 вместо молчаливо заблокированной кнопки */}
@@ -440,11 +462,21 @@ const AddKittenForm = ({ editShowForm }: AddKittenFormProps) => {
               className={styles.submitBtn}
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Saving..." : "Save Kitten"}
+              {isSubmitting ? "Сохраняем..." : "Сохранить котёнка"}
             </button>
           </div>
         </form>
       </div>
+
+      {/* Модалка нового окраса стоит рядом с формой, клик по ней не закрывает форму */}
+      {isColorModalOpen && (
+        <div onClick={(e) => e.stopPropagation()}>
+          <ColorFormModal
+            onClose={() => setIsColorModalOpen(false)}
+            onSaved={handleColorCreated}
+          />
+        </div>
+      )}
       {/* <svg className={styles.catIcon} viewBox="0 0 24 24">
         <path d="M12 5c.67 0 1.35.09 2 .26 1.78-2 5.03-2.84 6.42-2.26 1.4.58-.42 7-.42 7 .57 1.07 1 2.24 1 3.44C21 17.9 16.97 21 12 21s-9-3-9-7.56c0-1.25.5-2.4 1-3.44 0 0-1.89-6.42-.5-7 1.39-.58 4.72.23 6.5 2.23A9.04 9.04 0 0 1 12 5Z"></path>
         <path d="M8 14v.5"></path>

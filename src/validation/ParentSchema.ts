@@ -9,8 +9,10 @@ const Sex = {
 export const parentSchema = z.object({
   nameUa: z.string().min(1, "Имя (UA) обязательно"),
   nameEn: z.string().min(1, "Имя (EN) обязательно"),
-  color: z.string().min(1, "Цвет обязателен"),
-  breed: z.string().min(1, "Порода обязательна"),
+  // Пустой слаг бэкенд соберёт сам из nameEn — в запрос такое поле не кладём
+  slug: z.string().optional(),
+  color: z.string().min(1, "Выберите окрас"),
+  breed: z.string().min(1, "Выберите породу"),
   sex: z.enum(Sex, "Выберите пол"),
 
   images: z
@@ -22,8 +24,9 @@ export const parentSchema = z.object({
 export const updateParentSchema = z.object({
   nameUa: z.string().trim().min(1, "Имя (UA) обязательно"),
   nameEn: z.string().trim().min(1, "Имя (EN) обязательно"),
-  color: z.string().min(1, "Цвет обязателен"),
-  breed: z.string().min(1, "Порода обязательна"),
+  slug: z.string().optional(),
+  color: z.string().min(1, "Выберите окрас"),
+  breed: z.string().min(1, "Выберите породу"),
   sex: z.enum(Sex, "Выберите пол"),
 
   ...photoSelectionShape,

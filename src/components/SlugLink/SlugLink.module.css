@@ -1,0 +1,36 @@
+.wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.slug {
+  overflow: hidden;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11px;
+  color: #8a8ab5;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.copyBtn {
+  flex: none;
+  padding: 0 2px;
+  border: none;
+  background: none;
+  font-size: 11px;
+  line-height: 1;
+  color: #8a8ab5;
+  cursor: pointer;
+}
+
+.copyBtn:hover {
+  color: #5b5bd6;
+}
+
+.missing {
+  font-size: 11px;
+  color: #b3b3c8;
+}

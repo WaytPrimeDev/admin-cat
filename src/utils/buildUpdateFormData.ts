@@ -20,10 +20,17 @@ const appendPhotos = (formData: FormData, values: { photos: PhotoItem[] }) => {
   formData.append("imagesOrder", JSON.stringify(imagesOrder));
 };
 
+/*
+ * Слаг отправляем только если его реально меняли: он уже может быть
+ * в чужих ссылках и в поиске. Переименование записи слаг не меняет.
+ */
 export const buildUpdateKittenFormData = (
   values: UpdateKittenFormValues,
+  slug?: string,
 ): FormData => {
   const formData = new FormData();
+
+  if (slug) formData.append("slug", slug);
 
   formData.append("nameUa", values.nameUa);
   formData.append("nameEn", values.nameEn);
@@ -34,6 +41,8 @@ export const buildUpdateKittenFormData = (
   formData.append("birthDay", values.birthDay); // YYYY-MM-DD из <input type="date">
   formData.append("breeding", values.breeding);
   formData.append("pet", values.pet);
+  // Кладём безусловно: пустая строка = отвязать видео, бэкенд сведёт её к null
+  formData.append("videoId", values.videoId ?? "");
   appendPhotos(formData, values);
 
   return formData;
@@ -41,8 +50,11 @@ export const buildUpdateKittenFormData = (
 
 export const buildUpdateParentFormData = (
   values: UpdateParentFormValues,
+  slug?: string,
 ): FormData => {
   const formData = new FormData();
+
+  if (slug) formData.append("slug", slug);
 
   formData.append("nameUa", values.nameUa);
   formData.append("nameEn", values.nameEn);

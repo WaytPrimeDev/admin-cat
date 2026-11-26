@@ -112,7 +112,7 @@ export const PhotoOrderEditor = ({
           <polyline points="17 8 12 3 7 8"></polyline>
           <line x1="12" y1="3" x2="12" y2="15"></line>
         </svg>
-        {isLimitReached ? "Limit reached" : "Add Images"}
+        {isLimitReached ? "Достигнут лимит" : "Добавить фото"}
       </label>
       <input
         id={inputId}

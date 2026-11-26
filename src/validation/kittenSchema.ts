@@ -1,11 +1,26 @@
 import { z } from "zod";
 import { MAX_PHOTOS, photoSelectionShape } from "./photoSelection";
 import { isNotFutureDate } from "../utils/today";
+import { parseYoutubeId } from "../utils/youtube";
 
 const birthDayField = z
   .string()
   .nonempty("Дата рождения обязательна")
   .refine(isNotFutureDate, "Дата рождения не может быть в будущем");
+
+/*
+ * В форме держим ровно то, что ввёл админ (ссылку) — так он видит её при
+ * редактировании и может поправить. В videoId переводим только для превью,
+ * бэкенд сам сведёт ссылку к id. Пустая строка = видео нет / отвязать:
+ * поле не optional, чтобы тип формы совпадал с резолвером.
+ */
+const videoIdField = z
+  .string()
+  .trim()
+  .refine(
+    (value) => value === "" || parseYoutubeId(value) !== null,
+    "Не похоже на ссылку YouTube",
+  );
 
 export enum KittenStatus {
   OFFLINE = "offline",
@@ -22,13 +37,17 @@ const Sex = {
 export const kittenSchema = z.object({
   nameUa: z.string().min(1, "Имя (UA) обязательно"),
   nameEn: z.string().min(1, "Имя (EN) обязательно"),
-  color: z.string().min(1, "Цвет обязателен"),
+  // Пустой слаг бэкенд соберёт сам из nameEn — в запрос такое поле не кладём
+  slug: z.string().optional(),
+  color: z.string().min(1, "Выберите окрас"),
   birthDay: birthDayField,
-  breed: z.string().min(1, "Порода обязательна"),
+  breed: z.string().min(1, "Выберите породу"),
   sex: z.enum(Sex, "Выберите пол"),
 
   breeding: z.string(),
   pet: z.string(),
+
+  videoId: videoIdField,
 
   images: z
     .array(z.any())
@@ -41,14 +60,17 @@ export const KITTEN_STATUSES = ["offline", "active", "booked", "out"] as const;
 export const updateKittenSchema = z.object({
   nameUa: z.string().trim().min(1, "Имя (UA) обязательно"),
   nameEn: z.string().trim().min(1, "Имя (EN) обязательно"),
-  color: z.string().min(1, "Цвет обязателен"),
+  slug: z.string().optional(),
+  color: z.string().min(1, "Выберите окрас"),
   birthDay: birthDayField,
-  breed: z.string().min(1, "Порода обязательна"),
+  breed: z.string().min(1, "Выберите породу"),
   sex: z.enum(Sex, "Выберите пол"),
   status: z.enum(KITTEN_STATUSES, "Выберите статус"),
 
   breeding: z.string().trim(),
   pet: z.string().trim(),
+
+  videoId: videoIdField,
 
   ...photoSelectionShape,
 });

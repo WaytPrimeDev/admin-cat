@@ -1,11 +1,17 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import api from "../../api/axiosInstance";
+import { apiErrorMessage } from "../../utils/apiError";
 import type {
   KittensState,
   KittenResponse,
   AddKittenResponse,
+  DeleteKittenResponse,
+  DeleteKittenResult,
+  Family,
+  Kitten,
 } from "../../types";
-import type { AxiosError } from "axios";
+import { familyEmptiedBy } from "../../utils/familyCleanup";
+import { deleteFamily, fetchFamilies } from "./familiesSlice";
 
 const initialState: KittensState = {
   items: [],
@@ -20,9 +26,8 @@ export const fetchKittens = createAsyncThunk(
       const response = await api.get<KittenResponse>("/cats/kittens?page=1&perPage=100000");
       return response.data;
     } catch (error) {
-      const err = error as AxiosError<{ message: string }>;
       return rejectWithValue(
-        err.response?.data?.message || "Failed to fetch kittens",
+        apiErrorMessage(error, "Не удалось загрузить данные"),
       );
     }
   },
@@ -44,9 +49,8 @@ export const updateKitten = createAsyncThunk(
       );
       return response.data;
     } catch (error) {
-      const err = error as AxiosError<{ message: string }>;
       return rejectWithValue(
-        err.response?.data?.message || "Failed to update kitten",
+        apiErrorMessage(error, "Не удалось сохранить котёнка"),
       );
     }
   },
@@ -64,26 +68,106 @@ export const addKitten = createAsyncThunk(
       );
       return response.data;
     } catch (error) {
-      const err = error as AxiosError<{ message: string }>;
       return rejectWithValue(
-        err.response?.data?.message || "Failed to update kitten",
+        apiErrorMessage(error, "Не удалось сохранить котёнка"),
       );
     }
   },
 );
 
-export const deleteKitten = createAsyncThunk(
+/** Ровно то, что подчистка делает со стором: дотягивает семьи и удаляет одну. */
+interface FamilyCleanupDeps {
+  getState: () => unknown;
+  loadFamilies: () => Promise<unknown>;
+  removeFamily: (familyId: string) => Promise<unknown>;
+}
+
+/*
+ * Часть стора, которую читает подчистка. Описана локально, чтобы слайс не
+ * импортировал RootState из стора, который сам собран из слайсов.
+ */
+interface FamilyCleanupState {
+  kittens: { items: Kitten[] };
+  families: { items: Family[] };
+}
+
+/**
+ * Семья существует ради помёта: когда удалён последний её котёнок, пустая
+ * семья остаётся и в админке, и на сайте — удаляем её вслед за котёнком.
+ *
+ * Котёнка это уже не отменяет: он удалён на бэкенде, поэтому сбой здесь
+ * уходит наружу предупреждением, а не ошибкой всей операции.
+ */
+async function removeEmptiedFamily(
+  kittenId: string,
+  { getState, loadFamilies, removeFamily }: FamilyCleanupDeps,
+): Promise<Pick<DeleteKittenResult, "removedFamily" | "familyWarning">> {
+  try {
+    let state = getState() as FamilyCleanupState;
+
+    // Удалять могут и со страницы, которая список семей не грузила: без него
+    // проверка всегда отвечала бы «семьи нет» и пустая семья оставалась бы.
+    if (state.families.items.length === 0) {
+      await loadFamilies();
+      state = getState() as FamilyCleanupState;
+    }
+
+    const kitten = state.kittens.items.find((k) => k._id === kittenId);
+    const family = familyEmptiedBy(
+      state.families.items,
+      state.kittens.items,
+      kittenId,
+      kitten?.familyId,
+    );
+    if (!family) return { removedFamily: null, familyWarning: null };
+
+    await removeFamily(family._id);
+    return {
+      removedFamily: { id: family._id, name: family.name },
+      familyWarning: null,
+    };
+  } catch (error) {
+    return {
+      removedFamily: null,
+      familyWarning:
+        typeof error === "string"
+          ? `Котёнок удалён, но его семью убрать не удалось: ${error}`
+          : "Котёнок удалён, но его семью убрать не удалось.",
+    };
+  }
+}
+
+// Возвращаем не только id, но и блок telegram из ответа:
+// по нему UI решает, предупреждать ли о застрявшем посте
+export const deleteKitten = createAsyncThunk<
+  DeleteKittenResult,
+  string,
+  { rejectValue: string }
+>(
   "kittens/deleteKitten",
-  async (id: string, { rejectWithValue }) => {
+  async (id, { dispatch, getState, rejectWithValue }) => {
+    let response;
     try {
-      await api.delete(`/cats/kitten/${id}`);
-      return id;
+      response = await api.delete<DeleteKittenResponse>(`/cats/kitten/${id}`);
     } catch (error) {
-      const err = error as AxiosError<{ message: string }>;
       return rejectWithValue(
-        err.response?.data?.message || "Failed to delete kitten",
+        apiErrorMessage(error, "Не удалось удалить котёнка"),
       );
     }
+
+    // Состав семьи читается до того, как reducer выкинет котёнка из стора,
+    // поэтому удаляемый id исключается в самой проверке.
+    const cleanup = await removeEmptiedFamily(id, {
+      getState,
+      loadFamilies: () => dispatch(fetchFamilies()).unwrap(),
+      removeFamily: (familyId) => dispatch(deleteFamily(familyId)).unwrap(),
+    });
+
+    return {
+      id,
+      telegram: response.data?.telegram ?? null,
+      ...cleanup,
+    };
   },
 );
 
@@ -100,14 +184,20 @@ const kittensSlice = createSlice({
       .addCase(fetchKittens.fulfilled, (state, action) => {
         state.isLoading = false;
 
-        state.items = action.payload.data;
+        // Базовый порядок списка — от самых новых к старым,
+        // чтобы только что добавленный котёнок был в самом верху и после перезагрузки
+        state.items = [...action.payload.data].sort(
+          (a, b) =>
+            Date.parse(b.createdAt ?? "") - Date.parse(a.createdAt ?? "") || 0,
+        );
       })
       .addCase(fetchKittens.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
       })
       .addCase(addKitten.fulfilled, (state, action) => {
-        state.items.push(action.payload.data);
+        // Новый котёнок всегда первым в списке
+        state.items.unshift(action.payload.data);
       })
       .addCase(updateKitten.fulfilled, (state, action) => {
         const index = state.items.findIndex(
@@ -120,7 +210,7 @@ const kittensSlice = createSlice({
       })
       .addCase(deleteKitten.fulfilled, (state, action) => {
         state.items = state.items.filter(
-          (kitten) => kitten._id !== action.payload,
+          (kitten) => kitten._id !== action.payload.id,
         );
       });
   },

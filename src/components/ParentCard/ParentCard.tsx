@@ -1,10 +1,14 @@
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import styles from "./ParentCard.module.css";
+import SlugLink from "../SlugLink/SlugLink";
 import { useAppDispatch, type RootState } from "../../store";
 import type { Dispatch, SetStateAction } from "react";
 import type { Parent } from "../../types";
 import { deleteParent } from "../../store/slices/parentsSlice";
+import { refNameUa } from "../../utils/referenceName";
+import { kittenStatusLabel } from "../../utils/kittenStatus";
+import { getPluralKittens } from "../../utils/getPluralKittens";
 
 interface ParentCardProps {
   editParent: Dispatch<SetStateAction<Parent | null>>;
@@ -29,23 +33,23 @@ const ParentCard = ({
   };
 
   const handleDelete = (id: string) => {
-    if (window.confirm("Are you sure you want to delete this parent?")) {
+    if (window.confirm("Удалить этого родителя?")) {
       dispatch(deleteParent(id));
     }
   };
 
-  if (isLoading) return <div className={styles.loading}>Loading...</div>;
+  if (isLoading) return <div className={styles.loading}>Загрузка...</div>;
 
   return (
     <table className={styles.table}>
       <thead>
         <tr>
-          <th className={styles.desktopOnlyCell}>PHOTO</th>
-          <th>NAME & TITLE</th>
-          <th>BREED</th>
-          <th>SEX</th>
-          <th>KITTENS</th>
-          <th style={{ textAlign: "center" }}>ACTIONS</th>
+          <th className={styles.desktopOnlyCell}>ФОТО</th>
+          <th>ИМЯ И ТИТУЛ</th>
+          <th>ПОРОДА</th>
+          <th>ПОЛ</th>
+          <th>КОТЯТА</th>
+          <th style={{ textAlign: "center" }}>ДЕЙСТВИЯ</th>
         </tr>
       </thead>
       <tbody>
@@ -68,7 +72,7 @@ const ParentCard = ({
               <tr
                 className={`${styles.parentRow} ${isExpanded ? styles.activeRow : ""}`}
               >
-                <td data-label="PHOTO" className={styles.desktopOnlyCell}>
+                <td data-label="ФОТО" className={styles.desktopOnlyCell}>
                   <div className={styles.avatarWrapper}>
                     <img
                       src={parent.images[0]?.full || "placeholder.jpg"}
@@ -79,22 +83,23 @@ const ParentCard = ({
                   </div>
                 </td>
 
-                <td data-label="NAME & TITLE" className={styles.nameCell}>
+                <td data-label="ИМЯ И ТИТУЛ" className={styles.nameCell}>
                   <div className={styles.nameText}>
                     {parent.nameEn || parent.nameUa}
                   </div>
+                  <SlugLink kind="parents" slug={parent.slug} compact />
                 </td>
 
-                <td data-label="BREED" className={styles.mutedText}>
-                  {parent.breed || "Not specified"}
+                <td data-label="ПОРОДА" className={styles.mutedText}>
+                  {refNameUa(parent.breed, "Не указана")}
                 </td>
 
-                <td data-label="SEX" className={styles.mutedText}>
-                  {parent.sex === "male" ? "♂ Male" : "♀ Female"}
+                <td data-label="ПОЛ" className={styles.mutedText}>
+                  {parent.sex === "male" ? "♂ Кот" : "♀ Кошка"}
                 </td>
 
                 {/* Колонка с котятами, клик по которой раскрывает список */}
-                <td data-label="KITTENS" className={styles.kittensCell}>
+                <td data-label="КОТЯТА" className={styles.kittensCell}>
                   <div
                     className={styles.kittensTrigger}
                     onClick={() => toggleExpand(parent._id)}
@@ -112,21 +117,22 @@ const ParentCard = ({
                           ))}
                         </div>
                         <span className={styles.kittenCount}>
-                          {parentKittens.length} kittens{" "}
+                          {parentKittens.length}{" "}
+                          {getPluralKittens(parentKittens.length)}{" "}
                           {isExpanded ? "▲" : "▼"}
                         </span>
                       </>
                     ) : (
-                      <span className={styles.noKittens}>No kittens</span>
+                      <span className={styles.noKittens}>Нет котят</span>
                     )}
                   </div>
                 </td>
 
-                <td data-label="ACTIONS">
+                <td data-label="ДЕЙСТВИЯ">
                   <div className={styles.actions}>
                     <button
                       className={styles.iconBtn}
-                      aria-label="View"
+                      aria-label="Открыть карточку"
                       onClick={() => viewParent(parent)}
                     >
                       <svg
@@ -146,7 +152,7 @@ const ParentCard = ({
                     <button
                       className={styles.iconBtn}
                       onClick={() => editParent(parent)}
-                      aria-label="Edit"
+                      aria-label="Редактировать"
                     >
                       <svg
                         width="18"
@@ -165,7 +171,7 @@ const ParentCard = ({
                     <button
                       className={styles.iconBtn}
                       onClick={() => handleDelete(parent._id)}
-                      aria-label="Delete"
+                      aria-label="Удалить"
                     >
                       <svg
                         width="18"
@@ -191,7 +197,7 @@ const ParentCard = ({
                   <td colSpan={6} className={styles.expandedTd}>
                     <div className={styles.expandedContent}>
                       <div className={styles.expandedHeader}>
-                        KITTENS FROM{" "}
+                        КОТЯТА ОТ{" "}
                         {parent.nameEn?.toUpperCase() ||
                           parent.nameUa?.toUpperCase()}
                       </div>
@@ -213,7 +219,7 @@ const ParentCard = ({
                                 <span
                                   className={`${styles.statusDot} ${styles[kitten.status?.toLowerCase() || "offline"]}`}
                                 ></span>
-                                {kitten.status || "Offline"}
+                                {kittenStatusLabel(kitten.status)}
                               </div>
                             </div>
                           </div>

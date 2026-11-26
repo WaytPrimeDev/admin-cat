@@ -4,11 +4,154 @@ import { getPluralWeeks } from "../../utils/getPluralWeeks";
 import { getKittenAgeInWeeks } from "../../utils/kittenAge";
 import styles from "./KittenCard.module.css";
 import { deleteKitten } from "../../store/slices/kittensSlice";
-import { useState, type Dispatch, type SetStateAction } from "react";
+import {
+  useCallback,
+  useMemo,
+  useState,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 import type { Kitten } from "../../types";
 import ViewKittenModal from "../ViewKittenModal/ViewKittenModal";
 
 import TelegramPublishModal from "../TelegramPublishModal/TelegramPublishModal";
+import { refNameUa } from "../../utils/referenceName";
+import { familyEmptiedBy } from "../../utils/familyCleanup";
+import {
+  KITTEN_STATUS_ORDER,
+  KITTEN_STATUS_TABLE_LABELS,
+  kittenStatusKey,
+} from "../../utils/kittenStatus";
+import SlugLink from "../SlugLink/SlugLink";
+import {
+  useTableSort,
+  type SortDirection,
+  type SortState,
+  type SortValue,
+} from "../../hooks/useTableSort";
+
+// Поля таблицы, по которым разрешена сортировка
+type SortKey =
+  | "name"
+  | "breed"
+  | "color"
+  | "age"
+  | "sex"
+  | "parents"
+  | "family"
+  | "status"
+  | "priceBreeding"
+  | "pricePet";
+
+const sortableColumns: { key: SortKey; label: string }[] = [
+  { key: "name", label: "ИМЯ" },
+  { key: "breed", label: "ПОРОДА" },
+  { key: "color", label: "ОКРАС" },
+  { key: "age", label: "ВОЗРАСТ" },
+  { key: "sex", label: "ПОЛ" },
+  { key: "parents", label: "РОДИТЕЛИ" },
+  { key: "family", label: "СЕМЬЯ" },
+  { key: "status", label: "СТАТУС" },
+  { key: "priceBreeding", label: "ЦЕНА РАЗВЕДЕНИЕ" },
+  { key: "pricePet", label: "ЦЕНА ПИТОМЕЦ" },
+];
+
+// Панель сортировки для мобильной раскладки: заголовки таблицы там скрыты,
+// поэтому поле выбирается селектом, а направление — кнопкой-стрелкой
+const MobileSortBar = ({
+  sort,
+  onApply,
+}: {
+  sort: SortState<SortKey> | null;
+  onApply: (key: SortKey | null, direction?: SortDirection) => void;
+}) => (
+  <div className={styles.mobileSortBar}>
+    <label className={styles.mobileSortLabel} htmlFor="kittens-sort-field">
+      Сортировка
+    </label>
+    <select
+      id="kittens-sort-field"
+      className={styles.mobileSortSelect}
+      value={sort?.key ?? ""}
+      onChange={(e) =>
+        onApply(
+          e.target.value ? (e.target.value as SortKey) : null,
+          sort?.direction ?? "asc",
+        )
+      }
+    >
+      <option value="">Без сортировки</option>
+      {sortableColumns.map(({ key, label }) => (
+        <option key={key} value={key}>
+          {label}
+        </option>
+      ))}
+    </select>
+    <button
+      type="button"
+      className={styles.mobileSortDirBtn}
+      disabled={!sort}
+      onClick={() =>
+        sort && onApply(sort.key, sort.direction === "asc" ? "desc" : "asc")
+      }
+      title={
+        sort?.direction === "desc"
+          ? "По убыванию — клик для возрастания"
+          : "По возрастанию — клик для убывания"
+      }
+    >
+      <span aria-hidden="true">{sort?.direction === "desc" ? "▲" : "▼"}</span>
+      <span className={styles.mobileSortDirText}>
+        {sort?.direction === "desc" ? "По убыванию" : "По возрастанию"}
+      </span>
+    </button>
+  </div>
+);
+
+// Заголовок-кнопка со стрелкой текущего направления сортировки
+const SortableTh = ({
+  label,
+  sortKey,
+  direction,
+  onSort,
+}: {
+  label: string;
+  sortKey: SortKey;
+  direction: SortDirection | null;
+  onSort: (key: SortKey) => void;
+}) => (
+  <th
+    className={`${styles.sortableTh} ${direction ? styles.sortedTh : ""}`}
+    aria-sort={
+      direction === "asc"
+        ? "ascending"
+        : direction === "desc"
+          ? "descending"
+          : "none"
+    }
+  >
+    <button
+      type="button"
+      className={styles.sortBtn}
+      onClick={() => onSort(sortKey)}
+      title={
+        direction === "asc"
+          ? "Сортировка по возрастанию — клик для убывания"
+          : direction === "desc"
+            ? "Сортировка по убыванию — клик для сброса"
+            : "Сортировать по возрастанию"
+      }
+    >
+      <span>{label}</span>
+      <span
+        className={`${styles.sortArrow} ${direction ? styles.sortArrowActive : ""}`}
+        aria-hidden="true"
+      >
+        {direction === "asc" ? "▼" : direction === "desc" ? "▲" : "↕"}
+      </span>
+    </button>
+  </th>
+);
 
 // Микро-компонент кнопки публикации в Telegram
 const TelegramPublishBtn = ({
@@ -26,7 +169,7 @@ const TelegramPublishBtn = ({
       <button
         onClick={() => setIsModalOpen(true)}
         className={`${styles.socialBtn} ${isPublished ? styles.published : ""}`}
-        aria-label="Publish to Telegram"
+        aria-label="Опубликовать в Telegram"
         title={isPublished ? "Уже в Telegram" : "Опубликовать в Telegram"}
       >
         <svg
@@ -48,6 +191,7 @@ const TelegramPublishBtn = ({
           isPublished={isPublished}
           onClose={() => setIsModalOpen(false)}
           onPublished={() => setIsPublished(true)}
+          onUnpublished={() => setIsPublished(false)}
         />
       )}
     </>
@@ -67,7 +211,7 @@ const CopyIdBtn = ({ kittenId }: { kittenId: string }) => {
     <button
       className={`${styles.iconBtn} ${copied ? styles.textSuccess : ""}`}
       onClick={handleCopy}
-      title="Copy Kitten ID"
+      title="Скопировать ID котёнка"
     >
       {copied ? (
         <svg
@@ -108,44 +252,146 @@ interface KittenCardProps {
 
 const KittensCard = ({ editKitten, queryKittens }: KittenCardProps) => {
   const dispatch = useAppDispatch();
-  const { isLoading } = useSelector((state: RootState) => state.kittens);
+  const { items: kittens, isLoading } = useSelector(
+    (state: RootState) => state.kittens,
+  );
   const [viewKitten, setViewKitten] = useState<Kitten | null>(null);
+  // Предупреждение по итогам удаления: пост в Telegram мог остаться в канале
+  const [deleteWarning, setDeleteWarning] = useState<string | null>(null);
   const { items: parents } = useSelector((state: RootState) => state.parents);
+  const { items: families } = useSelector(
+    (state: RootState) => state.families,
+  );
 
-  const handleDelete = (id: string) => {
-    if (window.confirm("Are you sure you want to delete this kitten?")) {
-      dispatch(deleteKitten(id));
+  // Семью берём по familyId котёнка, а если поля нет — ищем по составу семьи
+  const familyName = useCallback(
+    (kitten: Kitten) => {
+      const family =
+        families.find((f) => f._id === kitten.familyId) ??
+        families.find((f) => f.kittens?.includes(kitten._id));
+      return family?.name?.trim() || "";
+    },
+    [families],
+  );
+
+  const parentName = useCallback(
+    (parentId: string | undefined) => {
+      const parent = parents.find((p) => p._id === parentId);
+      return parent ? parent.nameUa : "-";
+    },
+    [parents],
+  );
+
+  // Как достать значение для сортировки из каждой колонки:
+  // строки сравниваются по алфавиту, числа — по величине
+  const sortAccessors = useMemo<
+    Record<SortKey, (kitten: Kitten) => SortValue>
+  >(
+    () => ({
+      name: (kitten) => kitten.nameUa,
+      breed: (kitten) => refNameUa(kitten.breed, ""),
+      color: (kitten) => refNameUa(kitten.color, ""),
+      age: (kitten) =>
+        kitten.birthDay ? getKittenAgeInWeeks(kitten.birthDay) : null,
+      sex: (kitten) => (kitten.sex === "male" ? "Самец" : "Самка"),
+      parents: (kitten) =>
+        `${parentName(kitten.parentId?.dad)} ${parentName(kitten.parentId?.mom)}`,
+      family: (kitten) => familyName(kitten),
+      // Сортируем по ходу сделки, а не по алфавиту подписи
+      status: (kitten) => KITTEN_STATUS_ORDER[kittenStatusKey(kitten.status)],
+      priceBreeding: (kitten) => kitten.price?.breeding ?? null,
+      pricePet: (kitten) => kitten.price?.pet ?? null,
+    }),
+    [parentName, familyName],
+  );
+
+  const {
+    sortedItems: sortedKittens,
+    sort,
+    toggleSort,
+    applySort,
+    directionFor,
+  } = useTableSort<Kitten, SortKey>(queryKittens, sortAccessors);
+
+  /*
+   * Вместе с котёнком бэкенд снимает его пост и объявление из Telegram.
+   * Отказ Telegram удаление не отменяет, но возвращает warning — показываем
+   * его отдельным баннером, а не закрываем всё молча как «успешно».
+   */
+  const handleDelete = async (id: string) => {
+    // Семья существует ради помёта, поэтому вместе с последним её котёнком
+    // уходит и она сама — предупреждаем об этом до удаления, а не после.
+    const kitten = kittens.find((k) => k._id === id);
+    const emptiedFamily = familyEmptiedBy(
+      families,
+      kittens,
+      id,
+      kitten?.familyId,
+    );
+
+    const confirmed = window.confirm(
+      "Удалить этого котёнка?\n\nЕго пост и объявление в Telegram тоже будут удалены." +
+        (emptiedFamily
+          ? `\n\nВ семье «${emptiedFamily.name}» других котят нет — семья тоже будет удалена.`
+          : ""),
+    );
+    if (!confirmed) return;
+
+    setDeleteWarning(null);
+    try {
+      const result = await dispatch(deleteKitten(id)).unwrap();
+      // Телеграм и удаление семьи отваливаются независимо, а котёнок к этому
+      // моменту удалён в любом случае — показываем всё, что не доделалось.
+      const warnings = [result.telegram?.warning, result.familyWarning].filter(
+        (warning): warning is string => Boolean(warning),
+      );
+      if (warnings.length) setDeleteWarning(warnings.join(" "));
+    } catch (e) {
+      console.error(e);
+      setDeleteWarning(
+        typeof e === "string" ? e : "Не удалось удалить котёнка.",
+      );
     }
   };
-  const parentName = (parentId: string | undefined) => {
-    const parent = parents.find((p) => p._id === parentId);
-    return parent ? parent.nameUa : "-";
-  };
-
-  if (isLoading) return <div className={styles.loading}>Loading...</div>;
+  if (isLoading) return <div className={styles.loading}>Загрузка...</div>;
 
   return (
     <>
+      {deleteWarning && (
+        <div className={styles.deleteWarning} role="alert">
+          <span>⚠️ {deleteWarning}</span>
+          <button
+            type="button"
+            className={styles.deleteWarningClose}
+            onClick={() => setDeleteWarning(null)}
+            aria-label="Скрыть предупреждение"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+      <MobileSortBar sort={sort} onApply={applySort} />
       <table className={styles.table}>
         <thead>
           <tr>
-            <th className={styles.desktopOnlyCell}>PHOTO</th>
-            <th>NAME</th>
-            <th>BREED</th>
-            <th>COLOR</th>
-            <th>AGE</th>
-            <th>SEX</th>
-            <th>PARENTS</th>
-            <th>STATUS</th>
-            <th>PRICE</th>
-            <th>SOCIALS</th>
-            <th style={{ textAlign: "center" }}>ACTIONS</th>
+            <th className={styles.desktopOnlyCell}>ФОТО</th>
+            {sortableColumns.map(({ key, label }) => (
+              <SortableTh
+                key={key}
+                label={label}
+                sortKey={key}
+                direction={directionFor(key)}
+                onSort={toggleSort}
+              />
+            ))}
+            <th>СОЦСЕТИ</th>
+            <th style={{ textAlign: "center" }}>ДЕЙСТВИЯ</th>
           </tr>
         </thead>
         <tbody>
-          {queryKittens.map((kitten) => (
+          {sortedKittens.map((kitten) => (
             <tr key={kitten._id}>
-              <td data-label="PHOTO" className={styles.desktopOnlyCell}>
+              <td data-label="ФОТО" className={styles.desktopOnlyCell}>
                 <div className={styles.avatarWrapper}>
                   <img
                     src={kitten.images[0]?.mobile || "placeholder.jpg"}
@@ -155,45 +401,67 @@ const KittensCard = ({ editKitten, queryKittens }: KittenCardProps) => {
                   />
                 </div>
               </td>
-              <td data-label="NAME" className={styles.nameText}>
-                {kitten.nameUa}
+              <td data-label="ИМЯ" className={styles.nameText}>
+                <div>
+                  {kitten.nameUa}
+                  {/* Видно сразу, у кого видео уже привязано */}
+                  {kitten.videoId && (
+                    <span
+                      className={styles.videoMark}
+                      title="Есть видео с YouTube"
+                      aria-label="Есть видео с YouTube"
+                    >
+                      🎬
+                    </span>
+                  )}
+                </div>
+                <SlugLink kind="kittens" slug={kitten.slug} compact />
               </td>
-              <td data-label="BREED" className={styles.mutedText}>
-                {kitten.breed || "Not specified"}
+              <td data-label="ПОРОДА" className={styles.mutedText}>
+                {refNameUa(kitten.breed, "Не указана")}
               </td>
-              <td data-label="COLOR" className={styles.mutedText}>
-                {kitten.color || "Not specified"}
+              <td data-label="ОКРАС" className={styles.mutedText}>
+                {refNameUa(kitten.color, "Не указан")}
               </td>
-              <td data-label="AGE" className={styles.mutedText}>
+              <td data-label="ВОЗРАСТ" className={styles.mutedText}>
                 {kitten.birthDay
                   ? getPluralWeeks(getKittenAgeInWeeks(kitten.birthDay))
                   : "-"}
               </td>
-              <td data-label="SEX" className={styles.mutedText}>
-                {kitten.sex === "male" ? "♂ Male" : "♀ Female"}
+              <td data-label="ПОЛ" className={styles.mutedText}>
+                {kitten.sex === "male" ? "♂ Самец" : "♀ Самка"}
               </td>
               <td
-                data-label="PARENTS"
+                data-label="РОДИТЕЛИ"
                 className={(styles.parentsCell, styles.mutedText)}
               >
                 <div>{parentName(kitten.parentId?.dad)}</div>
                 <div>{parentName(kitten.parentId?.mom)}</div>
               </td>
-              <td data-label="STATUS">
+              <td data-label="СЕМЬЯ" className={styles.mutedText}>
+                {familyName(kitten) || "Без семьи"}
+              </td>
+              <td data-label="СТАТУС">
                 <span
                   className={`${styles.statusBadge} ${
-                    styles[kitten.status?.toLowerCase() || "available"]
+                    styles[`status_${kittenStatusKey(kitten.status)}`]
                   }`}
                 >
-                  {kitten.status || "Available"}
+                  {KITTEN_STATUS_TABLE_LABELS[kittenStatusKey(kitten.status)]}
                 </span>
               </td>
-              <td data-label="PRICE" className={styles.priceText}>
-                breeding: ${kitten.price?.breeding?.toLocaleString() || ""},
-                pet: ${kitten.price?.pet?.toLocaleString() || ""}
+              <td data-label="ЦЕНА РАЗВЕДЕНИЕ" className={styles.priceText}>
+                {kitten.price?.breeding != null
+                  ? `$${kitten.price.breeding.toLocaleString("ru-RU")}`
+                  : "—"}
+              </td>
+              <td data-label="ЦЕНА ПИТОМЕЦ" className={styles.priceText}>
+                {kitten.price?.pet != null
+                  ? `$${kitten.price.pet.toLocaleString("ru-RU")}`
+                  : "—"}
               </td>
 
-              <td data-label="SOCIALS">
+              <td data-label="СОЦСЕТИ">
                 <div className={styles.socialsGroup}>
                   <TelegramPublishBtn
                     kitten={kitten}
@@ -202,7 +470,7 @@ const KittensCard = ({ editKitten, queryKittens }: KittenCardProps) => {
                   <button
                     className={styles.socialBtn}
                     disabled
-                    title="Instagram (В разработке)"
+                    title="Instagram (в разработке)"
                   >
                     <svg
                       width="18"
@@ -248,7 +516,7 @@ const KittensCard = ({ editKitten, queryKittens }: KittenCardProps) => {
                   <button
                     className={styles.socialBtn}
                     disabled
-                    title="Facebook (В разработке)"
+                    title="Facebook (в разработке)"
                   >
                     <svg
                       width="18"
@@ -270,13 +538,13 @@ const KittensCard = ({ editKitten, queryKittens }: KittenCardProps) => {
                 </div>
               </td>
 
-              <td data-label="ACTIONS">
+              <td data-label="ДЕЙСТВИЯ">
                 <div className={styles.actions}>
                   <CopyIdBtn kittenId={kitten._id} />
 
                   <button
                     className={styles.iconBtn}
-                    aria-label="View"
+                    aria-label="Просмотр"
                     onClick={() => setViewKitten(kitten)}
                   >
                     <svg
@@ -296,7 +564,7 @@ const KittensCard = ({ editKitten, queryKittens }: KittenCardProps) => {
                   <button
                     className={styles.iconBtn}
                     onClick={() => editKitten(kitten)}
-                    aria-label="Edit"
+                    aria-label="Редактировать"
                   >
                     <svg
                       width="18"
@@ -315,7 +583,7 @@ const KittensCard = ({ editKitten, queryKittens }: KittenCardProps) => {
                   <button
                     className={styles.iconBtn}
                     onClick={() => handleDelete(kitten._id)}
-                    aria-label="Delete"
+                    aria-label="Удалить"
                   >
                     <svg
                       width="18"

@@ -20,12 +20,13 @@ import {
   RequiredMark,
 } from "../RequiredField/RequiredField";
 import formStyles from "../AddFamilyForm/AddFamily.module.css";
+import { refNameUa } from "../../utils/referenceName";
 import styles from "./EditFamilyForm.module.css";
 
 // Названия обязательных полей для сводки под формой
 const REQUIRED_LABELS: Record<string, string> = {
-  name: "Family / Litter Name",
-  breed: "Breed",
+  name: "Название семьи / помёта",
+  breed: "Порода",
   kittens: "Litter (Kittens)",
 };
 
@@ -50,7 +51,8 @@ const EditFamilyForm = ({ family, onClose }: EditFamilyFormProps) => {
     mode: "onChange",
     defaultValues: {
       name: family.name ?? "",
-      breed: family.breed ?? "",
+      // в значении селекта лежит _id породы, а не название
+      breed: family.breed?._id ?? "",
       mom: family.parents?.mom ?? "",
       dad: family.parents?.dad ?? "",
       kittens: family.kittens ?? [],
@@ -114,22 +116,21 @@ const EditFamilyForm = ({ family, onClose }: EditFamilyFormProps) => {
   };
 
   return (
-    <div className={formStyles.overlay} onClick={closeForm}>
-      <div
-        className={formStyles.modal}
-        onClick={(event) => event.stopPropagation()}
-      >
+    <div className={formStyles.overlay}>
+      {/* Клик по фону модалку не закрывает — только кнопки внутри:
+          случайным кликом не должны теряться введённые данные */}
+      <div className={formStyles.modal}>
         {/* Шапка модалки */}
         <div className={formStyles.header}>
           <div className={formStyles.headerText}>
-            <h2>Edit Family</h2>
-            <p>{family.name || "Untitled family"}</p>
+            <h2>Редактирование семьи</h2>
+            <p>{family.name || "Без названия"}</p>
           </div>
           <button
             type="button"
             className={formStyles.closeBtn}
             onClick={closeForm}
-            aria-label="Close"
+            aria-label="Закрыть"
           >
             <svg
               width="20"
@@ -154,20 +155,20 @@ const EditFamilyForm = ({ family, onClose }: EditFamilyFormProps) => {
           {/* Секция: Общая информация */}
           <div className={formStyles.sectionBox}>
             <div className={formStyles.sectionHeader}>
-              <span className={formStyles.sectionTitle}>General Details</span>
+              <span className={formStyles.sectionTitle}>Общая информация</span>
               <div className={formStyles.sectionLine}></div>
             </div>
 
             <div className={formStyles.gridRow}>
               <div className={formStyles.formGroup}>
                 <label htmlFor="edit-family-name">
-                  Family / Litter Name
+                  Название семьи / помёта
                   <RequiredMark />
                 </label>
                 <input
                   id="edit-family-name"
                   type="text"
-                  placeholder="e.g., Spring Litter 2026"
+                  placeholder="Например: Весенний помёт 2026"
                   className={formStyles.input}
                   {...register("name")}
                   aria-invalid={Boolean(errors.name)}
@@ -182,7 +183,7 @@ const EditFamilyForm = ({ family, onClose }: EditFamilyFormProps) => {
 
               <div className={formStyles.formGroup}>
                 <label htmlFor="edit-family-breed">
-                  Breed
+                  Порода
                   <RequiredMark />
                 </label>
                 <select
@@ -191,16 +192,18 @@ const EditFamilyForm = ({ family, onClose }: EditFamilyFormProps) => {
                   {...register("breed")}
                   aria-invalid={Boolean(errors.breed)}
                 >
-                  <option value="">Select breed</option>
+                  <option value="">Выберите породу</option>
                   {breeds.map((breed) => (
-                    <option key={breed._id} value={breed.name}>
-                      {breed.name}
+                    <option key={breed._id} value={breed._id} title={breed.nameEn}>
+                      {breed.nameUa}
                     </option>
                   ))}
                   {/* Порода семьи могла быть удалена из справочника — не теряем её */}
                   {family.breed &&
-                    !breeds.some((breed) => breed.name === family.breed) && (
-                      <option value={family.breed}>{family.breed}</option>
+                    !breeds.some((breed) => breed._id === family.breed?._id) && (
+                      <option value={family.breed._id}>
+                        {family.breed.nameUa}
+                      </option>
                     )}
                 </select>
                 {errors.breed && (
@@ -215,18 +218,18 @@ const EditFamilyForm = ({ family, onClose }: EditFamilyFormProps) => {
           {/* Секция: Отец */}
           <div className={formStyles.sectionBox}>
             <div className={formStyles.sectionHeader}>
-              <span className={formStyles.sectionTitle}>♂ Father (Sire)</span>
+              <span className={formStyles.sectionTitle}>♂ Отец</span>
               <div className={formStyles.sectionLine}></div>
             </div>
             <div className={formStyles.formGroup}>
-              <label htmlFor="edit-family-dad">Select Father</label>
-              <FieldHint>Необязательно — можно оставить Unknown</FieldHint>
+              <label htmlFor="edit-family-dad">Выберите отца</label>
+              <FieldHint>Необязательно — можно оставить «Не указан»</FieldHint>
               <select
                 id="edit-family-dad"
                 className={formStyles.select}
                 {...register("dad")}
               >
-                <option value="">Not selected (Unknown)</option>
+                <option value="">Не указан</option>
                 {sexParents.dad.map((parent) => (
                   <option key={parent._id} value={parent._id}>
                     {parent.nameEn || parent.nameUa}
@@ -242,18 +245,18 @@ const EditFamilyForm = ({ family, onClose }: EditFamilyFormProps) => {
           {/* Секция: Мать */}
           <div className={formStyles.sectionBox}>
             <div className={formStyles.sectionHeader}>
-              <span className={formStyles.sectionTitle}>♀ Mother (Dam)</span>
+              <span className={formStyles.sectionTitle}>♀ Мать</span>
               <div className={formStyles.sectionLine}></div>
             </div>
             <div className={formStyles.formGroup}>
-              <label htmlFor="edit-family-mom">Select Mother</label>
-              <FieldHint>Необязательно — можно оставить Unknown</FieldHint>
+              <label htmlFor="edit-family-mom">Выберите мать</label>
+              <FieldHint>Необязательно — можно оставить «Не указан»</FieldHint>
               <select
                 id="edit-family-mom"
                 className={formStyles.select}
                 {...register("mom")}
               >
-                <option value="">Not selected (Unknown)</option>
+                <option value="">Не указан</option>
                 {sexParents.mom.map((parent) => (
                   <option key={parent._id} value={parent._id}>
                     {parent.nameEn || parent.nameUa}
@@ -269,12 +272,12 @@ const EditFamilyForm = ({ family, onClose }: EditFamilyFormProps) => {
           {/* Секция: Котята */}
           <div className={formStyles.sectionBox}>
             <div className={formStyles.sectionHeader}>
-              <span className={formStyles.sectionTitle}>Litter (Kittens)</span>
+              <span className={formStyles.sectionTitle}>Помёт (котята)</span>
               <div className={formStyles.sectionLine}></div>
             </div>
             <div className={formStyles.formGroup}>
               <label>
-                Select kittens belonging to this family
+                Отметьте котят этой семьи
                 <RequiredMark />
               </label>
               <FieldHint>
@@ -294,11 +297,16 @@ const EditFamilyForm = ({ family, onClose }: EditFamilyFormProps) => {
                       <span className={formStyles.checkboxText}>
                         {kitten.nameEn || kitten.nameUa}
                       </span>
+                      {refNameUa(kitten.breed, "") && (
+                        <span className={formStyles.checkboxBreed}>
+                          {refNameUa(kitten.breed, "")}
+                        </span>
+                      )}
                     </label>
                   ))}
                 </div>
               ) : (
-                <p className={formStyles.emptyKittens}>No kittens available.</p>
+                <p className={formStyles.emptyKittens}>Нет доступных котят.</p>
               )}
               {errors.kittens && (
                 <span className={formStyles.error}>
@@ -322,7 +330,7 @@ const EditFamilyForm = ({ family, onClose }: EditFamilyFormProps) => {
               onClick={closeForm}
               disabled={isSubmitting}
             >
-              Cancel
+              Отмена
             </button>
             {/* Кнопка активна всегда: клик показывает, чего не хватает */}
             <button
@@ -330,7 +338,7 @@ const EditFamilyForm = ({ family, onClose }: EditFamilyFormProps) => {
               className={formStyles.submitBtn}
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Saving..." : "Save Changes"}
+              {isSubmitting ? "Сохраняем..." : "Сохранить изменения"}
             </button>
           </div>
         </form>

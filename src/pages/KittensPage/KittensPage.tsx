@@ -44,16 +44,16 @@ const KittensPage: React.FC = () => {
     <div className={styles.container}>
       <div className={styles.header}>
         <div className={styles.titleSection}>
-          <h2>Kittens</h2>
+          <h2>Котята</h2>
           <p className={styles.subtitle}>
-            Manage available kittens and litters
+            Управление котятами и помётами
           </p>
         </div>
         <button
           className={styles.addBtn}
           onClick={() => setShowForm(!showForm)}
         >
-          {showForm ? "Cancel" : "+ Add Kitten"}
+          {showForm ? "Отмена" : "+ Добавить котёнка"}
         </button>
       </div>
 
@@ -77,7 +77,7 @@ const KittensPage: React.FC = () => {
           <input
             type="text"
             className={styles.searchInput}
-            placeholder="Search by name..."
+            placeholder="Поиск по имени..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -85,7 +85,7 @@ const KittensPage: React.FC = () => {
             <button
               className={styles.clearSearchBtn}
               onClick={() => setSearchQuery("")}
-              aria-label="Clear search"
+              aria-label="Очистить поиск"
             >
               <svg
                 width="14"
@@ -104,7 +104,7 @@ const KittensPage: React.FC = () => {
           )}
         </div>
 
-        <button className={styles.filterSection} aria-label="Open filters">
+        <button className={styles.filterSection} aria-label="Открыть фильтры">
           <svg
             width="16"
             height="16"
@@ -125,7 +125,7 @@ const KittensPage: React.FC = () => {
             <line x1="9" y1="8" x2="15" y2="8"></line>
             <line x1="17" y1="16" x2="23" y2="16"></line>
           </svg>
-          <span className={styles.filterText}>Filters</span>
+          <span className={styles.filterText}>Фильтры</span>
         </button>
       </div>
 
@@ -148,14 +148,14 @@ const KittensPage: React.FC = () => {
           />
         ) : (
           <div className={styles.emptyState}>
-            <p>No kittens found</p>
+            <p>Котята не найдены</p>
             <span className={styles.emptyStateSub}>
-              Try adjusting your search criteria
+              Попробуйте изменить условия поиска
             </span>
           </div>
         )}
         <div className={styles.tableFooter}>
-          Showing {queryKittens?.length} of {kittens?.length} kittens
+          Показано {queryKittens?.length} из {kittens?.length} котят
         </div>
       </div>
     </div>

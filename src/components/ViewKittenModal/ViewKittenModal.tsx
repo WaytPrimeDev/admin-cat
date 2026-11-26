@@ -5,6 +5,9 @@ import type { RootState } from "../../store";
 import type { Kitten } from "../../types";
 import { getKittenAgeInWeeks } from "../../utils/kittenAge";
 import { getPluralWeeks } from "../../utils/getPluralWeeks";
+import { refNameUa } from "../../utils/referenceName";
+import { kittenStatusLabel } from "../../utils/kittenStatus";
+import { youtubeEmbedUrl } from "../../utils/youtube";
 
 interface ViewKittenModalProps {
   kitten: Kitten;
@@ -35,7 +38,7 @@ const ViewKittenModal: React.FC<ViewKittenModalProps> = ({
 
   const age = kitten.birthDay
     ? getPluralWeeks(getKittenAgeInWeeks(kitten.birthDay))
-    : "Unknown";
+    : "Возраст неизвестен";
 
   // Собираем все фото для галереи
   const allPhotos =
@@ -76,12 +79,12 @@ const ViewKittenModal: React.FC<ViewKittenModalProps> = ({
           <div className={styles.header}>
             <div>
               <h2 className={styles.title}>{kitten.nameEn || kitten.nameUa}</h2>
-              <p className={styles.subtitle}>{kitten.breed}</p>
+              <p className={styles.subtitle}>{refNameUa(kitten.breed)}</p>
             </div>
             <button
               className={styles.closeBtn}
               onClick={onClose}
-              aria-label="Close"
+              aria-label="Закрыть"
             >
               <svg
                 width="24"
@@ -125,7 +128,7 @@ const ViewKittenModal: React.FC<ViewKittenModalProps> = ({
                       >
                         <img
                           src={img.thumbnail || img.mobile}
-                          alt={`Thumb ${idx}`}
+                          alt={`Фото ${idx + 2}`}
                           className={styles.photo}
                         />
                       </div>
@@ -141,63 +144,79 @@ const ViewKittenModal: React.FC<ViewKittenModalProps> = ({
                 <span
                   className={`${styles.statusBadge} ${styles[kitten.status?.toLowerCase() || "offline"]}`}
                 >
-                  {kitten.status || "Available"}
+                  {kittenStatusLabel(kitten.status)}
                 </span>
                 <span className={styles.price}>
                   {kitten.price?.pet
-                    ? `$ pet ${kitten.price.pet}`
-                    : "Price upon request"}
+                    ? `Питомец: $${kitten.price.pet}`
+                    : "Цена по запросу"}
                 </span>
                 <span className={styles.price}>
                   {kitten.price?.breeding
-                    ? `$ breeding ${kitten.price.breeding}`
-                    : "Price upon request"}
+                    ? `Разведение: $${kitten.price.breeding}`
+                    : "Цена по запросу"}
                 </span>
               </div>
               <div
                 className={`${styles.gender} ${kitten.sex === "male" ? styles.male : styles.female}`}
               >
-                {kitten.sex === "male" ? "♂ Male" : "♀ Female"}
+                {kitten.sex === "male" ? "♂ Кот" : "♀ Кошка"}
               </div>
             </div>
 
             {/* Таблица характеристик */}
             <div className={styles.detailsTable}>
               <div className={styles.detailRow}>
-                <span className={styles.detailLabel}>Breed</span>
-                <span className={styles.detailValue}>{kitten.breed}</span>
+                <span className={styles.detailLabel}>Порода</span>
+                <span className={styles.detailValue}>{refNameUa(kitten.breed)}</span>
               </div>
               <div className={styles.detailRow}>
-                <span className={styles.detailLabel}>Age</span>
+                <span className={styles.detailLabel}>Возраст</span>
                 <span className={styles.detailValue}>{age}</span>
               </div>
               <div className={styles.detailRow}>
-                <span className={styles.detailLabel}>Color / Variety</span>
-                <span className={styles.detailValue}>{kitten.color}</span>
+                <span className={styles.detailLabel}>Окрас / разновидность</span>
+                <span className={styles.detailValue}>{refNameUa(kitten.color)}</span>
               </div>
             </div>
+
+            {/* Видео: подгружается с YouTube, у нас лежит только id ролика */}
+            {kitten.videoId && (
+              <div className={styles.videoSection}>
+                <h4 className={styles.videoTitle}>ВИДЕО</h4>
+                <div className={styles.videoFrame}>
+                  <iframe
+                    src={youtubeEmbedUrl(kitten.videoId)}
+                    title="Видео котёнка"
+                    loading="lazy"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Родители */}
             {father || mother ? (
               <div className={styles.parentsSection}>
-                <h4 className={styles.parentsTitle}>PARENTS</h4>
+                <h4 className={styles.parentsTitle}>РОДИТЕЛИ</h4>
                 <div className={styles.parentsGrid}>
                   {father ? (
                     <div className={styles.parentCard}>
                       <img
                         src={father?.images[0]?.thumbnail || "placeholder.jpg"}
-                        alt="Sire"
+                        alt="Отец"
                         className={styles.parentAvatar}
                       />
                       <div className={styles.parentInfo}>
                         <span className={styles.parentTitle}>
-                          {father?.nameEn || father?.nameUa || "Unknown"}
+                          {father?.nameEn || father?.nameUa || "Имя неизвестно"}
                         </span>
                         <span className={styles.parentName}>
-                          {father?.breed}
+                          {refNameUa(father?.breed)}
                         </span>
                         <span className={`${styles.parentRole} ${styles.male}`}>
-                          ♂ Sire
+                          ♂ Отец
                         </span>
                       </div>
                     </div>
@@ -215,20 +234,20 @@ const ViewKittenModal: React.FC<ViewKittenModalProps> = ({
                     <div className={styles.parentCard}>
                       <img
                         src={mother?.images[0]?.thumbnail || "placeholder.jpg"}
-                        alt="Dam"
+                        alt="Мать"
                         className={styles.parentAvatar}
                       />
                       <div className={styles.parentInfo}>
                         <span className={styles.parentTitle}>
-                          {mother?.nameEn || mother?.nameUa || "Unknown"}
+                          {mother?.nameEn || mother?.nameUa || "Имя неизвестно"}
                         </span>
                         <span className={styles.parentName}>
-                          {mother?.breed}
+                          {refNameUa(mother?.breed)}
                         </span>
                         <span
                           className={`${styles.parentRole} ${styles.female}`}
                         >
-                          ♀ Dam
+                          ♀ Мать
                         </span>
                       </div>
                     </div>
@@ -266,7 +285,7 @@ const ViewKittenModal: React.FC<ViewKittenModalProps> = ({
 
           <img
             src={allPhotos[activePhotoIndex]}
-            alt="Gallery preview"
+            alt="Просмотр фото"
             className={styles.galleryImage}
             onClick={(e) => e.stopPropagation()}
           />

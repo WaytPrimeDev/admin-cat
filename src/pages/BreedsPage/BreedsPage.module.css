@@ -1,0 +1,441 @@
+/*
+ * Общие стили справочников: породы (с фото) и окрасы (с монограммой).
+ * Обе страницы импортируют этот файл, поэтому классы здесь нейтральные.
+ */
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ───────────────────────── Шапка ───────────────────────── */
+
+.header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.titleSection h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: #16162e;
+}
+
+.subtitle {
+  margin: 5px 0 0;
+  font-size: 13px;
+  color: #77778c;
+}
+
+/* ───────────────────────── Кнопки ───────────────────────── */
+
+.addBtn,
+.editBtn,
+.deleteBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 0.16s ease,
+    border-color 0.16s ease,
+    color 0.16s ease,
+    box-shadow 0.16s ease,
+    transform 0.12s ease;
+}
+
+.addBtn:focus-visible,
+.editBtn:focus-visible,
+.deleteBtn:focus-visible,
+.clearSearchBtn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(74, 74, 226, 0.28);
+}
+
+/* Основная кнопка «Добавить» */
+.addBtn {
+  height: 42px;
+  padding: 0 20px;
+  border: none;
+  background: linear-gradient(180deg, #5a5aee 0%, #4646d8 100%);
+  color: #fff;
+  font-size: 14px;
+  box-shadow:
+    0 1px 2px rgba(26, 26, 90, 0.2),
+    0 6px 16px rgba(74, 74, 226, 0.26);
+}
+
+.addBtn:hover {
+  background: linear-gradient(180deg, #4f4fe6 0%, #3b3bcd 100%);
+  box-shadow:
+    0 1px 2px rgba(26, 26, 90, 0.22),
+    0 8px 20px rgba(74, 74, 226, 0.34);
+}
+
+.addBtn:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 2px rgba(26, 26, 90, 0.2);
+}
+
+/* ───────────────────────── Поиск ───────────────────────── */
+
+.searchContainer {
+  position: relative;
+  max-width: 340px;
+  width: 100%;
+}
+
+.searchInput {
+  width: 100%;
+  height: 42px;
+  padding: 0 40px 0 38px;
+  border: 1px solid #e3e3ed;
+  border-radius: 10px;
+  background-color: #fbfbfd;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239a9aae' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-4.3-4.3'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 13px center;
+  font-family: inherit;
+  font-size: 14px;
+  color: #1a1a33;
+  box-sizing: border-box;
+  outline: none;
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    background-color 0.16s ease;
+}
+
+.searchInput::placeholder {
+  color: #a6a6bb;
+}
+
+.searchInput:focus {
+  border-color: #6d6df0;
+  background-color: #fff;
+  box-shadow: 0 0 0 3px rgba(74, 74, 226, 0.14);
+}
+
+.clearSearchBtn {
+  position: absolute;
+  top: 50%;
+  right: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateY(-50%);
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: #ececf5;
+  color: #55556b;
+  font-size: 11px;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background-color 0.16s ease,
+    color 0.16s ease;
+}
+
+.clearSearchBtn:hover {
+  background: #dedeec;
+  color: #2a2a45;
+}
+
+/* ───────────────────────── Ошибка ───────────────────────── */
+
+.error {
+  padding: 11px 14px;
+  border: 1px solid #f5c2cb;
+  border-radius: 10px;
+  background: #fdf0f2;
+  color: #b4273c;
+  font-size: 13px;
+}
+
+/* ───────────────────────── Сетка карточек ───────────────────────── */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 18px;
+  align-items: stretch;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: #fff;
+  border: 1px solid #ebebf2;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(20, 20, 45, 0.04);
+  transition:
+    box-shadow 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.card:hover {
+  border-color: #dcdcf0;
+  box-shadow: 0 8px 24px rgba(20, 20, 45, 0.09);
+  transform: translateY(-2px);
+}
+
+/* Фото породы */
+.photoBox {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f4f4fa;
+  border-bottom: 1px solid #f0f0f6;
+}
+
+.photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.noPhoto {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #9a9aae;
+}
+
+/* Монограмма окраса — вместо фото, чтобы карточки были одной высоты */
+.monogramBox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 16 / 7;
+  background: radial-gradient(
+    120% 140% at 15% 0%,
+    hsl(var(--ref-hue, 250) 72% 96%) 0%,
+    hsl(var(--ref-hue, 250) 46% 88%) 100%
+  );
+  border-bottom: 1px solid #f0f0f6;
+}
+
+.monogram {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  background: #fff;
+  color: hsl(var(--ref-hue, 250) 52% 42%);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
+  box-shadow: 0 2px 8px rgba(20, 20, 45, 0.12);
+}
+
+/* Тело карточки */
+.cardBody {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px 12px;
+  min-width: 0;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 15.5px;
+  font-weight: 650;
+  line-height: 1.3;
+  color: #16162e;
+  overflow-wrap: anywhere;
+}
+
+/* Список названий по языкам */
+.langList {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 0;
+}
+
+.langRow {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  font-size: 12.5px;
+  color: #5e5e78;
+}
+
+.langTag {
+  flex: none;
+  min-width: 26px;
+  padding: 2px 5px;
+  border-radius: 5px;
+  background: #f2f2f8;
+  color: #8a8aa3;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.3;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.langValue {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.langEmpty {
+  color: #b3b3c8;
+}
+
+.slugRow {
+  display: flex;
+  min-width: 0;
+  padding-top: 2px;
+}
+
+/* Подвал карточки: две равные кнопки в ряд */
+.cardFooter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+  padding: 12px 16px 16px;
+  border-top: 1px solid #f3f3f8;
+}
+
+.editBtn,
+.deleteBtn {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 38px;
+  padding: 0 10px;
+  background: #fff;
+}
+
+.editBtn {
+  border: 1px solid #d9d9f0;
+  color: #4a4ae2;
+}
+
+.editBtn:hover:not(:disabled) {
+  border-color: #b9b9ef;
+  background: #f3f3ff;
+}
+
+.editBtn:active:not(:disabled) {
+  background: #e9e9fd;
+  transform: translateY(1px);
+}
+
+.deleteBtn {
+  border: 1px solid #f1d6db;
+  color: #e2445c;
+}
+
+.deleteBtn:hover:not(:disabled) {
+  border-color: #efbdc6;
+  background: #fdf1f3;
+}
+
+.deleteBtn:active:not(:disabled) {
+  background: #fbe4e8;
+  transform: translateY(1px);
+}
+
+.deleteBtn:focus-visible {
+  box-shadow: 0 0 0 3px rgba(226, 68, 92, 0.26);
+}
+
+.editBtn:disabled,
+.deleteBtn:disabled {
+  border-color: #ececf2;
+  color: #b3b3c8;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Иконка внутри кнопки */
+.btnIcon {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.addBtn .btnIcon {
+  margin-top: -1px;
+}
+
+/* ─────────────── Пустое состояние и счётчик ─────────────── */
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 56px 16px;
+  border: 1px dashed #dfdfea;
+  border-radius: 16px;
+  background: #fafafc;
+  color: #55556b;
+}
+
+.emptyState p {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.emptyStateSub {
+  font-size: 13px;
+  color: #9a9aae;
+}
+
+.footerCount {
+  font-size: 12px;
+  color: #9a9aae;
+}
+
+@media (max-width: 600px) {
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
+    gap: 12px;
+  }
+
+  .addBtn {
+    width: 100%;
+  }
+
+  .cardBody {
+    padding: 12px 13px 10px;
+  }
+
+  .cardFooter {
+    padding: 10px 13px 13px;
+  }
+}

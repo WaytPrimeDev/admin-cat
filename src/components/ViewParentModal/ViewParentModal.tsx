@@ -3,6 +3,9 @@ import { useSelector } from "react-redux";
 import styles from "./ViewParentModal.module.css";
 import type { RootState } from "../../store";
 import type { Parent } from "../../types";
+import { refNameUa } from "../../utils/referenceName";
+import { kittenStatusLabel } from "../../utils/kittenStatus";
+import { getPluralKittens } from "../../utils/getPluralKittens";
 
 interface ViewParentModalProps {
   parent: Parent;
@@ -76,12 +79,12 @@ const ViewParentModal: React.FC<ViewParentModalProps> = ({
                   {parent.nameEn || parent.nameUa}
                 </h2>
               </div>
-              <p className={styles.subtitle}>{parent.breed}</p>
+              <p className={styles.subtitle}>{refNameUa(parent.breed)}</p>
             </div>
             <button
               className={styles.closeBtn}
               onClick={onClose}
-              aria-label="Close"
+              aria-label="Закрыть"
             >
               <svg
                 width="24"
@@ -140,13 +143,13 @@ const ViewParentModal: React.FC<ViewParentModalProps> = ({
               <span
                 className={`${styles.chip} ${parent.sex === "male" ? styles.chipMale : styles.chipFemale}`}
               >
-                {parent.sex === "male" ? "♂ Male" : "♀ Female"}
+                {parent.sex === "male" ? "♂ Кот" : "♀ Кошка"}
               </span>
               <span className={`${styles.chip} ${styles.chipPurple}`}>
-                {parent.breed}
+                {refNameUa(parent.breed)}
               </span>
               <span className={`${styles.chip} ${styles.chipGold}`}>
-                {parent.color}
+                {refNameUa(parent.color)}
               </span>
             </div>
 
@@ -157,23 +160,23 @@ const ViewParentModal: React.FC<ViewParentModalProps> = ({
                 <span
                   className={`${styles.chip} ${parent.sex === "male" ? styles.chipMale : styles.chipFemale}`}
                 >
-                  {parent.sex === "male" ? "♂ Male" : "♀ Female"}
+                  {parent.sex === "male" ? "♂ Кот" : "♀ Кошка"}
                 </span>
               </div>
               <div className={styles.detailRow}>
                 <span className={styles.detailLabel}>Порода</span>
                 <span className={`${styles.chip} ${styles.chipPurple}`}>
-                  {parent.breed}
+                  {refNameUa(parent.breed)}
                 </span>
               </div>
               <div className={styles.detailRow}>
                 <span className={styles.detailLabel}>Цвет</span>
                 <span className={`${styles.chip} ${styles.chipGold}`}>
-                  {parent.color}
+                  {refNameUa(parent.color)}
                 </span>
               </div>
               <div className={styles.detailRow}>
-                <span className={styles.detailLabel}>Total kittens</span>
+                <span className={styles.detailLabel}>Всего котят</span>
                 <span className={styles.detailValue}>{offspring.length}</span>
               </div>
             </div>
@@ -183,7 +186,8 @@ const ViewParentModal: React.FC<ViewParentModalProps> = ({
             {/* Потомство (Offspring) */}
             <div className={styles.sectionBlock}>
               <h4 className={styles.sectionTitle}>
-                OFFSPRING · {offspring.length} KITTENS
+                ПОТОМСТВО · {offspring.length}{" "}
+                {getPluralKittens(offspring.length).toUpperCase()}
               </h4>
               <div className={styles.offspringList}>
                 {offspring.length > 0 ? (
@@ -200,13 +204,13 @@ const ViewParentModal: React.FC<ViewParentModalProps> = ({
                       <span
                         className={`${styles.statusBadge} ${styles[kitten.status?.toLowerCase() || "available"]}`}
                       >
-                        {kitten.status || "Available"}
+                        {kittenStatusLabel(kitten.status)}
                       </span>
                     </div>
                   ))
                 ) : (
                   <p className={styles.noOffspring}>
-                    No kittens registered yet.
+                    Котята пока не добавлены.
                   </p>
                 )}
               </div>
@@ -231,7 +235,7 @@ const ViewParentModal: React.FC<ViewParentModalProps> = ({
 
           <img
             src={allPhotos[activePhotoIndex]}
-            alt="Gallery preview"
+            alt="Просмотр фото"
             className={styles.galleryImage}
             onClick={(e) => e.stopPropagation()}
           />

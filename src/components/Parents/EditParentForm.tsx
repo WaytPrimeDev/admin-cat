@@ -15,6 +15,7 @@ import { withCurrentOption } from "../../utils/withCurrentOption";
 import type { PhotoItem } from "../../validation/photoSelection";
 import { PhotoOrderEditor } from "../PhotoOrderEditor/PhotoOrderEditor";
 import formStyles from "../AddParentForm/AddParentForm.module.css";
+import SlugField from "../SlugField/SlugField";
 import styles from "./EditParentForm.module.css";
 
 interface EditParentFormProps {
@@ -39,8 +40,10 @@ const EditParentForm = ({ parent, onClose }: EditParentFormProps) => {
     defaultValues: {
       nameUa: parent.nameUa,
       nameEn: parent.nameEn,
-      color: parent.color,
-      breed: parent.breed,
+      slug: parent.slug ?? "",
+      // в значении селекта лежит _id справочной записи, а не название
+      color: parent.color?._id ?? "",
+      breed: parent.breed?._id ?? "",
       sex: parent.sex,
       photos: parent.images.map((image) => ({
         kind: "retained" as const,
@@ -50,6 +53,7 @@ const EditParentForm = ({ parent, onClose }: EditParentFormProps) => {
   });
 
   const photos = useWatch({ control, name: "photos" });
+  const slugValue = useWatch({ control, name: "slug" });
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -65,12 +69,21 @@ const EditParentForm = ({ parent, onClose }: EditParentFormProps) => {
   const onSubmit = async (values: UpdateParentFormValues) => {
     setSubmitError(null);
     try {
-      await dispatch(
+      // Слаг уходит только если его реально меняли: переименование
+      // родителя адрес не меняет, он уже в чужих ссылках
+      const nextSlug = values.slug?.trim();
+      const changedSlug =
+        nextSlug && nextSlug !== (parent.slug ?? "") ? nextSlug : undefined;
+
+      const response = await dispatch(
         updateParent({
           id: parent._id,
-          formData: buildUpdateParentFormData(values),
+          formData: buildUpdateParentFormData(values, changedSlug),
         }),
       ).unwrap();
+      // Бэкенд нормализует слаг и при коллизии вернёт luna-2 — значение
+      // берём из ответа, а не то, что ввёл админ
+      setValue("slug", response.data.slug ?? "");
       onClose();
     } catch (error) {
       setSubmitError(
@@ -84,21 +97,20 @@ const EditParentForm = ({ parent, onClose }: EditParentFormProps) => {
   };
 
   return (
-    <div className={formStyles.overlay} onClick={closeForm}>
-      <div
-        className={formStyles.modal}
-        onClick={(event) => event.stopPropagation()}
-      >
+    <div className={formStyles.overlay}>
+      {/* Клик по фону модалку не закрывает — только кнопки внутри:
+          случайным кликом не должны теряться введённые данные */}
+      <div className={formStyles.modal}>
         <div className={formStyles.header}>
           <div className={formStyles.headerText}>
-            <h2>Edit Parent</h2>
+            <h2>Редактирование родителя</h2>
             <p>{parent.nameUa}</p>
           </div>
           <button
             type="button"
             className={formStyles.closeBtn}
             onClick={closeForm}
-            aria-label="Close"
+            aria-label="Закрыть"
           >
             <svg
               width="20"
@@ -119,7 +131,7 @@ const EditParentForm = ({ parent, onClose }: EditParentFormProps) => {
         <form onSubmit={handleSubmit(onSubmit)} className={formStyles.formBody}>
           <div className={formStyles.gridRow}>
             <div className={formStyles.formGroup}>
-              <label htmlFor="edit-parent-nameUa">Name (UA)</label>
+              <label htmlFor="edit-parent-nameUa">Имя (UA)</label>
               <input
                 id="edit-parent-nameUa"
                 {...register("nameUa")}
@@ -133,7 +145,7 @@ const EditParentForm = ({ parent, onClose }: EditParentFormProps) => {
             </div>
 
             <div className={formStyles.formGroup}>
-              <label htmlFor="edit-parent-nameEn">Name (EN)</label>
+              <label htmlFor="edit-parent-nameEn">Имя (EN)</label>
               <input
                 id="edit-parent-nameEn"
                 {...register("nameEn")}
@@ -147,9 +159,19 @@ const EditParentForm = ({ parent, onClose }: EditParentFormProps) => {
             </div>
           </div>
 
+          <SlugField
+            id="edit-parent-slug"
+            kind="parents"
+            mode="edit"
+            value={slugValue ?? ""}
+            sourceName={parent.nameEn}
+            inputProps={register("slug")}
+            error={errors.slug?.message}
+          />
+
           <div className={formStyles.gridRow}>
             <div className={formStyles.formGroup}>
-              <label htmlFor="edit-parent-breed">Breed</label>
+              <label htmlFor="edit-parent-breed">Порода</label>
               <select
                 id="edit-parent-breed"
                 {...register("breed")}
@@ -157,8 +179,8 @@ const EditParentForm = ({ parent, onClose }: EditParentFormProps) => {
               >
                 <option value="">-- Выберите --</option>
                 {withCurrentOption(breeds, parent.breed).map((breed) => (
-                  <option key={breed._id} value={breed.name}>
-                    {breed.name}
+                  <option key={breed._id} value={breed._id} title={breed.nameEn}>
+                    {breed.nameUa}
                   </option>
                 ))}
               </select>
@@ -168,7 +190,7 @@ const EditParentForm = ({ parent, onClose }: EditParentFormProps) => {
             </div>
 
             <div className={formStyles.formGroup}>
-              <label htmlFor="edit-parent-color">Color / Pattern</label>
+              <label htmlFor="edit-parent-color">Окрас / рисунок</label>
               <select
                 id="edit-parent-color"
                 {...register("color")}
@@ -176,8 +198,8 @@ const EditParentForm = ({ parent, onClose }: EditParentFormProps) => {
               >
                 <option value="">-- Выберите --</option>
                 {withCurrentOption(colors, parent.color).map((color) => (
-                  <option key={color._id} value={color.name}>
-                    {color.name}
+                  <option key={color._id} value={color._id} title={color.nameEn}>
+                    {color.nameUa}
                   </option>
                 ))}
               </select>
@@ -189,14 +211,14 @@ const EditParentForm = ({ parent, onClose }: EditParentFormProps) => {
 
           <div className={formStyles.gridRow}>
             <div className={formStyles.formGroup}>
-              <label htmlFor="edit-parent-sex">Gender</label>
+              <label htmlFor="edit-parent-sex">Пол</label>
               <select
                 id="edit-parent-sex"
                 {...register("sex")}
                 className={formStyles.input}
               >
-                <option value="male">Male (Самец)</option>
-                <option value="female">Female (Самка)</option>
+                <option value="male">Кот (самец)</option>
+                <option value="female">Кошка (самка)</option>
               </select>
               {errors.sex && (
                 <span className={formStyles.error}>{errors.sex.message}</span>
@@ -223,14 +245,14 @@ const EditParentForm = ({ parent, onClose }: EditParentFormProps) => {
               onClick={closeForm}
               disabled={isSubmitting}
             >
-              Cancel
+              Отмена
             </button>
             <button
               type="submit"
               className={formStyles.submitBtn}
               disabled={!isValid || isSubmitting}
             >
-              {isSubmitting ? "Saving..." : "Save Changes"}
+              {isSubmitting ? "Сохраняем..." : "Сохранить изменения"}
             </button>
           </div>
         </form>

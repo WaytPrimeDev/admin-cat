@@ -1,14 +1,75 @@
-interface Filter {
-  name: string;
+// Справочники породы и окраса многоязычные: бэкенд отдаёт все языки сразу,
+// в формы и фильтры уходит _id, а не название
+export interface ReferenceImage {
+  full: string;
+  thumbnail: string;
+  mobile: string;
+}
+
+export interface ColorRef {
   _id: string;
+  nameUa: string;
+  nameEn: string;
+  nameLang3?: string | null;
+  nameLang4?: string | null;
+}
+
+export interface BreedRef extends ColorRef {
+  image?: ReferenceImage | null;
+  // Второй ключ для публичных URL: /breeds/<slug>. Админка работает по _id
+  slug?: string;
 }
 
 export interface FilterState {
-  breeds: Filter[];
-  colors: Filter[];
+  breeds: BreedRef[];
+  colors: ColorRef[];
   isLoading: boolean;
   errorColor: string | null;
   errorBreed: string | null;
+}
+
+export interface GetBreedsResponse {
+  data: BreedRef[];
+  message?: string;
+  status?: string;
+}
+
+export interface GetColorsResponse {
+  data: ColorRef[];
+  message?: string;
+  status?: string;
+}
+
+export interface AddBreedResponse {
+  data: BreedRef;
+  message?: string;
+  status?: string;
+}
+
+export interface AddColorResponse {
+  data: ColorRef;
+  message?: string;
+  status?: string;
+}
+
+export interface AddColorRequest {
+  nameUa: string;
+  nameEn: string;
+  nameLang3?: string;
+  nameLang4?: string;
+}
+
+/*
+ * PATCH /filters/color/:id и /filters/breed/:id принимают любые из полей:
+ * отсутствие ключа = не трогать, null = очистить необязательный язык.
+ * Пустой объект бэкенд отклоняет с 400 «Нет полей для обновления».
+ */
+export interface UpdateReferenceRequest {
+  nameUa?: string;
+  nameEn?: string;
+  nameLang3?: string | null;
+  nameLang4?: string | null;
+  slug?: string;
 }
 
 export interface User {
@@ -53,21 +114,32 @@ export interface Kitten {
   _id: string;
   nameUa: string;
   nameEn: string;
-  color: string;
+  // Второй ключ для публичных URL (/kittens/<slug>); админка работает по _id.
+  // У записей, созданных до появления слага, его нет — бэкенд достроит при PATCH
+  slug?: string;
+  // справочные поля приходят объектами с подставленными названиями;
+  // если запись справочника удалили — приходит null
+  color: ColorRef | null;
   birthDay: string;
   status: KittenStatus;
   // у нового котёнка семьи ещё нет: бэкенд отдаёт null либо вовсе не присылает поле
   familyId?: string | null;
-  breed: string;
+  breed: BreedRef | null;
   sex: KittenSex;
   price: KittenPrice;
   images: KittenImage[];
+  // Видео с YouTube — только идентификатор ролика, сам файл нигде не хранится.
+  // null/отсутствие поля = видео нет
+  videoId?: string | null;
   parentId: {
     mom: string;
     dad: string;
   };
   createdAt: string;
+  // GET /cats/kittens отдаёт состояние поста рядом с флагом публикации
   isTelegramPublished?: boolean;
+  hasAnnouncement?: boolean;
+  telegramPostUrl?: string | null;
 }
 
 export interface KittenResponse {
@@ -80,6 +152,37 @@ export interface AddKittenResponse {
   data: Kitten;
 }
 
+/*
+ * DELETE /cats/kitten/:id заодно снимает пост из Telegram.
+ * Отказ Telegram удаление котёнка не блокирует (force: true) — вместо ошибки
+ * приходит warning, и его обязательно нужно показать админу: иначе в канале
+ * останется объявление о проданном котёнке.
+ */
+export interface DeleteKittenTelegram {
+  hadPost: boolean;
+  removed: boolean;
+  warning: string | null;
+}
+
+export interface DeleteKittenResponse {
+  status?: number;
+  message?: string;
+  telegram?: DeleteKittenTelegram;
+}
+
+/*
+ * Итог удаления котёнка для UI. Кроме телеграма сюда попадает и судьба семьи:
+ * если удалённый котёнок был в ней последним, семья удаляется вслед за ним
+ * (removedFamily), а сбой этой подчистки приходит отдельным предупреждением —
+ * сам котёнок в этот момент уже удалён.
+ */
+export interface DeleteKittenResult {
+  id: string;
+  telegram: DeleteKittenTelegram | null;
+  removedFamily: { id: string; name: string } | null;
+  familyWarning: string | null;
+}
+
 export interface KittensState {
   items: Kitten[];
   isLoading: boolean;
@@ -90,10 +193,11 @@ export interface Parent {
   _id: string;
   nameUa: string;
   nameEn: string;
-  color: string;
+  slug?: string;
+  color: ColorRef | null;
   status: KittenStatus;
   familyId?: string[] | null;
-  breed: string;
+  breed: BreedRef | null;
   sex: KittenSex;
   images: KittenImage[];
   createdAt: string;
@@ -119,7 +223,7 @@ export interface Family {
   _id: string;
   name: string;
   kittens: string[];
-  breed: string;
+  breed: BreedRef | null;
   displayOrder: number;
   parents: {
     mom?: string;
