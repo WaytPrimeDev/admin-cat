@@ -233,6 +233,18 @@
   color: #4a4a68;
 }
 
+/* Порода под кличкой котёнка: подпись, а не второе название — поэтому
+   мельче и бледнее основного текста чипа. */
+.checkboxBreed {
+  font-size: 11px;
+  font-weight: 400;
+  color: #8a8ab5;
+}
+
+.checkboxLabel:has(input:checked) .checkboxBreed {
+  color: #6b5ca5;
+}
+
 .emptyKittens {
   color: #8a8ab5;
   font-size: 13px;

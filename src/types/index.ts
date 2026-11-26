@@ -170,6 +170,19 @@ export interface DeleteKittenResponse {
   telegram?: DeleteKittenTelegram;
 }
 
+/*
+ * Итог удаления котёнка для UI. Кроме телеграма сюда попадает и судьба семьи:
+ * если удалённый котёнок был в ней последним, семья удаляется вслед за ним
+ * (removedFamily), а сбой этой подчистки приходит отдельным предупреждением —
+ * сам котёнок в этот момент уже удалён.
+ */
+export interface DeleteKittenResult {
+  id: string;
+  telegram: DeleteKittenTelegram | null;
+  removedFamily: { id: string; name: string } | null;
+  familyWarning: string | null;
+}
+
 export interface KittensState {
   items: Kitten[];
   isLoading: boolean;

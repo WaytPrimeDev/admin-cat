@@ -11,6 +11,12 @@ import {
 import AddBreedForm from "../../components/AddBreedForm/AddBreedForm";
 import EditBreedForm from "../../components/EditBreedForm/EditBreedForm";
 import SlugLink from "../../components/SlugLink/SlugLink";
+import {
+  ImageOffIcon,
+  PencilIcon,
+  PlusIcon,
+  TrashIcon,
+} from "../../components/ReferenceIcons/ReferenceIcons";
 import { compareRefNameUa, refNameUa } from "../../utils/referenceName";
 import type { BreedRef } from "../../types";
 
@@ -64,8 +70,15 @@ const BreedsPage: React.FC = () => {
             Справочник пород: названия по языкам и фото породы
           </p>
         </div>
-        <button className={styles.addBtn} onClick={() => setShowForm(true)}>
-          + Добавить породу
+        <button
+          type="button"
+          className={styles.addBtn}
+          onClick={() => setShowForm(true)}
+        >
+          <span className={styles.btnIcon}>
+            <PlusIcon />
+          </span>
+          Добавить породу
         </button>
       </div>
 
@@ -116,21 +129,50 @@ const BreedsPage: React.FC = () => {
                     loading="lazy"
                   />
                 ) : (
-                  <span className={styles.noPhoto}>Нет фото</span>
+                  <span className={styles.noPhoto}>
+                    <ImageOffIcon />
+                    Нет фото
+                  </span>
                 )}
               </div>
 
               <div className={styles.cardBody}>
                 <h3 className={styles.cardTitle}>{refNameUa(breed)}</h3>
-                <p className={styles.cardSubtitle}>{breed.nameEn || ""}</p>
-                <SlugLink kind="breeds" slug={breed.slug} />
-                {(breed.nameLang3 || breed.nameLang4) && (
-                  <p className={styles.cardLangs}>
-                    {[breed.nameLang3, breed.nameLang4]
-                      .filter(Boolean)
-                      .join(" · ")}
+
+                <div className={styles.langList}>
+                  <p className={styles.langRow}>
+                    <span className={styles.langTag}>en</span>
+                    <span
+                      className={
+                        breed.nameEn
+                          ? styles.langValue
+                          : `${styles.langValue} ${styles.langEmpty}`
+                      }
+                    >
+                      {breed.nameEn || "не заполнено"}
+                    </span>
                   </p>
-                )}
+                  {breed.nameLang3 && (
+                    <p className={styles.langRow}>
+                      <span className={styles.langTag}>л3</span>
+                      <span className={styles.langValue}>
+                        {breed.nameLang3}
+                      </span>
+                    </p>
+                  )}
+                  {breed.nameLang4 && (
+                    <p className={styles.langRow}>
+                      <span className={styles.langTag}>л4</span>
+                      <span className={styles.langValue}>
+                        {breed.nameLang4}
+                      </span>
+                    </p>
+                  )}
+                </div>
+
+                <div className={styles.slugRow}>
+                  <SlugLink kind="breeds" slug={breed.slug} />
+                </div>
               </div>
 
               <div className={styles.cardFooter}>
@@ -139,6 +181,9 @@ const BreedsPage: React.FC = () => {
                   className={styles.editBtn}
                   onClick={() => setEditingBreed(breed)}
                 >
+                  <span className={styles.btnIcon}>
+                    <PencilIcon />
+                  </span>
                   Изменить
                 </button>
                 <button
@@ -147,6 +192,9 @@ const BreedsPage: React.FC = () => {
                   onClick={() => handleDelete(breed._id, refNameUa(breed))}
                   disabled={deletingId === breed._id}
                 >
+                  <span className={styles.btnIcon}>
+                    <TrashIcon />
+                  </span>
                   {deletingId === breed._id ? "Удаляем..." : "Удалить"}
                 </button>
               </div>

@@ -6,7 +6,12 @@ import type {
   KittenResponse,
   AddKittenResponse,
   DeleteKittenResponse,
+  DeleteKittenResult,
+  Family,
+  Kitten,
 } from "../../types";
+import { familyEmptiedBy } from "../../utils/familyCleanup";
+import { deleteFamily, fetchFamilies } from "./familiesSlice";
 
 const initialState: KittensState = {
   items: [],
@@ -70,21 +75,99 @@ export const addKitten = createAsyncThunk(
   },
 );
 
+/** Ровно то, что подчистка делает со стором: дотягивает семьи и удаляет одну. */
+interface FamilyCleanupDeps {
+  getState: () => unknown;
+  loadFamilies: () => Promise<unknown>;
+  removeFamily: (familyId: string) => Promise<unknown>;
+}
+
+/*
+ * Часть стора, которую читает подчистка. Описана локально, чтобы слайс не
+ * импортировал RootState из стора, который сам собран из слайсов.
+ */
+interface FamilyCleanupState {
+  kittens: { items: Kitten[] };
+  families: { items: Family[] };
+}
+
+/**
+ * Семья существует ради помёта: когда удалён последний её котёнок, пустая
+ * семья остаётся и в админке, и на сайте — удаляем её вслед за котёнком.
+ *
+ * Котёнка это уже не отменяет: он удалён на бэкенде, поэтому сбой здесь
+ * уходит наружу предупреждением, а не ошибкой всей операции.
+ */
+async function removeEmptiedFamily(
+  kittenId: string,
+  { getState, loadFamilies, removeFamily }: FamilyCleanupDeps,
+): Promise<Pick<DeleteKittenResult, "removedFamily" | "familyWarning">> {
+  try {
+    let state = getState() as FamilyCleanupState;
+
+    // Удалять могут и со страницы, которая список семей не грузила: без него
+    // проверка всегда отвечала бы «семьи нет» и пустая семья оставалась бы.
+    if (state.families.items.length === 0) {
+      await loadFamilies();
+      state = getState() as FamilyCleanupState;
+    }
+
+    const kitten = state.kittens.items.find((k) => k._id === kittenId);
+    const family = familyEmptiedBy(
+      state.families.items,
+      state.kittens.items,
+      kittenId,
+      kitten?.familyId,
+    );
+    if (!family) return { removedFamily: null, familyWarning: null };
+
+    await removeFamily(family._id);
+    return {
+      removedFamily: { id: family._id, name: family.name },
+      familyWarning: null,
+    };
+  } catch (error) {
+    return {
+      removedFamily: null,
+      familyWarning:
+        typeof error === "string"
+          ? `Котёнок удалён, но его семью убрать не удалось: ${error}`
+          : "Котёнок удалён, но его семью убрать не удалось.",
+    };
+  }
+}
+
 // Возвращаем не только id, но и блок telegram из ответа:
 // по нему UI решает, предупреждать ли о застрявшем посте
-export const deleteKitten = createAsyncThunk(
+export const deleteKitten = createAsyncThunk<
+  DeleteKittenResult,
+  string,
+  { rejectValue: string }
+>(
   "kittens/deleteKitten",
-  async (id: string, { rejectWithValue }) => {
+  async (id, { dispatch, getState, rejectWithValue }) => {
+    let response;
     try {
-      const response = await api.delete<DeleteKittenResponse>(
-        `/cats/kitten/${id}`,
-      );
-      return { id, telegram: response.data?.telegram ?? null };
+      response = await api.delete<DeleteKittenResponse>(`/cats/kitten/${id}`);
     } catch (error) {
       return rejectWithValue(
         apiErrorMessage(error, "Не удалось удалить котёнка"),
       );
     }
+
+    // Состав семьи читается до того, как reducer выкинет котёнка из стора,
+    // поэтому удаляемый id исключается в самой проверке.
+    const cleanup = await removeEmptiedFamily(id, {
+      getState,
+      loadFamilies: () => dispatch(fetchFamilies()).unwrap(),
+      removeFamily: (familyId) => dispatch(deleteFamily(familyId)).unwrap(),
+    });
+
+    return {
+      id,
+      telegram: response.data?.telegram ?? null,
+      ...cleanup,
+    };
   },
 );
 

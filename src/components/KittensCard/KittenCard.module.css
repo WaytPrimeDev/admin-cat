@@ -98,6 +98,47 @@
   color: #8a8ab5;
 }
 
+/* Статус котёнка: цвет несёт тот же смысл, что и подпись, поэтому читается
+   и в узкой колонке, и в мобильной раскладке. */
+.statusBadge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+
+/* Нет семьи — на сайте котёнка не видно: нейтральный серый */
+.status_offline {
+  background: #f1f1f6;
+  color: #6b6b85;
+  border-color: #dedee8;
+}
+
+/* В семье, опубликован и свободен */
+.status_active {
+  background: #f0fdf4;
+  color: #16a34a;
+  border-color: #bbf7d0;
+}
+
+/* Забронирован — сделка идёт, но не закрыта */
+.status_booked {
+  background: #fffbeb;
+  color: #b45309;
+  border-color: #fde68a;
+}
+
+/* Продан */
+.status_out {
+  background: #fef2f2;
+  color: #dc2626;
+  border-color: #fecaca;
+}
+
 .parentsCell {
   color: #2b1f5c;
   font-size: 13px;

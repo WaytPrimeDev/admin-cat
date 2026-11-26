@@ -13,6 +13,7 @@ import {
 import { createFamily } from "../../store/slices/familiesSlice";
 import { fetchKittens } from "../../store/slices/kittensSlice";
 import { fetchParents } from "../../store/slices/parentsSlice";
+import { refNameUa } from "../../utils/referenceName";
 import {
   FieldHint,
   MissingFieldsNotice,
@@ -258,6 +259,13 @@ const AddFamilyForm = ({ editShowForm }: AddFamilyFormProps) => {
                       <span className={styles.checkboxText}>
                         {kitten.nameEn || kitten.nameUa}
                       </span>
+                      {/* Порода рядом с кличкой: в помёт идут котята одной
+                          породы, и по именам это не проверить */}
+                      {refNameUa(kitten.breed, "") && (
+                        <span className={styles.checkboxBreed}>
+                          {refNameUa(kitten.breed, "")}
+                        </span>
+                      )}
                     </label>
                   ))}
                 </div>

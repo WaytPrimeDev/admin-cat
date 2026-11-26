@@ -20,6 +20,7 @@ import {
   RequiredMark,
 } from "../RequiredField/RequiredField";
 import formStyles from "../AddFamilyForm/AddFamily.module.css";
+import { refNameUa } from "../../utils/referenceName";
 import styles from "./EditFamilyForm.module.css";
 
 // Названия обязательных полей для сводки под формой
@@ -296,6 +297,11 @@ const EditFamilyForm = ({ family, onClose }: EditFamilyFormProps) => {
                       <span className={formStyles.checkboxText}>
                         {kitten.nameEn || kitten.nameUa}
                       </span>
+                      {refNameUa(kitten.breed, "") && (
+                        <span className={formStyles.checkboxBreed}>
+                          {refNameUa(kitten.breed, "")}
+                        </span>
+                      )}
                     </label>
                   ))}
                 </div>

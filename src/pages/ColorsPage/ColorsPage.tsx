@@ -12,6 +12,12 @@ import {
 import ColorFormModal from "../../components/ColorFormModal/ColorFormModal";
 import type { ColorRef } from "../../types";
 import { compareRefNameUa, refNameUa } from "../../utils/referenceName";
+import { refHue, refMonogram } from "../../utils/refHue";
+import {
+  PencilIcon,
+  PlusIcon,
+  TrashIcon,
+} from "../../components/ReferenceIcons/ReferenceIcons";
 
 const ColorsPage: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -62,8 +68,15 @@ const ColorsPage: React.FC = () => {
             Справочник окрасов: названия по языкам
           </p>
         </div>
-        <button className={styles.addBtn} onClick={() => setShowForm(true)}>
-          + Добавить окрас
+        <button
+          type="button"
+          className={styles.addBtn}
+          onClick={() => setShowForm(true)}
+        >
+          <span className={styles.btnIcon}>
+            <PlusIcon />
+          </span>
+          Добавить окрас
         </button>
       </div>
 
@@ -103,39 +116,84 @@ const ColorsPage: React.FC = () => {
         </div>
       ) : queryColors.length > 0 ? (
         <div className={styles.grid}>
-          {queryColors.map((color) => (
-            <article key={color._id} className={styles.card}>
-              <div className={styles.cardBody}>
-                <h3 className={styles.cardTitle}>{refNameUa(color)}</h3>
-                <p className={styles.cardSubtitle}>{color.nameEn || ""}</p>
-                {(color.nameLang3 || color.nameLang4) && (
-                  <p className={styles.cardLangs}>
-                    {[color.nameLang3, color.nameLang4]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </p>
-                )}
-              </div>
+          {queryColors.map((color) => {
+            const name = refNameUa(color, "");
 
-              <div className={styles.cardFooter}>
-                <button
-                  type="button"
-                  className={styles.editBtn}
-                  onClick={() => setEditingColor(color)}
-                >
-                  Изменить
-                </button>
-                <button
-                  type="button"
-                  className={styles.deleteBtn}
-                  onClick={() => handleDelete(color._id, refNameUa(color))}
-                  disabled={deletingId === color._id}
-                >
-                  {deletingId === color._id ? "Удаляем..." : "Удалить"}
-                </button>
-              </div>
-            </article>
-          ))}
+            return (
+              <article
+                key={color._id}
+                className={styles.card}
+                style={
+                  {
+                    "--ref-hue": String(refHue(name || color._id)),
+                  } as React.CSSProperties
+                }
+              >
+                <div className={styles.monogramBox}>
+                  <span className={styles.monogram}>{refMonogram(name)}</span>
+                </div>
+
+                <div className={styles.cardBody}>
+                  <h3 className={styles.cardTitle}>{refNameUa(color)}</h3>
+
+                  <div className={styles.langList}>
+                    <p className={styles.langRow}>
+                      <span className={styles.langTag}>en</span>
+                      <span
+                        className={
+                          color.nameEn
+                            ? styles.langValue
+                            : `${styles.langValue} ${styles.langEmpty}`
+                        }
+                      >
+                        {color.nameEn || "не заполнено"}
+                      </span>
+                    </p>
+                    {color.nameLang3 && (
+                      <p className={styles.langRow}>
+                        <span className={styles.langTag}>л3</span>
+                        <span className={styles.langValue}>
+                          {color.nameLang3}
+                        </span>
+                      </p>
+                    )}
+                    {color.nameLang4 && (
+                      <p className={styles.langRow}>
+                        <span className={styles.langTag}>л4</span>
+                        <span className={styles.langValue}>
+                          {color.nameLang4}
+                        </span>
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className={styles.cardFooter}>
+                  <button
+                    type="button"
+                    className={styles.editBtn}
+                    onClick={() => setEditingColor(color)}
+                  >
+                    <span className={styles.btnIcon}>
+                      <PencilIcon />
+                    </span>
+                    Изменить
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.deleteBtn}
+                    onClick={() => handleDelete(color._id, refNameUa(color))}
+                    disabled={deletingId === color._id}
+                  >
+                    <span className={styles.btnIcon}>
+                      <TrashIcon />
+                    </span>
+                    {deletingId === color._id ? "Удаляем..." : "Удалить"}
+                  </button>
+                </div>
+              </article>
+            );
+          })}
         </div>
       ) : (
         <div className={styles.emptyState}>

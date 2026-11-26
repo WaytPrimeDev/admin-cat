@@ -16,6 +16,12 @@ import ViewKittenModal from "../ViewKittenModal/ViewKittenModal";
 
 import TelegramPublishModal from "../TelegramPublishModal/TelegramPublishModal";
 import { refNameUa } from "../../utils/referenceName";
+import { familyEmptiedBy } from "../../utils/familyCleanup";
+import {
+  KITTEN_STATUS_ORDER,
+  KITTEN_STATUS_TABLE_LABELS,
+  kittenStatusKey,
+} from "../../utils/kittenStatus";
 import SlugLink from "../SlugLink/SlugLink";
 import {
   useTableSort,
@@ -33,6 +39,7 @@ type SortKey =
   | "sex"
   | "parents"
   | "family"
+  | "status"
   | "priceBreeding"
   | "pricePet";
 
@@ -44,6 +51,7 @@ const sortableColumns: { key: SortKey; label: string }[] = [
   { key: "sex", label: "ПОЛ" },
   { key: "parents", label: "РОДИТЕЛИ" },
   { key: "family", label: "СЕМЬЯ" },
+  { key: "status", label: "СТАТУС" },
   { key: "priceBreeding", label: "ЦЕНА РАЗВЕДЕНИЕ" },
   { key: "pricePet", label: "ЦЕНА ПИТОМЕЦ" },
 ];
@@ -244,7 +252,9 @@ interface KittenCardProps {
 
 const KittensCard = ({ editKitten, queryKittens }: KittenCardProps) => {
   const dispatch = useAppDispatch();
-  const { isLoading } = useSelector((state: RootState) => state.kittens);
+  const { items: kittens, isLoading } = useSelector(
+    (state: RootState) => state.kittens,
+  );
   const [viewKitten, setViewKitten] = useState<Kitten | null>(null);
   // Предупреждение по итогам удаления: пост в Telegram мог остаться в канале
   const [deleteWarning, setDeleteWarning] = useState<string | null>(null);
@@ -287,6 +297,8 @@ const KittensCard = ({ editKitten, queryKittens }: KittenCardProps) => {
       parents: (kitten) =>
         `${parentName(kitten.parentId?.dad)} ${parentName(kitten.parentId?.mom)}`,
       family: (kitten) => familyName(kitten),
+      // Сортируем по ходу сделки, а не по алфавиту подписи
+      status: (kitten) => KITTEN_STATUS_ORDER[kittenStatusKey(kitten.status)],
       priceBreeding: (kitten) => kitten.price?.breeding ?? null,
       pricePet: (kitten) => kitten.price?.pet ?? null,
     }),
@@ -307,15 +319,33 @@ const KittensCard = ({ editKitten, queryKittens }: KittenCardProps) => {
    * его отдельным баннером, а не закрываем всё молча как «успешно».
    */
   const handleDelete = async (id: string) => {
+    // Семья существует ради помёта, поэтому вместе с последним её котёнком
+    // уходит и она сама — предупреждаем об этом до удаления, а не после.
+    const kitten = kittens.find((k) => k._id === id);
+    const emptiedFamily = familyEmptiedBy(
+      families,
+      kittens,
+      id,
+      kitten?.familyId,
+    );
+
     const confirmed = window.confirm(
-      "Удалить этого котёнка?\n\nЕго пост и объявление в Telegram тоже будут удалены.",
+      "Удалить этого котёнка?\n\nЕго пост и объявление в Telegram тоже будут удалены." +
+        (emptiedFamily
+          ? `\n\nВ семье «${emptiedFamily.name}» других котят нет — семья тоже будет удалена.`
+          : ""),
     );
     if (!confirmed) return;
 
     setDeleteWarning(null);
     try {
       const result = await dispatch(deleteKitten(id)).unwrap();
-      if (result.telegram?.warning) setDeleteWarning(result.telegram.warning);
+      // Телеграм и удаление семьи отваливаются независимо, а котёнок к этому
+      // моменту удалён в любом случае — показываем всё, что не доделалось.
+      const warnings = [result.telegram?.warning, result.familyWarning].filter(
+        (warning): warning is string => Boolean(warning),
+      );
+      if (warnings.length) setDeleteWarning(warnings.join(" "));
     } catch (e) {
       console.error(e);
       setDeleteWarning(
@@ -410,6 +440,15 @@ const KittensCard = ({ editKitten, queryKittens }: KittenCardProps) => {
               </td>
               <td data-label="СЕМЬЯ" className={styles.mutedText}>
                 {familyName(kitten) || "Без семьи"}
+              </td>
+              <td data-label="СТАТУС">
+                <span
+                  className={`${styles.statusBadge} ${
+                    styles[`status_${kittenStatusKey(kitten.status)}`]
+                  }`}
+                >
+                  {KITTEN_STATUS_TABLE_LABELS[kittenStatusKey(kitten.status)]}
+                </span>
               </td>
               <td data-label="ЦЕНА РАЗВЕДЕНИЕ" className={styles.priceText}>
                 {kitten.price?.breeding != null
